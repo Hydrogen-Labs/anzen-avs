@@ -106,6 +106,18 @@ func (mr *MockAvsWritererMockRecorder) SendAggregatedResponse(arg0, arg1, arg2, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendAggregatedResponse", reflect.TypeOf((*MockAvsWriterer)(nil).SendAggregatedResponse), arg0, arg1, arg2, arg3)
 }
 
+// SendNewOraclePullTask mocks base method.
+func (m *MockAvsWriterer) SendNewOraclePullTask(arg0 context.Context, arg1 *big.Int, arg2 types.QuorumThresholdPercentage, arg3 types.QuorumNums) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SendNewOraclePullTask", arg0, arg1, arg2, arg3)
+}
+
+// SendNewOraclePullTask indicates an expected call of SendNewOraclePullTask.
+func (mr *MockAvsWritererMockRecorder) SendNewOraclePullTask(arg0, arg1, arg2, arg3 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendNewOraclePullTask", reflect.TypeOf((*MockAvsWriterer)(nil).SendNewOraclePullTask), arg0, arg1, arg2, arg3)
+}
+
 // SendNewTaskNumberToSquare mocks base method.
 func (m *MockAvsWriterer) SendNewTaskNumberToSquare(arg0 context.Context, arg1 *big.Int, arg2 types.QuorumThresholdPercentage, arg3 types.QuorumNums) (contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask, uint32, error) {
 	m.ctrl.T.Helper()
@@ -116,13 +128,11 @@ func (m *MockAvsWriterer) SendNewTaskNumberToSquare(arg0 context.Context, arg1 *
 	return ret0, ret1, ret2
 }
 
-
 // SendNewTaskNumberToSquare indicates an expected call of SendNewTaskNumberToSquare.
 func (mr *MockAvsWritererMockRecorder) SendNewTaskNumberToSquare(arg0, arg1, arg2, arg3 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendNewTaskNumberToSquare", reflect.TypeOf((*MockAvsWriterer)(nil).SendNewTaskNumberToSquare), arg0, arg1, arg2, arg3)
 }
-
 
 // UpdateStakesOfEntireOperatorSetForQuorums mocks base method.
 func (m *MockAvsWriterer) UpdateStakesOfEntireOperatorSetForQuorums(arg0 context.Context, arg1 [][]common.Address, arg2 types.QuorumNums) (*types0.Receipt, error) {

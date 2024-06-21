@@ -92,7 +92,7 @@ func (w *AvsWriter) SendNewOraclePullTask(
 		w.logger.Errorf("Error getting tx opts")
 		return
 	}
-	tx, err := w.AvsContractBindings.TaskManager.CreateNewTask(txOpts, oracleIndex, uint32(quorumThresholdPercentage), quorumNumbers.UnderlyingType())
+	tx, err := w.AvsContractBindings.TaskManager.CreateNewOraclePullTask(txOpts, uint32(oracleIndex.Uint64()), uint32(quorumThresholdPercentage), quorumNumbers.UnderlyingType())
 	if err != nil {
 		w.logger.Errorf("Error assembling CreateNewOraclePullTask tx")
 		return
