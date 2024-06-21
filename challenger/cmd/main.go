@@ -9,8 +9,8 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/Layr-Labs/incredible-squaring-avs/challenger"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
+	"anzen-avs/challenger"
+	"anzen-avs/core/config"
 )
 
 var (

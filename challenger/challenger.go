@@ -5,15 +5,16 @@ import (
 	"context"
 	"math/big"
 
+	"anzen-avs/common"
+	"anzen-avs/core/config"
+
 	ethclient "github.com/Layr-Labs/eigensdk-go/chainio/clients/eth"
 	"github.com/Layr-Labs/eigensdk-go/logging"
-	"github.com/Layr-Labs/incredible-squaring-avs/common"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 
-	"github.com/Layr-Labs/incredible-squaring-avs/challenger/types"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/chainio"
+	"anzen-avs/challenger/types"
+	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	"anzen-avs/core/chainio"
 )
 
 type Challenger struct {

@@ -8,18 +8,19 @@ import (
 
 	"github.com/Layr-Labs/eigensdk-go/logging"
 
+	"anzen-avs/aggregator/types"
+	"anzen-avs/core"
+	"anzen-avs/core/chainio"
+	"anzen-avs/core/config"
+
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients"
 	sdkclients "github.com/Layr-Labs/eigensdk-go/chainio/clients"
 	"github.com/Layr-Labs/eigensdk-go/services/avsregistry"
 	blsagg "github.com/Layr-Labs/eigensdk-go/services/bls_aggregation"
 	oprsinfoserv "github.com/Layr-Labs/eigensdk-go/services/operatorsinfo"
 	sdktypes "github.com/Layr-Labs/eigensdk-go/types"
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
-	"github.com/Layr-Labs/incredible-squaring-avs/core"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/chainio"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
 
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
 )
 
 const (

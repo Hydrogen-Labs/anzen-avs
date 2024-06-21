@@ -5,11 +5,12 @@ import (
 	"log"
 	"os"
 
+	"anzen-avs/core/config"
+	"anzen-avs/operator"
+	"anzen-avs/types"
+
 	sdkecdsa "github.com/Layr-Labs/eigensdk-go/crypto/ecdsa"
 	sdkutils "github.com/Layr-Labs/eigensdk-go/utils"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
-	"github.com/Layr-Labs/incredible-squaring-avs/operator"
-	"github.com/Layr-Labs/incredible-squaring-avs/types"
 	"github.com/urfave/cli"
 )
 

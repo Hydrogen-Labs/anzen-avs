@@ -14,11 +14,11 @@ import (
 
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator"
-	aggtypes "github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	chainiomocks "github.com/Layr-Labs/incredible-squaring-avs/core/chainio/mocks"
-	operatormocks "github.com/Layr-Labs/incredible-squaring-avs/operator/mocks"
+	"anzen-avs/aggregator"
+	aggtypes "anzen-avs/aggregator/types"
+	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	chainiomocks "anzen-avs/core/chainio/mocks"
+	operatormocks "anzen-avs/operator/mocks"
 )
 
 func TestOperator(t *testing.T) {

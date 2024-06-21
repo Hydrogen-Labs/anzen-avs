@@ -2,13 +2,15 @@ package actions
 
 import (
 	"encoding/json"
-	"github.com/urfave/cli"
 	"log"
 
+	"github.com/urfave/cli"
+
+	"anzen-avs/core/config"
+	"anzen-avs/operator"
+	"anzen-avs/types"
+
 	sdkutils "github.com/Layr-Labs/eigensdk-go/utils"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
-	"github.com/Layr-Labs/incredible-squaring-avs/operator"
-	"github.com/Layr-Labs/incredible-squaring-avs/types"
 )
 
 func RegisterOperatorWithEigenlayer(ctx *cli.Context) error {

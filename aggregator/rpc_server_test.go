@@ -9,11 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"anzen-avs/aggregator/types"
+	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	"anzen-avs/core"
+
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 	sdktypes "github.com/Layr-Labs/eigensdk-go/types"
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	"github.com/Layr-Labs/incredible-squaring-avs/core"
 )
 
 func TestProcessSignedTaskResponse(t *testing.T) {

@@ -3,8 +3,9 @@ package core
 import (
 	"math/big"
 
+	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"golang.org/x/crypto/sha3"
 )

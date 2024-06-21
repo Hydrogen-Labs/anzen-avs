@@ -8,10 +8,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	gethcommon "github.com/ethereum/go-ethereum/common"
 
+	erc20mock "anzen-avs/contracts/bindings/ERC20Mock"
+	csservicemanager "anzen-avs/contracts/bindings/IncredibleSquaringServiceManager"
+	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+
 	regcoord "github.com/Layr-Labs/eigensdk-go/contracts/bindings/RegistryCoordinator"
-	erc20mock "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/ERC20Mock"
-	csservicemanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringServiceManager"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
 )
 
 type AvsManagersBindings struct {

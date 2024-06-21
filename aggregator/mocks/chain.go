@@ -3,10 +3,11 @@ package mocks
 import (
 	"math/big"
 
+	"anzen-avs/aggregator/types"
+	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+
 	opstateretriever "github.com/Layr-Labs/eigensdk-go/contracts/bindings/OperatorStateRetriever"
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
 )
 
 // ====== TaskManager Mocks ======

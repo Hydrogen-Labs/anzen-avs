@@ -10,12 +10,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	"github.com/Layr-Labs/incredible-squaring-avs/core"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/chainio"
-	"github.com/Layr-Labs/incredible-squaring-avs/metrics"
-	"github.com/Layr-Labs/incredible-squaring-avs/types"
+	"anzen-avs/aggregator"
+	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	"anzen-avs/core"
+	"anzen-avs/core/chainio"
+	"anzen-avs/metrics"
+	"anzen-avs/types"
 
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients"
 	sdkelcontracts "github.com/Layr-Labs/eigensdk-go/chainio/clients/elcontracts"

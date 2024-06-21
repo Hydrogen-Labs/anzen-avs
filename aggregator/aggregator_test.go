@@ -17,10 +17,10 @@ import (
 	blsaggservmock "github.com/Layr-Labs/eigensdk-go/services/mocks/blsagg"
 	sdktypes "github.com/Layr-Labs/eigensdk-go/types"
 
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/mocks"
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	chainiomocks "github.com/Layr-Labs/incredible-squaring-avs/core/chainio/mocks"
+	"anzen-avs/aggregator/mocks"
+	"anzen-avs/aggregator/types"
+	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	chainiomocks "anzen-avs/core/chainio/mocks"
 )
 
 var MOCK_OPERATOR_ID = [32]byte{207, 73, 226, 221, 104, 100, 123, 41, 192, 3, 9, 119, 90, 83, 233, 159, 231, 151, 245, 96, 150, 48, 144, 27, 102, 253, 39, 101, 1, 26, 135, 173}

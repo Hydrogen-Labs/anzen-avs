@@ -13,13 +13,19 @@ import (
 	logging "github.com/Layr-Labs/eigensdk-go/logging"
 	sdktypes "github.com/Layr-Labs/eigensdk-go/types"
 
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
+	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	"anzen-avs/core/config"
 )
 
 type AvsWriterer interface {
 	avsregistry.AvsRegistryWriter
 
+	SendNewOraclePullTask(
+		ctx context.Context,
+		oracleIndex *big.Int,
+		quorumThresholdPercentage sdktypes.QuorumThresholdPercentage,
+		quorumNumbers sdktypes.QuorumNums,
+	)
 	SendNewTaskNumberToSquare(
 		ctx context.Context,
 		numToSquare *big.Int,
@@ -72,6 +78,29 @@ func NewAvsWriter(avsRegistryWriter avsregistry.AvsRegistryWriter, avsServiceBin
 		AvsContractBindings: avsServiceBindings,
 		logger:              logger,
 		TxMgr:               txMgr,
+	}
+}
+
+func (w *AvsWriter) SendNewOraclePullTask(
+	ctx context.Context,
+	oracleIndex *big.Int,
+	quorumThresholdPercentage sdktypes.QuorumThresholdPercentage,
+	quorumNumbers sdktypes.QuorumNums,
+) {
+	txOpts, err := w.TxMgr.GetNoSendTxOpts()
+	if err != nil {
+		w.logger.Errorf("Error getting tx opts")
+		return
+	}
+	tx, err := w.AvsContractBindings.TaskManager.CreateNewTask(txOpts, oracleIndex, uint32(quorumThresholdPercentage), quorumNumbers.UnderlyingType())
+	if err != nil {
+		w.logger.Errorf("Error assembling CreateNewOraclePullTask tx")
+		return
+	}
+	_, err = w.TxMgr.Send(ctx, tx)
+	if err != nil {
+		w.logger.Errorf("Error submitting CreateNewOraclePullTask tx")
+		return
 	}
 }
 

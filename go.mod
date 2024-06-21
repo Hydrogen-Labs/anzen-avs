@@ -1,4 +1,4 @@
-module github.com/Layr-Labs/incredible-squaring-avs
+module anzen-avs
 
 go 1.21
 
