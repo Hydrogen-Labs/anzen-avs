@@ -41,6 +41,8 @@ contract IncredibleSquaringTaskManager is
     // mapping of task indices to hash of abi.encode(taskResponse, taskResponseMetadata)
     mapping(uint32 => bytes32) public allTaskResponses;
 
+    mapping(uint32 => int256) public proposedOraclePullTaskSolutions;
+
     mapping(uint32 => bool) public taskSuccesfullyChallenged;
 
     address public aggregator;
@@ -109,6 +111,20 @@ contract IncredibleSquaringTaskManager is
         allTaskHashes[latestTaskNum] = keccak256(abi.encode(newTask));
         emit NewOraclePullTaskCreated(latestTaskNum, newTask, oracleIndex);
         latestTaskNum = latestTaskNum + 1;
+    }
+
+    function proposeOraclePullTaskSolution(uint32 taskIndex, int256 safetyFactor) external onlyAggregator {
+        // create a new task struct
+        require(
+            proposedOraclePullTaskSolutions[taskIndex] == 0, "Aggregator has already proposed a solution for this task"
+        );
+
+        OraclePullTaskResponse memory newTaskResponse;
+        newTaskResponse.referenceTaskIndex = taskIndex;
+        newTaskResponse.safetyFactor = safetyFactor;
+
+        proposedOraclePullTaskSolutions[taskIndex] = safetyFactor;
+        emit OraclePullTaskSolutionProposed(newTaskResponse);
     }
 
     // NOTE: this function responds to existing tasks.

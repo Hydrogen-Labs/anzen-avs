@@ -9,6 +9,8 @@ interface IIncredibleSquaringTaskManager {
 
     event NewOraclePullTaskCreated(uint32 indexed taskIndex, OraclePullTask oraclePullTask, uint32 indexed oracleIndex);
 
+    event OraclePullTaskSolutionProposed(OraclePullTaskResponse oraclePullTaskResponse);
+
     event TaskResponded(TaskResponse taskResponse, TaskResponseMetadata taskResponseMetadata);
 
     event TaskCompleted(uint32 indexed taskIndex);
@@ -49,7 +51,7 @@ interface IIncredibleSquaringTaskManager {
 
     struct OraclePullTaskResponse {
         uint32 referenceTaskIndex;
-        uint256 safetyFactor;
+        int256 safetyFactor;
     }
 
     // Extra information related to taskResponse, which is filled inside the contract.
@@ -68,6 +70,9 @@ interface IIncredibleSquaringTaskManager {
     // NOTE: this function creates new oracle pull task.
     function createNewOraclePullTask(uint32 oracleIndex, uint32 quorumThresholdPercentage, bytes calldata quorumNumbers)
         external;
+
+    // NOTE: this function submits task response.
+    function proposeOraclePullTaskSolution(uint32 taskIndex, int256 safetyFactor) external;
 
     /// @notice Returns the current 'taskNumber' for the middleware
     function taskNumber() external view returns (uint32);

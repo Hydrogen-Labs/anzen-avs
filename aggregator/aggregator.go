@@ -12,6 +12,7 @@ import (
 	"anzen-avs/core"
 	"anzen-avs/core/chainio"
 	"anzen-avs/core/config"
+	safety_factor "anzen-avs/safety-factor"
 
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients"
 	sdkclients "github.com/Layr-Labs/eigensdk-go/chainio/clients"
@@ -66,15 +67,17 @@ const (
 // Upon sending a task onchain (or receiving a NewTaskCreated Event if the tasks were sent by an external task generator), the aggregator can get the list of all operators opted into each quorum at that
 // block number by calling the getOperatorState() function of the BLSOperatorStateRetriever.sol contract.
 type Aggregator struct {
-	logger           logging.Logger
-	serverIpPortAddr string
-	avsWriter        chainio.AvsWriterer
+	logger              logging.Logger
+	serverIpPortAddr    string
+	avsWriter           chainio.AvsWriterer
+	safetyFactorService safety_factor.SafetyFactorServicer
 	// aggregation related fields
 	blsAggregationService blsagg.BlsAggregationService
 	tasks                 map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerTask
 	tasksMu               sync.RWMutex
 	taskResponses         map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse
 	taskResponsesMu       sync.RWMutex
+	oracleTasks           map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask
 }
 
 // NewAggregator creates a new Aggregator with the provided config.
@@ -109,14 +112,17 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 	operatorPubkeysService := oprsinfoserv.NewOperatorsInfoServiceInMemory(context.Background(), clients.AvsRegistryChainSubscriber, clients.AvsRegistryChainReader, c.Logger)
 	avsRegistryService := avsregistry.NewAvsRegistryServiceChainCaller(avsReader, operatorPubkeysService, c.Logger)
 	blsAggregationService := blsagg.NewBlsAggregatorService(avsRegistryService, c.Logger)
+	safetyFactorService := safety_factor.NewSafetyFactorService()
 
 	return &Aggregator{
 		logger:                c.Logger,
 		serverIpPortAddr:      c.AggregatorServerIpPortAddr,
 		avsWriter:             avsWriter,
 		blsAggregationService: blsAggregationService,
+		safetyFactorService:   safetyFactorService,
 		tasks:                 make(map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerTask),
 		taskResponses:         make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse),
+		oracleTasks:           make(map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask),
 	}, nil
 }
 
@@ -143,7 +149,7 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 			agg.logger.Info("Received response from blsAggregationService", "blsAggServiceResp", blsAggServiceResp)
 			agg.sendAggregatedResponseToContract(blsAggServiceResp)
 		case <-ticker.C:
-			err := agg.sendNewTask(big.NewInt(taskNum))
+			err := agg.sendNewOraclePullTask(big.NewInt(0))
 			taskNum++
 			if err != nil {
 				// we log the errors inside sendNewTask() so here we just continue to the next task
@@ -221,5 +227,47 @@ func (agg *Aggregator) sendNewTask(numToSquare *big.Int) error {
 		quorumNums = append(quorumNums, sdktypes.QuorumNum(quorumNum))
 	}
 	agg.blsAggregationService.InitializeNewTask(taskIndex, newTask.TaskCreatedBlock, quorumNums, quorumThresholdPercentages, taskTimeToExpiry)
+	return nil
+}
+
+func (agg *Aggregator) sendNewOraclePullTask(oracleIndex *big.Int) error {
+	agg.logger.Info("Aggregator sending new oracle pull task", "oracleIndex", oracleIndex)
+	// Send number to square to the task manager contract
+	newPullTask, taskIndex, err := agg.avsWriter.SendNewOraclePullTask(context.Background(), oracleIndex, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
+
+	if err != nil {
+		agg.logger.Error("Aggregator failed to send new oracle pull task", "err", err)
+		return err
+	}
+
+	proposedSafetyFactorInfo, err := agg.safetyFactorService.GetSafetyFactorInfoByOracleIndex(int(oracleIndex.Int64()))
+	if err != nil {
+		agg.logger.Error("Aggregator failed to get safety factor info", "err", err)
+		return err
+	}
+	safetyFactor := big.NewInt(int64(*proposedSafetyFactorInfo.SF))
+
+	_, err = agg.avsWriter.ProposeOraclePullTaskSolution(context.Background(), taskIndex, safetyFactor)
+	if err != nil {
+		agg.logger.Error("Aggregator failed to propose oracle pull task solution", "err", err)
+		return err
+	}
+	agg.logger.Info("Aggregator proposed oracle pull task solution", "safetyFactor", proposedSafetyFactorInfo)
+
+	agg.tasksMu.Lock()
+	agg.oracleTasks[taskIndex] = newPullTask
+	agg.tasksMu.Unlock()
+
+	quorumThresholdPercentages := make(sdktypes.QuorumThresholdPercentages, len(newPullTask.QuorumNumbers))
+	for i := range newPullTask.QuorumNumbers {
+		quorumThresholdPercentages[i] = sdktypes.QuorumThresholdPercentage(newPullTask.QuorumThresholdPercentage)
+	}
+
+	taskTimeToExpiry := taskChallengeWindowBlock * blockTimeSeconds
+	var quorumNums sdktypes.QuorumNums
+	for _, quorumNum := range newPullTask.QuorumNumbers {
+		quorumNums = append(quorumNums, sdktypes.QuorumNum(quorumNum))
+	}
+	agg.blsAggregationService.InitializeNewTask(taskIndex, newPullTask.TaskCreatedBlock, quorumNums, quorumThresholdPercentages, taskTimeToExpiry)
 	return nil
 }

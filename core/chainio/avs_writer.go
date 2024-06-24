@@ -25,7 +25,8 @@ type AvsWriterer interface {
 		oracleIndex *big.Int,
 		quorumThresholdPercentage sdktypes.QuorumThresholdPercentage,
 		quorumNumbers sdktypes.QuorumNums,
-	)
+	) (cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask, uint32, error)
+	ProposeOraclePullTaskSolution(ctx context.Context, taskIndex uint32, solution *big.Int) (*types.Receipt, error)
 	SendNewTaskNumberToSquare(
 		ctx context.Context,
 		numToSquare *big.Int,
@@ -86,22 +87,47 @@ func (w *AvsWriter) SendNewOraclePullTask(
 	oracleIndex *big.Int,
 	quorumThresholdPercentage sdktypes.QuorumThresholdPercentage,
 	quorumNumbers sdktypes.QuorumNums,
-) {
+) (cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask, uint32, error) {
 	txOpts, err := w.TxMgr.GetNoSendTxOpts()
 	if err != nil {
 		w.logger.Errorf("Error getting tx opts")
-		return
+		return cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask{}, 0, err
 	}
 	tx, err := w.AvsContractBindings.TaskManager.CreateNewOraclePullTask(txOpts, uint32(oracleIndex.Uint64()), uint32(quorumThresholdPercentage), quorumNumbers.UnderlyingType())
 	if err != nil {
 		w.logger.Errorf("Error assembling CreateNewOraclePullTask tx")
-		return
+		return cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask{}, 0, err
 	}
-	_, err = w.TxMgr.Send(ctx, tx)
+	receipt, err := w.TxMgr.Send(ctx, tx)
 	if err != nil {
 		w.logger.Errorf("Error submitting CreateNewOraclePullTask tx")
-		return
+		return cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask{}, 0, err
 	}
+	newTaskCreatedEvent, err := w.AvsContractBindings.TaskManager.ContractIncredibleSquaringTaskManagerFilterer.ParseNewOraclePullTaskCreated(*receipt.Logs[0])
+	if err != nil {
+		w.logger.Error("Aggregator failed to parse new oracle pull task created event", "err", err)
+		return cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask{}, 0, err
+	}
+	return newTaskCreatedEvent.OraclePullTask, newTaskCreatedEvent.TaskIndex, nil
+}
+
+func (w *AvsWriter) ProposeOraclePullTaskSolution(ctx context.Context, taskIndex uint32, solution *big.Int) (*types.Receipt, error) {
+	txOpts, err := w.TxMgr.GetNoSendTxOpts()
+	if err != nil {
+		w.logger.Errorf("Error getting tx opts")
+		return nil, err
+	}
+	tx, err := w.AvsContractBindings.TaskManager.ProposeOraclePullTaskSolution(txOpts, taskIndex, solution)
+	if err != nil {
+		w.logger.Errorf("Error assembling ProposeOraclePullTaskSolution tx")
+		return nil, err
+	}
+	receipt, err := w.TxMgr.Send(ctx, tx)
+	if err != nil {
+		w.logger.Errorf("Error submitting ProposeOraclePullTaskSolution tx")
+		return nil, err
+	}
+	return receipt, nil
 }
 
 // returns the tx receipt, as well as the task index (which it gets from parsing the tx receipt logs)
