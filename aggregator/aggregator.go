@@ -149,6 +149,7 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 			agg.logger.Info("Received response from blsAggregationService", "blsAggServiceResp", blsAggServiceResp)
 			agg.sendAggregatedResponseToContract(blsAggServiceResp)
 		case <-ticker.C:
+			// TODO: create some policy for when to send oracle pull tasks
 			err := agg.sendNewOraclePullTask(big.NewInt(0))
 			taskNum++
 			if err != nil {
@@ -245,13 +246,13 @@ func (agg *Aggregator) sendNewOraclePullTask(oracleIndex *big.Int) error {
 		agg.logger.Error("Aggregator failed to get safety factor info", "err", err)
 		return err
 	}
-	safetyFactor := big.NewInt(int64(*proposedSafetyFactorInfo.SF))
 
-	_, err = agg.avsWriter.ProposeOraclePullTaskSolution(context.Background(), taskIndex, safetyFactor)
+	_, err = agg.avsWriter.ProposeOraclePullTaskSolution(context.Background(), taskIndex, proposedSafetyFactorInfo.SF)
 	if err != nil {
 		agg.logger.Error("Aggregator failed to propose oracle pull task solution", "err", err)
 		return err
 	}
+	agg.logger.Info("Aggregator proposed oracle pull task index", "taskIndex", taskIndex)
 	agg.logger.Info("Aggregator proposed oracle pull task solution", "safetyFactor", proposedSafetyFactorInfo)
 
 	agg.tasksMu.Lock()

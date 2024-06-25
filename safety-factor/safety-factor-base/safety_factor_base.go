@@ -3,6 +3,7 @@ package safety_factor_base
 import (
 	"errors"
 	"log"
+	"math/big"
 	"time"
 )
 
@@ -21,8 +22,11 @@ type SFModuleNodeConfig struct {
 	// Define the fields as needed
 }
 
+// define constant 1_000_000_000 to represent 1 billion big int
+const PRECISION = 1_000_000_000
+
 type SFModuleResponse struct {
-	SF        *float64
+	SF        *big.Int
 	PfC       *float64
 	CoC       *float64
 	Timestamp int64
@@ -113,8 +117,10 @@ func (m *BaseSFModule) SafeQuerySafetyFactorInfo() (SFModuleResponse, error) {
 	}
 
 	sf := (CoC - PfC) / CoC
+	sfInt := big.NewInt(int64(sf * PRECISION))
+
 	return SFModuleResponse{
-		SF:        &sf,
+		SF:        sfInt,
 		PfC:       &PfC,
 		CoC:       &CoC,
 		Timestamp: time.Now().Unix(),

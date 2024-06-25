@@ -15,6 +15,7 @@ import (
 	"anzen-avs/core"
 	"anzen-avs/core/chainio"
 	"anzen-avs/metrics"
+	safety_factor "anzen-avs/safety-factor"
 	"anzen-avs/types"
 
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients"
@@ -59,12 +60,18 @@ type Operator struct {
 	operatorAddr     common.Address
 	// receive new tasks in this chan (typically from listening to onchain event)
 	newTaskCreatedChan chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated
+	// receive new oracle pull tasks in this chan (typically from listening to onchain event)
+	newOraclePullTaskSolutionProposedChan chan *cstaskmanager.ContractIncredibleSquaringTaskManagerOraclePullTaskSolutionProposed
+	// receive new oracle pull tasks in this chan (typically from listening to onchain event)
+	newOraclePullTaskCreatedChan chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewOraclePullTaskCreated
 	// ip address of aggregator
 	aggregatorServerIpPortAddr string
 	// rpc client to send signed task responses to aggregator
 	aggregatorRpcClient AggregatorRpcClienter
 	// needed when opting in to avs (allow this service manager contract to slash operator)
 	credibleSquaringServiceManagerAddr common.Address
+
+	safetyFactorService safety_factor.SafetyFactorServicer
 }
 
 // TODO(samlaf): config is a mess right now, since the chainio client constructors
@@ -210,26 +217,30 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 		return nil, err
 	}
 
-	operator := &Operator{
-		config:                             c,
-		logger:                             logger,
-		metricsReg:                         reg,
-		metrics:                            avsAndEigenMetrics,
-		nodeApi:                            nodeApi,
-		ethClient:                          ethRpcClient,
-		avsWriter:                          avsWriter,
-		avsReader:                          avsReader,
-		avsSubscriber:                      avsSubscriber,
-		eigenlayerReader:                   sdkClients.ElChainReader,
-		eigenlayerWriter:                   sdkClients.ElChainWriter,
-		blsKeypair:                         blsKeyPair,
-		operatorAddr:                       common.HexToAddress(c.OperatorAddress),
-		aggregatorServerIpPortAddr:         c.AggregatorServerIpPortAddress,
-		aggregatorRpcClient:                aggregatorRpcClient,
-		newTaskCreatedChan:                 make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated),
-		credibleSquaringServiceManagerAddr: common.HexToAddress(c.AVSRegistryCoordinatorAddress),
-		operatorId:                         [32]byte{0}, // this is set below
+	safetyFactorService := safety_factor.NewSafetyFactorService()
 
+	operator := &Operator{
+		config:                                c,
+		logger:                                logger,
+		metricsReg:                            reg,
+		metrics:                               avsAndEigenMetrics,
+		nodeApi:                               nodeApi,
+		ethClient:                             ethRpcClient,
+		avsWriter:                             avsWriter,
+		avsReader:                             avsReader,
+		avsSubscriber:                         avsSubscriber,
+		eigenlayerReader:                      sdkClients.ElChainReader,
+		eigenlayerWriter:                      sdkClients.ElChainWriter,
+		blsKeypair:                            blsKeyPair,
+		operatorAddr:                          common.HexToAddress(c.OperatorAddress),
+		aggregatorServerIpPortAddr:            c.AggregatorServerIpPortAddress,
+		aggregatorRpcClient:                   aggregatorRpcClient,
+		newTaskCreatedChan:                    make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated),
+		newOraclePullTaskSolutionProposedChan: make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerOraclePullTaskSolutionProposed),
+		newOraclePullTaskCreatedChan:          make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewOraclePullTaskCreated),
+		credibleSquaringServiceManagerAddr:    common.HexToAddress(c.AVSRegistryCoordinatorAddress),
+		operatorId:                            [32]byte{0}, // this is set below
+		safetyFactorService:                   safetyFactorService,
 	}
 
 	if c.RegisterOperatorOnStartup {
@@ -279,7 +290,7 @@ func (o *Operator) Start(ctx context.Context) error {
 	}
 
 	// TODO(samlaf): wrap this call with increase in avs-node-spec metric
-	sub := o.avsSubscriber.SubscribeToNewTasks(o.newTaskCreatedChan)
+	sub := o.avsSubscriber.SubscribeToOraclePullTaskSolutionProposed(o.newOraclePullTaskSolutionProposedChan)
 	for {
 		select {
 		case <-ctx.Done():
@@ -293,7 +304,7 @@ func (o *Operator) Start(ctx context.Context) error {
 			// TODO(samlaf): write unit tests to check if this fixed the issues we were seeing
 			sub.Unsubscribe()
 			// TODO(samlaf): wrap this call with increase in avs-node-spec metric
-			sub = o.avsSubscriber.SubscribeToNewTasks(o.newTaskCreatedChan)
+			sub = o.avsSubscriber.SubscribeToOraclePullTaskSolutionProposed(o.newOraclePullTaskSolutionProposedChan)
 		case newTaskCreatedLog := <-o.newTaskCreatedChan:
 			o.metrics.IncNumTasksReceived()
 			taskResponse := o.ProcessNewTaskCreatedLog(newTaskCreatedLog)
@@ -302,8 +313,50 @@ func (o *Operator) Start(ctx context.Context) error {
 				continue
 			}
 			go o.aggregatorRpcClient.SendSignedTaskResponseToAggregator(signedTaskResponse)
+		case newOraclePullTaskCreatedLog := <-o.newOraclePullTaskCreatedChan:
+			o.logger.Debug("Received new oracle pull task", "task", newOraclePullTaskCreatedLog)
+			o.logger.Info("Received new oracle pull task", "taskIndex", newOraclePullTaskCreatedLog.TaskIndex)
+
+		case newOraclePullTaskSolutionProposedLog := <-o.newOraclePullTaskSolutionProposedChan:
+			taskResponse, err := o.ProcessNewOraclePullTaskSolutionProposedLog(newOraclePullTaskSolutionProposedLog)
+			o.logger.Debug("Task response", "taskResponse", taskResponse)
+
+			if err != nil {
+				continue
+			}
 		}
+
 	}
+}
+
+// Takes a newOraclePullTaskSolutionProposedLog struct as input and returns a TaskResponseHeader struct.
+// The TaskResponseHeader struct is the struct that is signed and sent to the contract as a task response.
+func (o *Operator) ProcessNewOraclePullTaskSolutionProposedLog(newOraclePullTaskSolutionProposedLog *cstaskmanager.ContractIncredibleSquaringTaskManagerOraclePullTaskSolutionProposed) (*cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse, error) {
+	o.logger.Debug("Received new oracle pull task solution proposed", "task", newOraclePullTaskSolutionProposedLog)
+	o.logger.Info("Received new oracle pull task solution proposed",
+		"taskIndex", newOraclePullTaskSolutionProposedLog.OraclePullTaskResponse.ReferenceTaskIndex,
+		"proposedSolution", newOraclePullTaskSolutionProposedLog.OraclePullTaskResponse.SafetyFactor,
+	)
+
+	safetyFactorInfo, err := o.safetyFactorService.GetSafetyFactorInfoByOracleIndex(0)
+	if err != nil {
+		o.logger.Error("Error getting safety factor info", "err", err)
+		return nil, err
+	}
+
+	// Check if the proposed solution is equal to what we expect
+	if safetyFactorInfo.SF.Cmp(newOraclePullTaskSolutionProposedLog.OraclePullTaskResponse.SafetyFactor) != 0 {
+		o.logger.Error("Proposed solution does not match expected solution", "expected", safetyFactorInfo.SF, "proposed", newOraclePullTaskSolutionProposedLog.OraclePullTaskResponse.SafetyFactor)
+
+		return nil, fmt.Errorf("Proposed solution does not match expected solution")
+	}
+
+	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse{
+		ReferenceTaskIndex: newOraclePullTaskSolutionProposedLog.OraclePullTaskResponse.ReferenceTaskIndex,
+		SafetyFactor:       safetyFactorInfo.SF,
+	}
+
+	return taskResponse, nil
 }
 
 // Takes a NewTaskCreatedLog struct as input and returns a TaskResponseHeader struct.
