@@ -23,6 +23,7 @@ type AvsWriterer interface {
 	SendNewOraclePullTask(
 		ctx context.Context,
 		oracleIndex *big.Int,
+		proposedSafetyFactor *big.Int,
 		quorumThresholdPercentage sdktypes.QuorumThresholdPercentage,
 		quorumNumbers sdktypes.QuorumNums,
 	) (cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask, uint32, error)
@@ -43,6 +44,11 @@ type AvsWriterer interface {
 	SendAggregatedResponse(ctx context.Context,
 		task cstaskmanager.IIncredibleSquaringTaskManagerTask,
 		taskResponse cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse,
+		nonSignerStakesAndSignature cstaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature,
+	) (*types.Receipt, error)
+	SendAggregatedOracleResponse(ctx context.Context,
+		task cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask,
+		taskResponse cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse,
 		nonSignerStakesAndSignature cstaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature,
 	) (*types.Receipt, error)
 }
@@ -85,6 +91,7 @@ func NewAvsWriter(avsRegistryWriter avsregistry.AvsRegistryWriter, avsServiceBin
 func (w *AvsWriter) SendNewOraclePullTask(
 	ctx context.Context,
 	oracleIndex *big.Int,
+	proposedSafetyFactor *big.Int,
 	quorumThresholdPercentage sdktypes.QuorumThresholdPercentage,
 	quorumNumbers sdktypes.QuorumNums,
 ) (cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask, uint32, error) {
@@ -93,7 +100,7 @@ func (w *AvsWriter) SendNewOraclePullTask(
 		w.logger.Errorf("Error getting tx opts")
 		return cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask{}, 0, err
 	}
-	tx, err := w.AvsContractBindings.TaskManager.CreateNewOraclePullTask(txOpts, uint32(oracleIndex.Uint64()), uint32(quorumThresholdPercentage), quorumNumbers.UnderlyingType())
+	tx, err := w.AvsContractBindings.TaskManager.CreateNewOraclePullTask(txOpts, uint32(oracleIndex.Uint64()), proposedSafetyFactor, uint32(quorumThresholdPercentage), quorumNumbers.UnderlyingType())
 	if err != nil {
 		w.logger.Errorf("Error assembling CreateNewOraclePullTask tx")
 		return cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask{}, 0, err
@@ -166,6 +173,29 @@ func (w *AvsWriter) SendAggregatedResponse(
 		return nil, err
 	}
 	tx, err := w.AvsContractBindings.TaskManager.RespondToTask(txOpts, task, taskResponse, nonSignerStakesAndSignature)
+	if err != nil {
+		w.logger.Error("Error submitting SubmitTaskResponse tx while calling respondToTask", "err", err)
+		return nil, err
+	}
+	receipt, err := w.TxMgr.Send(ctx, tx)
+	if err != nil {
+		w.logger.Errorf("Error submitting respondToTask tx")
+		return nil, err
+	}
+	return receipt, nil
+}
+
+func (w *AvsWriter) SendAggregatedOracleResponse(
+	ctx context.Context, task cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask,
+	taskResponse cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse,
+	nonSignerStakesAndSignature cstaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature,
+) (*types.Receipt, error) {
+	txOpts, err := w.TxMgr.GetNoSendTxOpts()
+	if err != nil {
+		w.logger.Errorf("Error getting tx opts")
+		return nil, err
+	}
+	tx, err := w.AvsContractBindings.TaskManager.RespondToOracleTask(txOpts, task, taskResponse, nonSignerStakesAndSignature)
 	if err != nil {
 		w.logger.Error("Error submitting SubmitTaskResponse tx while calling respondToTask", "err", err)
 		return nil, err

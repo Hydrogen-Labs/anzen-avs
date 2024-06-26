@@ -290,7 +290,7 @@ func (o *Operator) Start(ctx context.Context) error {
 	}
 
 	// TODO(samlaf): wrap this call with increase in avs-node-spec metric
-	sub := o.avsSubscriber.SubscribeToOraclePullTaskSolutionProposed(o.newOraclePullTaskSolutionProposedChan)
+	sub := o.avsSubscriber.SubcribeToNewOraclePullTasks(o.newOraclePullTaskCreatedChan)
 	for {
 		select {
 		case <-ctx.Done():
@@ -304,7 +304,7 @@ func (o *Operator) Start(ctx context.Context) error {
 			// TODO(samlaf): write unit tests to check if this fixed the issues we were seeing
 			sub.Unsubscribe()
 			// TODO(samlaf): wrap this call with increase in avs-node-spec metric
-			sub = o.avsSubscriber.SubscribeToOraclePullTaskSolutionProposed(o.newOraclePullTaskSolutionProposedChan)
+			sub = o.avsSubscriber.SubcribeToNewOraclePullTasks(o.newOraclePullTaskCreatedChan)
 		case newTaskCreatedLog := <-o.newTaskCreatedChan:
 			o.metrics.IncNumTasksReceived()
 			taskResponse := o.ProcessNewTaskCreatedLog(newTaskCreatedLog)
@@ -313,17 +313,25 @@ func (o *Operator) Start(ctx context.Context) error {
 				continue
 			}
 			go o.aggregatorRpcClient.SendSignedTaskResponseToAggregator(signedTaskResponse)
+
 		case newOraclePullTaskCreatedLog := <-o.newOraclePullTaskCreatedChan:
-			o.logger.Debug("Received new oracle pull task", "task", newOraclePullTaskCreatedLog)
-			o.logger.Info("Received new oracle pull task", "taskIndex", newOraclePullTaskCreatedLog.TaskIndex)
-
-		case newOraclePullTaskSolutionProposedLog := <-o.newOraclePullTaskSolutionProposedChan:
-			taskResponse, err := o.ProcessNewOraclePullTaskSolutionProposedLog(newOraclePullTaskSolutionProposedLog)
-			o.logger.Debug("Task response", "taskResponse", taskResponse)
-
+			o.logger.Info("Received new oracle pull task", "taskIndex", newOraclePullTaskCreatedLog.OraclePullTask)
+			taskResponse, err := o.ProcessNewOraclePullTaskLog(newOraclePullTaskCreatedLog)
 			if err != nil {
 				continue
 			}
+			signedPullOracleTaskResponse, err := o.SignOraclePullTaskResponse(taskResponse)
+			if err != nil {
+				continue
+			}
+			go o.aggregatorRpcClient.SendSignedOraclePullTaskReponseToAggregator(signedPullOracleTaskResponse)
+			o.logger.Info("Sending task response to aggregator", "taskResponse", taskResponse)
+
+		case newOraclePullTaskSolutionProposedLog := <-o.newOraclePullTaskSolutionProposedChan:
+			if err != nil {
+				continue
+			}
+			o.logger.Info("Received new oracle pull task solution proposed", "task", newOraclePullTaskSolutionProposedLog)
 		}
 
 	}
@@ -331,28 +339,26 @@ func (o *Operator) Start(ctx context.Context) error {
 
 // Takes a newOraclePullTaskSolutionProposedLog struct as input and returns a TaskResponseHeader struct.
 // The TaskResponseHeader struct is the struct that is signed and sent to the contract as a task response.
-func (o *Operator) ProcessNewOraclePullTaskSolutionProposedLog(newOraclePullTaskSolutionProposedLog *cstaskmanager.ContractIncredibleSquaringTaskManagerOraclePullTaskSolutionProposed) (*cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse, error) {
-	o.logger.Debug("Received new oracle pull task solution proposed", "task", newOraclePullTaskSolutionProposedLog)
-	o.logger.Info("Received new oracle pull task solution proposed",
-		"taskIndex", newOraclePullTaskSolutionProposedLog.OraclePullTaskResponse.ReferenceTaskIndex,
-		"proposedSolution", newOraclePullTaskSolutionProposedLog.OraclePullTaskResponse.SafetyFactor,
-	)
+func (o *Operator) ProcessNewOraclePullTaskLog(newOraclePullTaskLog *cstaskmanager.ContractIncredibleSquaringTaskManagerNewOraclePullTaskCreated) (*cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse, error) {
+	o.logger.Info("Received new oracle pull task solution proposed", "task", newOraclePullTaskLog)
 
-	safetyFactorInfo, err := o.safetyFactorService.GetSafetyFactorInfoByOracleIndex(0)
+	oracleIndex := newOraclePullTaskLog.OraclePullTask.OracleIndex
+
+	safetyFactorInfo, err := o.safetyFactorService.GetSafetyFactorInfoByOracleIndex(int(oracleIndex))
 	if err != nil {
 		o.logger.Error("Error getting safety factor info", "err", err)
 		return nil, err
 	}
 
 	// Check if the proposed solution is equal to what we expect
-	if safetyFactorInfo.SF.Cmp(newOraclePullTaskSolutionProposedLog.OraclePullTaskResponse.SafetyFactor) != 0 {
-		o.logger.Error("Proposed solution does not match expected solution", "expected", safetyFactorInfo.SF, "proposed", newOraclePullTaskSolutionProposedLog.OraclePullTaskResponse.SafetyFactor)
+	if safetyFactorInfo.SF.Cmp(newOraclePullTaskLog.OraclePullTask.ProposedSafetyFactor) != 0 {
+		o.logger.Error("Proposed solution does not match expected solution", "expected", safetyFactorInfo.SF, "proposed", newOraclePullTaskLog.OraclePullTask.ProposedSafetyFactor)
 
 		return nil, fmt.Errorf("Proposed solution does not match expected solution")
 	}
 
 	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse{
-		ReferenceTaskIndex: newOraclePullTaskSolutionProposedLog.OraclePullTaskResponse.ReferenceTaskIndex,
+		ReferenceTaskIndex: newOraclePullTaskLog.TaskIndex,
 		SafetyFactor:       safetyFactorInfo.SF,
 	}
 
@@ -375,6 +381,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 		ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
 		NumberSquared:      numberSquared,
 	}
+
 	return taskResponse
 }
 
@@ -392,4 +399,20 @@ func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IIncredibleSquar
 	}
 	o.logger.Debug("Signed task response", "signedTaskResponse", signedTaskResponse)
 	return signedTaskResponse, nil
+}
+
+func (o *Operator) SignOraclePullTaskResponse(oraclePullTaskResponse *cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse) (*aggregator.SignedOraclePullTaskResponse, error) {
+	oraclePullTaskResponseHash, err := core.GetPullOracleTaskResponseDigest(oraclePullTaskResponse)
+	if err != nil {
+		o.logger.Error("Error getting oracle pull task response header hash. skipping task (this is not expected and should be investigated)", "err", err)
+		return nil, err
+	}
+	blsSignature := o.blsKeypair.SignMessage(oraclePullTaskResponseHash)
+	signedOraclePullTaskResponse := &aggregator.SignedOraclePullTaskResponse{
+		OraclePullTaskResponse: *oraclePullTaskResponse,
+		BlsSignature:           *blsSignature,
+		OperatorId:             o.operatorId,
+	}
+	o.logger.Debug("Signed oracle pull task response", "signedOraclePullTaskResponse", signedOraclePullTaskResponse)
+	return signedOraclePullTaskResponse, nil
 }

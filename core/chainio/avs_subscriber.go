@@ -68,7 +68,7 @@ func (s *AvsSubscriber) SubscribeToNewTasks(newTaskCreatedChan chan *cstaskmanag
 
 func (s *AvsSubscriber) SubcribeToNewOraclePullTasks(newOraclePullTaskLogs chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewOraclePullTaskCreated) event.Subscription {
 	sub, err := s.AvsContractBindings.TaskManager.WatchNewOraclePullTaskCreated(
-		&bind.WatchOpts{}, newOraclePullTaskLogs, nil, nil,
+		&bind.WatchOpts{}, newOraclePullTaskLogs, nil,
 	)
 	if err != nil {
 		s.logger.Error("Failed to subscribe to new OraclePullTask events", "err", err)

@@ -106,6 +106,21 @@ func (mr *MockAvsWritererMockRecorder) RegisterOperatorInQuorumWithAVSRegistryCo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterOperatorInQuorumWithAVSRegistryCoordinator", reflect.TypeOf((*MockAvsWriterer)(nil).RegisterOperatorInQuorumWithAVSRegistryCoordinator), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
+// SendAggregatedOracleResponse mocks base method.
+func (m *MockAvsWriterer) SendAggregatedOracleResponse(arg0 context.Context, arg1 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerOraclePullTask, arg2 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerOraclePullTaskResponse, arg3 contractIncredibleSquaringTaskManager.IBLSSignatureCheckerNonSignerStakesAndSignature) (*types0.Receipt, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendAggregatedOracleResponse", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(*types0.Receipt)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SendAggregatedOracleResponse indicates an expected call of SendAggregatedOracleResponse.
+func (mr *MockAvsWritererMockRecorder) SendAggregatedOracleResponse(arg0, arg1, arg2, arg3 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendAggregatedOracleResponse", reflect.TypeOf((*MockAvsWriterer)(nil).SendAggregatedOracleResponse), arg0, arg1, arg2, arg3)
+}
+
 // SendAggregatedResponse mocks base method.
 func (m *MockAvsWriterer) SendAggregatedResponse(arg0 context.Context, arg1 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask, arg2 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTaskResponse, arg3 contractIncredibleSquaringTaskManager.IBLSSignatureCheckerNonSignerStakesAndSignature) (*types0.Receipt, error) {
 	m.ctrl.T.Helper()
@@ -122,9 +137,9 @@ func (mr *MockAvsWritererMockRecorder) SendAggregatedResponse(arg0, arg1, arg2, 
 }
 
 // SendNewOraclePullTask mocks base method.
-func (m *MockAvsWriterer) SendNewOraclePullTask(arg0 context.Context, arg1 *big.Int, arg2 types.QuorumThresholdPercentage, arg3 types.QuorumNums) (contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerOraclePullTask, uint32, error) {
+func (m *MockAvsWriterer) SendNewOraclePullTask(arg0 context.Context, arg1, arg2 *big.Int, arg3 types.QuorumThresholdPercentage, arg4 types.QuorumNums) (contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerOraclePullTask, uint32, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendNewOraclePullTask", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "SendNewOraclePullTask", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerOraclePullTask)
 	ret1, _ := ret[1].(uint32)
 	ret2, _ := ret[2].(error)
@@ -132,9 +147,9 @@ func (m *MockAvsWriterer) SendNewOraclePullTask(arg0 context.Context, arg1 *big.
 }
 
 // SendNewOraclePullTask indicates an expected call of SendNewOraclePullTask.
-func (mr *MockAvsWritererMockRecorder) SendNewOraclePullTask(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockAvsWritererMockRecorder) SendNewOraclePullTask(arg0, arg1, arg2, arg3, arg4 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendNewOraclePullTask", reflect.TypeOf((*MockAvsWriterer)(nil).SendNewOraclePullTask), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendNewOraclePullTask", reflect.TypeOf((*MockAvsWriterer)(nil).SendNewOraclePullTask), arg0, arg1, arg2, arg3, arg4)
 }
 
 // SendNewTaskNumberToSquare mocks base method.

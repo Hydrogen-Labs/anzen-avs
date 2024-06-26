@@ -78,6 +78,9 @@ type Aggregator struct {
 	taskResponses         map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse
 	taskResponsesMu       sync.RWMutex
 	oracleTasks           map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask
+	oracleTasksMu         sync.RWMutex
+	oracleTaskReponses    map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse
+	oracleTaskReponsesMu  sync.RWMutex
 }
 
 // NewAggregator creates a new Aggregator with the provided config.
@@ -123,6 +126,7 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 		tasks:                 make(map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerTask),
 		taskResponses:         make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse),
 		oracleTasks:           make(map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask),
+		oracleTaskReponses:    make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse),
 	}, nil
 }
 
@@ -147,7 +151,7 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 			return nil
 		case blsAggServiceResp := <-agg.blsAggregationService.GetResponseChannel():
 			agg.logger.Info("Received response from blsAggregationService", "blsAggServiceResp", blsAggServiceResp)
-			agg.sendAggregatedResponseToContract(blsAggServiceResp)
+			agg.sendAggregatedOracleResponseToContract(blsAggServiceResp)
 		case <-ticker.C:
 			// TODO: create some policy for when to send oracle pull tasks
 			err := agg.sendNewOraclePullTask(big.NewInt(0))
@@ -201,6 +205,47 @@ func (agg *Aggregator) sendAggregatedResponseToContract(blsAggServiceResp blsagg
 	}
 }
 
+func (agg *Aggregator) sendAggregatedOracleResponseToContract(blsAggServiceResp blsagg.BlsAggregationServiceResponse) {
+	// TODO: check if blsAggServiceResp contains an err
+	if blsAggServiceResp.Err != nil {
+		agg.logger.Error("BlsAggregationServiceResponse contains an error", "err", blsAggServiceResp.Err)
+		// panicing to help with debugging (fail fast), but we shouldn't panic if we run this in production
+		panic(blsAggServiceResp.Err)
+	}
+	nonSignerPubkeys := []cstaskmanager.BN254G1Point{}
+	for _, nonSignerPubkey := range blsAggServiceResp.NonSignersPubkeysG1 {
+		nonSignerPubkeys = append(nonSignerPubkeys, core.ConvertToBN254G1Point(nonSignerPubkey))
+	}
+	quorumApks := []cstaskmanager.BN254G1Point{}
+	for _, quorumApk := range blsAggServiceResp.QuorumApksG1 {
+		quorumApks = append(quorumApks, core.ConvertToBN254G1Point(quorumApk))
+	}
+	nonSignerStakesAndSignature := cstaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature{
+		NonSignerPubkeys:             nonSignerPubkeys,
+		QuorumApks:                   quorumApks,
+		ApkG2:                        core.ConvertToBN254G2Point(blsAggServiceResp.SignersApkG2),
+		Sigma:                        core.ConvertToBN254G1Point(blsAggServiceResp.SignersAggSigG1.G1Point),
+		NonSignerQuorumBitmapIndices: blsAggServiceResp.NonSignerQuorumBitmapIndices,
+		QuorumApkIndices:             blsAggServiceResp.QuorumApkIndices,
+		TotalStakeIndices:            blsAggServiceResp.TotalStakeIndices,
+		NonSignerStakeIndices:        blsAggServiceResp.NonSignerStakeIndices,
+	}
+
+	agg.logger.Info("Threshold reached. Sending aggregated response onchain.",
+		"taskIndex", blsAggServiceResp.TaskIndex,
+	)
+	agg.oracleTasksMu.RLock()
+	task := agg.oracleTasks[blsAggServiceResp.TaskIndex]
+	agg.oracleTasksMu.RUnlock()
+	agg.oracleTaskReponsesMu.RLock()
+	taskResponse := agg.oracleTaskReponses[blsAggServiceResp.TaskIndex][blsAggServiceResp.TaskResponseDigest]
+	agg.oracleTaskReponsesMu.RUnlock()
+	_, err := agg.avsWriter.SendAggregatedOracleResponse(context.Background(), task, taskResponse, nonSignerStakesAndSignature)
+	if err != nil {
+		agg.logger.Error("Aggregator failed to respond to task", "err", err)
+	}
+}
+
 // sendNewTask sends a new task to the task manager contract, and updates the Task dict struct
 // with the information of operators opted into quorum 0 at the block of task creation.
 func (agg *Aggregator) sendNewTask(numToSquare *big.Int) error {
@@ -234,26 +279,20 @@ func (agg *Aggregator) sendNewTask(numToSquare *big.Int) error {
 func (agg *Aggregator) sendNewOraclePullTask(oracleIndex *big.Int) error {
 	agg.logger.Info("Aggregator sending new oracle pull task", "oracleIndex", oracleIndex)
 	// Send number to square to the task manager contract
-	newPullTask, taskIndex, err := agg.avsWriter.SendNewOraclePullTask(context.Background(), oracleIndex, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
-
-	if err != nil {
-		agg.logger.Error("Aggregator failed to send new oracle pull task", "err", err)
-		return err
-	}
-
 	proposedSafetyFactorInfo, err := agg.safetyFactorService.GetSafetyFactorInfoByOracleIndex(int(oracleIndex.Int64()))
 	if err != nil {
 		agg.logger.Error("Aggregator failed to get safety factor info", "err", err)
 		return err
 	}
 
-	_, err = agg.avsWriter.ProposeOraclePullTaskSolution(context.Background(), taskIndex, proposedSafetyFactorInfo.SF)
+	newPullTask, taskIndex, err := agg.avsWriter.SendNewOraclePullTask(context.Background(), oracleIndex, proposedSafetyFactorInfo.SF, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
+
 	if err != nil {
-		agg.logger.Error("Aggregator failed to propose oracle pull task solution", "err", err)
+		agg.logger.Error("Aggregator failed to send new oracle pull task", "err", err)
 		return err
 	}
-	agg.logger.Info("Aggregator proposed oracle pull task index", "taskIndex", taskIndex)
-	agg.logger.Info("Aggregator proposed oracle pull task solution", "safetyFactor", proposedSafetyFactorInfo)
+
+	agg.logger.Info("Aggregator sent new oracle pull task", "task", newPullTask)
 
 	agg.tasksMu.Lock()
 	agg.oracleTasks[taskIndex] = newPullTask

@@ -7,11 +7,15 @@ interface IIncredibleSquaringTaskManager {
     // EVENTS
     event NewTaskCreated(uint32 indexed taskIndex, Task task);
 
-    event NewOraclePullTaskCreated(uint32 indexed taskIndex, OraclePullTask oraclePullTask, uint32 indexed oracleIndex);
+    event NewOraclePullTaskCreated(uint32 indexed taskIndex, OraclePullTask oraclePullTask);
 
     event OraclePullTaskSolutionProposed(OraclePullTaskResponse oraclePullTaskResponse);
 
     event TaskResponded(TaskResponse taskResponse, TaskResponseMetadata taskResponseMetadata);
+
+    event OraclePullTaskResponded(
+        OraclePullTaskResponse oraclePullTaskResponse, TaskResponseMetadata taskResponseMetadata
+    );
 
     event TaskCompleted(uint32 indexed taskIndex);
 
@@ -35,6 +39,7 @@ interface IIncredibleSquaringTaskManager {
 
     struct OraclePullTask {
         uint32 oracleIndex;
+        int256 proposedSafetyFactor;
         uint32 taskCreatedBlock;
         bytes quorumNumbers;
         uint32 quorumThresholdPercentage;
@@ -68,8 +73,12 @@ interface IIncredibleSquaringTaskManager {
         external;
 
     // NOTE: this function creates new oracle pull task.
-    function createNewOraclePullTask(uint32 oracleIndex, uint32 quorumThresholdPercentage, bytes calldata quorumNumbers)
-        external;
+    function createNewOraclePullTask(
+        uint32 oracleIndex,
+        int256 safetyFactor,
+        uint32 quorumThresholdPercentage,
+        bytes calldata quorumNumbers
+    ) external;
 
     // NOTE: this function submits task response.
     function proposeOraclePullTaskSolution(uint32 taskIndex, int256 safetyFactor) external;
