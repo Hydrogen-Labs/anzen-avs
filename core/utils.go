@@ -3,18 +3,18 @@ package core
 import (
 	"math/big"
 
-	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"golang.org/x/crypto/sha3"
 )
 
-// this hardcodes abi.encode() for cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse
+// this hardcodes abi.encode() for cstaskmanager.IAnzenTaskManagerTaskResponse
 // unclear why abigen doesn't provide this out of the box...
-func AbiEncodeTaskResponse(h *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse) ([]byte, error) {
+func AbiEncodeTaskResponse(h *cstaskmanager.IAnzenTaskManagerTaskResponse) ([]byte, error) {
 
-	// The order here has to match the field ordering of cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse
+	// The order here has to match the field ordering of cstaskmanager.IAnzenTaskManagerTaskResponse
 	taskResponseType, err := abi.NewType("tuple", "", []abi.ArgumentMarshaling{
 		{
 			Name: "referenceTaskIndex",
@@ -42,9 +42,9 @@ func AbiEncodeTaskResponse(h *cstaskmanager.IIncredibleSquaringTaskManagerTaskRe
 	return bytes, nil
 }
 
-func AbiEncodePullOracleTaskResponse(h *cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse) ([]byte, error) {
+func AbiEncodePullOracleTaskResponse(h *cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse) ([]byte, error) {
 
-	// The order here has to match the field ordering of cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse
+	// The order here has to match the field ordering of cstaskmanager.IAnzenTaskManagerTaskResponse
 	taskResponseType, err := abi.NewType("tuple", "", []abi.ArgumentMarshaling{
 		{
 			Name: "referenceTaskIndex",
@@ -73,7 +73,7 @@ func AbiEncodePullOracleTaskResponse(h *cstaskmanager.IIncredibleSquaringTaskMan
 }
 
 // GetTaskResponseDigest returns the hash of the TaskResponse, which is what operators sign over
-func GetTaskResponseDigest(h *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse) ([32]byte, error) {
+func GetTaskResponseDigest(h *cstaskmanager.IAnzenTaskManagerTaskResponse) ([32]byte, error) {
 
 	encodeTaskResponseByte, err := AbiEncodeTaskResponse(h)
 	if err != nil {
@@ -88,7 +88,7 @@ func GetTaskResponseDigest(h *cstaskmanager.IIncredibleSquaringTaskManagerTaskRe
 	return taskResponseDigest, nil
 }
 
-func GetPullOracleTaskResponseDigest(h *cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse) ([32]byte, error) {
+func GetPullOracleTaskResponseDigest(h *cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse) ([32]byte, error) {
 	encodeTaskResponseByte, err := AbiEncodePullOracleTaskResponse(h)
 	if err != nil {
 		return [32]byte{}, err

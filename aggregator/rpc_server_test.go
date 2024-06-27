@@ -10,7 +10,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"anzen-avs/aggregator/types"
-	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	"anzen-avs/core"
 
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
@@ -64,7 +64,7 @@ func TestProcessSignedTaskResponse(t *testing.T) {
 // mocks an operator signing on a task response
 func createMockSignedTaskResponse(mockTask MockTask, keypair bls.KeyPair) (*SignedTaskResponse, error) {
 	numberToSquareBigInt := big.NewInt(int64(mockTask.NumberToSquare))
-	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+	taskResponse := &cstaskmanager.IAnzenTaskManagerTaskResponse{
 		ReferenceTaskIndex: mockTask.TaskNum,
 		NumberSquared:      numberToSquareBigInt.Mul(numberToSquareBigInt, numberToSquareBigInt),
 	}

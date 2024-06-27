@@ -8,7 +8,7 @@ import (
 	aggtypes "anzen-avs/aggregator/types"
 	"anzen-avs/challenger/mocks"
 	chtypes "anzen-avs/challenger/types"
-	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	chainiomocks "anzen-avs/core/chainio/mocks"
 
 	mockethclient "github.com/Layr-Labs/eigensdk-go/chainio/mocks"
@@ -40,7 +40,7 @@ func TestCallChallengeModule(t *testing.T) {
 	const TASK_INDEX = 1
 	const BLOCK_NUMBER = uint32(100)
 
-	challenger.tasks[TASK_INDEX] = cstaskmanager.IIncredibleSquaringTaskManagerTask{
+	challenger.tasks[TASK_INDEX] = cstaskmanager.IAnzenTaskManagerTask{
 		NumberToBeSquared:         big.NewInt(3),
 		TaskCreatedBlock:          1000,
 		QuorumNumbers:             aggtypes.QUORUM_NUMBERS.UnderlyingType(),
@@ -48,11 +48,11 @@ func TestCallChallengeModule(t *testing.T) {
 	}
 
 	challenger.taskResponses[TASK_INDEX] = chtypes.TaskResponseData{
-		TaskResponse: cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+		TaskResponse: cstaskmanager.IAnzenTaskManagerTaskResponse{
 			ReferenceTaskIndex: TASK_INDEX,
 			NumberSquared:      big.NewInt(2),
 		},
-		TaskResponseMetadata: cstaskmanager.IIncredibleSquaringTaskManagerTaskResponseMetadata{
+		TaskResponseMetadata: cstaskmanager.IAnzenTaskManagerTaskResponseMetadata{
 			TaskResponsedBlock: 1001,
 			HashOfNonSigners:   [32]byte{},
 		},
@@ -82,7 +82,7 @@ func TestRaiseChallenge(t *testing.T) {
 	const TASK_INDEX = 1
 	const BLOCK_NUMBER = uint32(100)
 
-	challenger.tasks[TASK_INDEX] = cstaskmanager.IIncredibleSquaringTaskManagerTask{
+	challenger.tasks[TASK_INDEX] = cstaskmanager.IAnzenTaskManagerTask{
 		NumberToBeSquared:         big.NewInt(3),
 		TaskCreatedBlock:          1000,
 		QuorumNumbers:             aggtypes.QUORUM_NUMBERS.UnderlyingType(),
@@ -90,11 +90,11 @@ func TestRaiseChallenge(t *testing.T) {
 	}
 
 	challenger.taskResponses[TASK_INDEX] = chtypes.TaskResponseData{
-		TaskResponse: cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+		TaskResponse: cstaskmanager.IAnzenTaskManagerTaskResponse{
 			ReferenceTaskIndex: TASK_INDEX,
 			NumberSquared:      big.NewInt(9),
 		},
-		TaskResponseMetadata: cstaskmanager.IIncredibleSquaringTaskManagerTaskResponseMetadata{
+		TaskResponseMetadata: cstaskmanager.IAnzenTaskManagerTaskResponseMetadata{
 			TaskResponsedBlock: 1001,
 			HashOfNonSigners:   [32]byte{},
 		},
@@ -122,7 +122,7 @@ func TestProcessTaskResponseLog(t *testing.T) {
 
 	const TASK_INDEX = 1
 
-	challenger.tasks[TASK_INDEX] = cstaskmanager.IIncredibleSquaringTaskManagerTask{
+	challenger.tasks[TASK_INDEX] = cstaskmanager.IAnzenTaskManagerTask{
 		NumberToBeSquared:         big.NewInt(3),
 		TaskCreatedBlock:          1000,
 		QuorumNumbers:             aggtypes.QUORUM_NUMBERS.UnderlyingType(),
@@ -130,18 +130,18 @@ func TestProcessTaskResponseLog(t *testing.T) {
 	}
 
 	challenger.taskResponses[TASK_INDEX] = chtypes.TaskResponseData{
-		TaskResponse: cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+		TaskResponse: cstaskmanager.IAnzenTaskManagerTaskResponse{
 			ReferenceTaskIndex: TASK_INDEX,
 			NumberSquared:      big.NewInt(9),
 		},
-		TaskResponseMetadata: cstaskmanager.IIncredibleSquaringTaskManagerTaskResponseMetadata{
+		TaskResponseMetadata: cstaskmanager.IAnzenTaskManagerTaskResponseMetadata{
 			TaskResponsedBlock: 1001,
 			HashOfNonSigners:   [32]byte{},
 		},
 		NonSigningOperatorPubKeys: []cstaskmanager.BN254G1Point{},
 	}
 
-	taskResponseLog := cstaskmanager.ContractIncredibleSquaringTaskManagerTaskResponded{
+	taskResponseLog := cstaskmanager.ContractAnzenTaskManagerTaskResponded{
 		TaskResponse:         challenger.taskResponses[TASK_INDEX].TaskResponse,
 		TaskResponseMetadata: challenger.taskResponses[TASK_INDEX].TaskResponseMetadata,
 		Raw: gethtypes.Log{
@@ -183,10 +183,10 @@ func createMockChallenger(mockCtrl *gomock.Controller) (*Challenger, *chainiomoc
 		avsReader:          mockAvsReader,
 		ethClient:          mockEthClient,
 		avsSubscriber:      mockAvsSubscriber,
-		tasks:              make(map[uint32]cstaskmanager.IIncredibleSquaringTaskManagerTask),
+		tasks:              make(map[uint32]cstaskmanager.IAnzenTaskManagerTask),
 		taskResponses:      make(map[uint32]chtypes.TaskResponseData),
-		taskResponseChan:   make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerTaskResponded),
-		newTaskCreatedChan: make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated),
+		taskResponseChan:   make(chan *cstaskmanager.ContractAnzenTaskManagerTaskResponded),
+		newTaskCreatedChan: make(chan *cstaskmanager.ContractAnzenTaskManagerNewTaskCreated),
 	}
 	return challenger, mockAvsWriter, mockAvsReader, mockAvsSubscriber, mockEthClient, nil
 }

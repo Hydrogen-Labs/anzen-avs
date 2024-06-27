@@ -21,7 +21,7 @@ import (
 	oprsinfoserv "github.com/Layr-Labs/eigensdk-go/services/operatorsinfo"
 	sdktypes "github.com/Layr-Labs/eigensdk-go/types"
 
-	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 )
 
 const (
@@ -73,13 +73,13 @@ type Aggregator struct {
 	safetyFactorService safety_factor.SafetyFactorServicer
 	// aggregation related fields
 	blsAggregationService blsagg.BlsAggregationService
-	tasks                 map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerTask
+	tasks                 map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerTask
 	tasksMu               sync.RWMutex
-	taskResponses         map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse
+	taskResponses         map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerTaskResponse
 	taskResponsesMu       sync.RWMutex
-	oracleTasks           map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask
+	oracleTasks           map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerOraclePullTask
 	oracleTasksMu         sync.RWMutex
-	oracleTaskReponses    map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse
+	oracleTaskReponses    map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse
 	oracleTaskReponsesMu  sync.RWMutex
 }
 
@@ -123,10 +123,10 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 		avsWriter:             avsWriter,
 		blsAggregationService: blsAggregationService,
 		safetyFactorService:   safetyFactorService,
-		tasks:                 make(map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerTask),
-		taskResponses:         make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse),
-		oracleTasks:           make(map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTask),
-		oracleTaskReponses:    make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse),
+		tasks:                 make(map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerTask),
+		taskResponses:         make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerTaskResponse),
+		oracleTasks:           make(map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerOraclePullTask),
+		oracleTaskReponses:    make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse),
 	}, nil
 }
 

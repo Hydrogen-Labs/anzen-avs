@@ -10,8 +10,8 @@ import (
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients/eth"
 	logging "github.com/Layr-Labs/eigensdk-go/logging"
 
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	erc20mock "anzen-avs/contracts/bindings/ERC20Mock"
-	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
 	"anzen-avs/core/config"
 )
 

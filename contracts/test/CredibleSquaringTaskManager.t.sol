@@ -2,15 +2,15 @@
 pragma solidity ^0.8.12;
 
 import "../src/AnzenServiceManager.sol" as incsqsm;
-import {IncredibleSquaringTaskManager} from "../src/IncredibleSquaringTaskManager.sol";
+import {AnzenTaskManager} from "../src/AnzenTaskManager.sol";
 import {BLSMockAVSDeployer} from "@eigenlayer-middleware/test/utils/BLSMockAVSDeployer.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract IncredibleSquaringTaskManagerTest is BLSMockAVSDeployer {
+contract AnzenTaskManagerTest is BLSMockAVSDeployer {
     incsqsm.AnzenServiceManager sm;
     incsqsm.AnzenServiceManager smImplementation;
-    IncredibleSquaringTaskManager tm;
-    IncredibleSquaringTaskManager tmImplementation;
+    AnzenTaskManager tm;
+    AnzenTaskManager tmImplementation;
 
     uint32 public constant TASK_RESPONSE_WINDOW_BLOCK = 30;
     address aggregator = address(uint160(uint256(keccak256(abi.encodePacked("aggregator")))));
@@ -19,12 +19,11 @@ contract IncredibleSquaringTaskManagerTest is BLSMockAVSDeployer {
     function setUp() public {
         _setUpBLSMockAVSDeployer();
 
-        tmImplementation = new IncredibleSquaringTaskManager(
-            incsqsm.IRegistryCoordinator(address(registryCoordinator)), TASK_RESPONSE_WINDOW_BLOCK
-        );
+        tmImplementation =
+            new AnzenTaskManager(incsqsm.IRegistryCoordinator(address(registryCoordinator)), TASK_RESPONSE_WINDOW_BLOCK);
 
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
-        tm = IncredibleSquaringTaskManager(
+        tm = AnzenTaskManager(
             address(
                 new TransparentUpgradeableProxy(
                     address(tmImplementation),

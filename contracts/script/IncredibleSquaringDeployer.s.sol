@@ -19,8 +19,8 @@ import {StakeRegistry} from "@eigenlayer-middleware/src/StakeRegistry.sol";
 import "@eigenlayer-middleware/src/OperatorStateRetriever.sol";
 
 import {AnzenServiceManager, IServiceManager} from "../src/AnzenServiceManager.sol";
-import {IncredibleSquaringTaskManager} from "../src/IncredibleSquaringTaskManager.sol";
-import {IIncredibleSquaringTaskManager} from "../src/IIncredibleSquaringTaskManager.sol";
+import {AnzenTaskManager} from "../src/AnzenTaskManager.sol";
+import {IAnzenTaskManager} from "../src/IAnzenTaskManager.sol";
 import "../src/ERC20Mock.sol";
 
 import {Utils} from "./utils/Utils.sol";
@@ -67,8 +67,8 @@ contract IncredibleSquaringDeployer is Script, Utils {
     AnzenServiceManager public anzenServiceManager;
     IServiceManager public anzenServiceManagerImplementation;
 
-    IncredibleSquaringTaskManager public incredibleSquaringTaskManager;
-    IIncredibleSquaringTaskManager public incredibleSquaringTaskManagerImplementation;
+    AnzenTaskManager public anzenTaskManager;
+    IAnzenTaskManager public anzenTaskManagerImplementation;
 
     function run() external {
         // Eigenlayer contracts
@@ -94,7 +94,7 @@ contract IncredibleSquaringDeployer is Script, Utils {
         _deployErc20AndStrategyAndWhitelistStrategy(
             eigenLayerProxyAdmin, eigenLayerPauserReg, baseStrategyImplementation, strategyManager
         );
-        _deployCredibleSquaringContracts(
+        _deployAnzenContracts(
             delegationManager,
             avsDirectory,
             erc20MockStrategy,
@@ -135,7 +135,7 @@ contract IncredibleSquaringDeployer is Script, Utils {
         strategyManager.addStrategiesToDepositWhitelist(strats, thirdPartyTransfersForbiddenValues);
     }
 
-    function _deployCredibleSquaringContracts(
+    function _deployAnzenContracts(
         IDelegationManager delegationManager,
         IAVSDirectory avsDirectory,
         IStrategy strat,
@@ -169,7 +169,7 @@ contract IncredibleSquaringDeployer is Script, Utils {
         anzenServiceManager = AnzenServiceManager(
             address(new TransparentUpgradeableProxy(address(emptyContract), address(incredibleSquaringProxyAdmin), ""))
         );
-        incredibleSquaringTaskManager = IncredibleSquaringTaskManager(
+        anzenTaskManager = AnzenTaskManager(
             address(new TransparentUpgradeableProxy(address(emptyContract), address(incredibleSquaringProxyAdmin), ""))
         );
         registryCoordinator = regcoord.RegistryCoordinator(
@@ -265,22 +265,21 @@ contract IncredibleSquaringDeployer is Script, Utils {
         }
 
         anzenServiceManagerImplementation =
-            new AnzenServiceManager(avsDirectory, registryCoordinator, stakeRegistry, incredibleSquaringTaskManager);
+            new AnzenServiceManager(avsDirectory, registryCoordinator, stakeRegistry, anzenTaskManager);
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
         incredibleSquaringProxyAdmin.upgrade(
             TransparentUpgradeableProxy(payable(address(anzenServiceManager))),
             address(anzenServiceManagerImplementation)
         );
 
-        incredibleSquaringTaskManagerImplementation =
-            new IncredibleSquaringTaskManager(registryCoordinator, TASK_RESPONSE_WINDOW_BLOCK);
+        anzenTaskManagerImplementation = new AnzenTaskManager(registryCoordinator, TASK_RESPONSE_WINDOW_BLOCK);
 
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
         incredibleSquaringProxyAdmin.upgradeAndCall(
-            TransparentUpgradeableProxy(payable(address(incredibleSquaringTaskManager))),
-            address(incredibleSquaringTaskManagerImplementation),
+            TransparentUpgradeableProxy(payable(address(anzenTaskManager))),
+            address(anzenTaskManagerImplementation),
             abi.encodeWithSelector(
-                incredibleSquaringTaskManager.initialize.selector,
+                anzenTaskManager.initialize.selector,
                 incredibleSquaringPauserReg,
                 incredibleSquaringCommunityMultisig,
                 AGGREGATOR_ADDR,
@@ -300,11 +299,9 @@ contract IncredibleSquaringDeployer is Script, Utils {
             "credibleSquaringServiceManagerImplementation",
             address(anzenServiceManagerImplementation)
         );
-        vm.serializeAddress(deployed_addresses, "credibleSquaringTaskManager", address(incredibleSquaringTaskManager));
+        vm.serializeAddress(deployed_addresses, "credibleSquaringTaskManager", address(anzenTaskManager));
         vm.serializeAddress(
-            deployed_addresses,
-            "credibleSquaringTaskManagerImplementation",
-            address(incredibleSquaringTaskManagerImplementation)
+            deployed_addresses, "credibleSquaringTaskManagerImplementation", address(anzenTaskManagerImplementation)
         );
         vm.serializeAddress(deployed_addresses, "registryCoordinator", address(registryCoordinator));
         vm.serializeAddress(

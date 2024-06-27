@@ -9,8 +9,8 @@
 package mocks
 
 import (
+	contractAnzenTaskManager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	contractERC20Mock "anzen-avs/contracts/bindings/ERC20Mock"
-	contractIncredibleSquaringTaskManager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
 	context "context"
 	big "math/big"
 	reflect "reflect"
@@ -46,10 +46,10 @@ func (m *MockAvsReaderer) EXPECT() *MockAvsReadererMockRecorder {
 }
 
 // CheckSignatures mocks base method.
-func (m *MockAvsReaderer) CheckSignatures(arg0 context.Context, arg1 [32]byte, arg2 []byte, arg3 uint32, arg4 contractIncredibleSquaringTaskManager.IBLSSignatureCheckerNonSignerStakesAndSignature) (contractIncredibleSquaringTaskManager.IBLSSignatureCheckerQuorumStakeTotals, error) {
+func (m *MockAvsReaderer) CheckSignatures(arg0 context.Context, arg1 [32]byte, arg2 []byte, arg3 uint32, arg4 contractAnzenTaskManager.IBLSSignatureCheckerNonSignerStakesAndSignature) (contractAnzenTaskManager.IBLSSignatureCheckerQuorumStakeTotals, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CheckSignatures", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].(contractIncredibleSquaringTaskManager.IBLSSignatureCheckerQuorumStakeTotals)
+	ret0, _ := ret[0].(contractAnzenTaskManager.IBLSSignatureCheckerQuorumStakeTotals)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

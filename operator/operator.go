@@ -11,7 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"anzen-avs/aggregator"
-	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	"anzen-avs/core"
 	"anzen-avs/core/chainio"
 	"anzen-avs/metrics"
@@ -59,9 +59,9 @@ type Operator struct {
 	operatorId       sdktypes.OperatorId
 	operatorAddr     common.Address
 	// receive new tasks in this chan (typically from listening to onchain event)
-	newTaskCreatedChan chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated
+	newTaskCreatedChan chan *cstaskmanager.ContractAnzenTaskManagerNewTaskCreated
 	// receive new oracle pull tasks in this chan (typically from listening to onchain event)	// receive new oracle pull tasks in this chan (typically from listening to onchain event)
-	newOraclePullTaskCreatedChan chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewOraclePullTaskCreated
+	newOraclePullTaskCreatedChan chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated
 	// ip address of aggregator
 	aggregatorServerIpPortAddr string
 	// rpc client to send signed task responses to aggregator
@@ -233,8 +233,8 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 		operatorAddr:                       common.HexToAddress(c.OperatorAddress),
 		aggregatorServerIpPortAddr:         c.AggregatorServerIpPortAddress,
 		aggregatorRpcClient:                aggregatorRpcClient,
-		newTaskCreatedChan:                 make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated),
-		newOraclePullTaskCreatedChan:       make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewOraclePullTaskCreated),
+		newTaskCreatedChan:                 make(chan *cstaskmanager.ContractAnzenTaskManagerNewTaskCreated),
+		newOraclePullTaskCreatedChan:       make(chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
 		credibleSquaringServiceManagerAddr: common.HexToAddress(c.AVSRegistryCoordinatorAddress),
 		operatorId:                         [32]byte{0}, // this is set below
 		safetyFactorService:                safetyFactorService,
@@ -331,7 +331,7 @@ func (o *Operator) Start(ctx context.Context) error {
 
 // Takes a newOraclePullTaskSolutionProposedLog struct as input and returns a TaskResponseHeader struct.
 // The TaskResponseHeader struct is the struct that is signed and sent to the contract as a task response.
-func (o *Operator) ProcessNewOraclePullTaskLog(newOraclePullTaskLog *cstaskmanager.ContractIncredibleSquaringTaskManagerNewOraclePullTaskCreated) (*cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse, error) {
+func (o *Operator) ProcessNewOraclePullTaskLog(newOraclePullTaskLog *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated) (*cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse, error) {
 	o.logger.Info("Received new oracle pull task solution proposed", "task", newOraclePullTaskLog)
 
 	oracleIndex := newOraclePullTaskLog.OraclePullTask.OracleIndex
@@ -349,7 +349,7 @@ func (o *Operator) ProcessNewOraclePullTaskLog(newOraclePullTaskLog *cstaskmanag
 		return nil, fmt.Errorf("Proposed solution does not match expected solution")
 	}
 
-	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse{
+	taskResponse := &cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
 		ReferenceTaskIndex: newOraclePullTaskLog.TaskIndex,
 		SafetyFactor:       safetyFactorInfo.SF,
 	}
@@ -359,7 +359,7 @@ func (o *Operator) ProcessNewOraclePullTaskLog(newOraclePullTaskLog *cstaskmanag
 
 // Takes a NewTaskCreatedLog struct as input and returns a TaskResponseHeader struct.
 // The TaskResponseHeader struct is the struct that is signed and sent to the contract as a task response.
-func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated) *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse {
+func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.ContractAnzenTaskManagerNewTaskCreated) *cstaskmanager.IAnzenTaskManagerTaskResponse {
 	o.logger.Debug("Received new task", "task", newTaskCreatedLog)
 	o.logger.Info("Received new task",
 		"numberToBeSquared", newTaskCreatedLog.Task.NumberToBeSquared,
@@ -369,7 +369,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 		"QuorumThresholdPercentage", newTaskCreatedLog.Task.QuorumThresholdPercentage,
 	)
 	numberSquared := big.NewInt(0).Exp(newTaskCreatedLog.Task.NumberToBeSquared, big.NewInt(2), nil)
-	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+	taskResponse := &cstaskmanager.IAnzenTaskManagerTaskResponse{
 		ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
 		NumberSquared:      numberSquared,
 	}
@@ -377,7 +377,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 	return taskResponse
 }
 
-func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse) (*aggregator.SignedTaskResponse, error) {
+func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IAnzenTaskManagerTaskResponse) (*aggregator.SignedTaskResponse, error) {
 	taskResponseHash, err := core.GetTaskResponseDigest(taskResponse)
 	if err != nil {
 		o.logger.Error("Error getting task response header hash. skipping task (this is not expected and should be investigated)", "err", err)
@@ -393,7 +393,7 @@ func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IIncredibleSquar
 	return signedTaskResponse, nil
 }
 
-func (o *Operator) SignOraclePullTaskResponse(oraclePullTaskResponse *cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse) (*aggregator.SignedOraclePullTaskResponse, error) {
+func (o *Operator) SignOraclePullTaskResponse(oraclePullTaskResponse *cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse) (*aggregator.SignedOraclePullTaskResponse, error) {
 	oraclePullTaskResponseHash, err := core.GetPullOracleTaskResponseDigest(oraclePullTaskResponse)
 	if err != nil {
 		o.logger.Error("Error getting oracle pull task response header hash. skipping task (this is not expected and should be investigated)", "err", err)

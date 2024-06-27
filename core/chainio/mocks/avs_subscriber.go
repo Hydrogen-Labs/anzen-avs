@@ -9,7 +9,7 @@
 package mocks
 
 import (
-	contractIncredibleSquaringTaskManager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	contractAnzenTaskManager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	reflect "reflect"
 
 	types "github.com/ethereum/go-ethereum/core/types"
@@ -41,10 +41,10 @@ func (m *MockAvsSubscriberer) EXPECT() *MockAvsSubscribererMockRecorder {
 }
 
 // ParseTaskResponded mocks base method.
-func (m *MockAvsSubscriberer) ParseTaskResponded(arg0 types.Log) (*contractIncredibleSquaringTaskManager.ContractIncredibleSquaringTaskManagerTaskResponded, error) {
+func (m *MockAvsSubscriberer) ParseTaskResponded(arg0 types.Log) (*contractAnzenTaskManager.ContractAnzenTaskManagerTaskResponded, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ParseTaskResponded", arg0)
-	ret0, _ := ret[0].(*contractIncredibleSquaringTaskManager.ContractIncredibleSquaringTaskManagerTaskResponded)
+	ret0, _ := ret[0].(*contractAnzenTaskManager.ContractAnzenTaskManagerTaskResponded)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -56,7 +56,7 @@ func (mr *MockAvsSubscribererMockRecorder) ParseTaskResponded(arg0 any) *gomock.
 }
 
 // SubcribeToNewOraclePullTasks mocks base method.
-func (m *MockAvsSubscriberer) SubcribeToNewOraclePullTasks(arg0 chan *contractIncredibleSquaringTaskManager.ContractIncredibleSquaringTaskManagerNewOraclePullTaskCreated) event.Subscription {
+func (m *MockAvsSubscriberer) SubcribeToNewOraclePullTasks(arg0 chan *contractAnzenTaskManager.ContractAnzenTaskManagerNewOraclePullTaskCreated) event.Subscription {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SubcribeToNewOraclePullTasks", arg0)
 	ret0, _ := ret[0].(event.Subscription)
@@ -70,7 +70,7 @@ func (mr *MockAvsSubscribererMockRecorder) SubcribeToNewOraclePullTasks(arg0 any
 }
 
 // SubscribeToNewTasks mocks base method.
-func (m *MockAvsSubscriberer) SubscribeToNewTasks(arg0 chan *contractIncredibleSquaringTaskManager.ContractIncredibleSquaringTaskManagerNewTaskCreated) event.Subscription {
+func (m *MockAvsSubscriberer) SubscribeToNewTasks(arg0 chan *contractAnzenTaskManager.ContractAnzenTaskManagerNewTaskCreated) event.Subscription {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SubscribeToNewTasks", arg0)
 	ret0, _ := ret[0].(event.Subscription)
@@ -84,7 +84,7 @@ func (mr *MockAvsSubscribererMockRecorder) SubscribeToNewTasks(arg0 any) *gomock
 }
 
 // SubscribeToTaskResponses mocks base method.
-func (m *MockAvsSubscriberer) SubscribeToTaskResponses(arg0 chan *contractIncredibleSquaringTaskManager.ContractIncredibleSquaringTaskManagerTaskResponded) event.Subscription {
+func (m *MockAvsSubscriberer) SubscribeToTaskResponses(arg0 chan *contractAnzenTaskManager.ContractAnzenTaskManagerTaskResponded) event.Subscription {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SubscribeToTaskResponses", arg0)
 	ret0, _ := ret[0].(event.Subscription)

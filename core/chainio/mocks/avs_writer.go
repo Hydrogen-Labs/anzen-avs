@@ -9,7 +9,7 @@
 package mocks
 
 import (
-	contractIncredibleSquaringTaskManager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	contractAnzenTaskManager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	context "context"
 	ecdsa "crypto/ecdsa"
 	big "math/big"
@@ -61,23 +61,8 @@ func (mr *MockAvsWritererMockRecorder) DeregisterOperator(arg0, arg1, arg2 any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeregisterOperator", reflect.TypeOf((*MockAvsWriterer)(nil).DeregisterOperator), arg0, arg1, arg2)
 }
 
-// ProposeOraclePullTaskSolution mocks base method.
-func (m *MockAvsWriterer) ProposeOraclePullTaskSolution(arg0 context.Context, arg1 uint32, arg2 *big.Int) (*types0.Receipt, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ProposeOraclePullTaskSolution", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*types0.Receipt)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ProposeOraclePullTaskSolution indicates an expected call of ProposeOraclePullTaskSolution.
-func (mr *MockAvsWritererMockRecorder) ProposeOraclePullTaskSolution(arg0, arg1, arg2 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProposeOraclePullTaskSolution", reflect.TypeOf((*MockAvsWriterer)(nil).ProposeOraclePullTaskSolution), arg0, arg1, arg2)
-}
-
 // RaiseChallenge mocks base method.
-func (m *MockAvsWriterer) RaiseChallenge(arg0 context.Context, arg1 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask, arg2 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTaskResponse, arg3 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTaskResponseMetadata, arg4 []contractIncredibleSquaringTaskManager.BN254G1Point) (*types0.Receipt, error) {
+func (m *MockAvsWriterer) RaiseChallenge(arg0 context.Context, arg1 contractAnzenTaskManager.IAnzenTaskManagerTask, arg2 contractAnzenTaskManager.IAnzenTaskManagerTaskResponse, arg3 contractAnzenTaskManager.IAnzenTaskManagerTaskResponseMetadata, arg4 []contractAnzenTaskManager.BN254G1Point) (*types0.Receipt, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RaiseChallenge", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(*types0.Receipt)
@@ -107,7 +92,7 @@ func (mr *MockAvsWritererMockRecorder) RegisterOperatorInQuorumWithAVSRegistryCo
 }
 
 // SendAggregatedOracleResponse mocks base method.
-func (m *MockAvsWriterer) SendAggregatedOracleResponse(arg0 context.Context, arg1 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerOraclePullTask, arg2 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerOraclePullTaskResponse, arg3 contractIncredibleSquaringTaskManager.IBLSSignatureCheckerNonSignerStakesAndSignature) (*types0.Receipt, error) {
+func (m *MockAvsWriterer) SendAggregatedOracleResponse(arg0 context.Context, arg1 contractAnzenTaskManager.IAnzenTaskManagerOraclePullTask, arg2 contractAnzenTaskManager.IAnzenTaskManagerOraclePullTaskResponse, arg3 contractAnzenTaskManager.IBLSSignatureCheckerNonSignerStakesAndSignature) (*types0.Receipt, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendAggregatedOracleResponse", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(*types0.Receipt)
@@ -121,26 +106,11 @@ func (mr *MockAvsWritererMockRecorder) SendAggregatedOracleResponse(arg0, arg1, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendAggregatedOracleResponse", reflect.TypeOf((*MockAvsWriterer)(nil).SendAggregatedOracleResponse), arg0, arg1, arg2, arg3)
 }
 
-// SendAggregatedResponse mocks base method.
-func (m *MockAvsWriterer) SendAggregatedResponse(arg0 context.Context, arg1 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask, arg2 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTaskResponse, arg3 contractIncredibleSquaringTaskManager.IBLSSignatureCheckerNonSignerStakesAndSignature) (*types0.Receipt, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendAggregatedResponse", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].(*types0.Receipt)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SendAggregatedResponse indicates an expected call of SendAggregatedResponse.
-func (mr *MockAvsWritererMockRecorder) SendAggregatedResponse(arg0, arg1, arg2, arg3 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendAggregatedResponse", reflect.TypeOf((*MockAvsWriterer)(nil).SendAggregatedResponse), arg0, arg1, arg2, arg3)
-}
-
 // SendNewOraclePullTask mocks base method.
-func (m *MockAvsWriterer) SendNewOraclePullTask(arg0 context.Context, arg1, arg2 *big.Int, arg3 types.QuorumThresholdPercentage, arg4 types.QuorumNums) (contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerOraclePullTask, uint32, error) {
+func (m *MockAvsWriterer) SendNewOraclePullTask(arg0 context.Context, arg1, arg2 *big.Int, arg3 types.QuorumThresholdPercentage, arg4 types.QuorumNums) (contractAnzenTaskManager.IAnzenTaskManagerOraclePullTask, uint32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendNewOraclePullTask", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].(contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerOraclePullTask)
+	ret0, _ := ret[0].(contractAnzenTaskManager.IAnzenTaskManagerOraclePullTask)
 	ret1, _ := ret[1].(uint32)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -153,10 +123,10 @@ func (mr *MockAvsWritererMockRecorder) SendNewOraclePullTask(arg0, arg1, arg2, a
 }
 
 // SendNewTaskNumberToSquare mocks base method.
-func (m *MockAvsWriterer) SendNewTaskNumberToSquare(arg0 context.Context, arg1 *big.Int, arg2 types.QuorumThresholdPercentage, arg3 types.QuorumNums) (contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask, uint32, error) {
+func (m *MockAvsWriterer) SendNewTaskNumberToSquare(arg0 context.Context, arg1 *big.Int, arg2 types.QuorumThresholdPercentage, arg3 types.QuorumNums) (contractAnzenTaskManager.IAnzenTaskManagerTask, uint32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendNewTaskNumberToSquare", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].(contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask)
+	ret0, _ := ret[0].(contractAnzenTaskManager.IAnzenTaskManagerTask)
 	ret1, _ := ret[1].(uint32)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

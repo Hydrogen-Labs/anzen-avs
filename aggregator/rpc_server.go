@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/rpc"
 
-	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	"anzen-avs/core"
 
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
@@ -39,13 +39,13 @@ func (agg *Aggregator) startServer(ctx context.Context) error {
 }
 
 type SignedTaskResponse struct {
-	TaskResponse cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse
+	TaskResponse cstaskmanager.IAnzenTaskManagerTaskResponse
 	BlsSignature bls.Signature
 	OperatorId   types.OperatorId
 }
 
 type SignedOraclePullTaskResponse struct {
-	OraclePullTaskResponse cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse
+	OraclePullTaskResponse cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse
 	BlsSignature           bls.Signature
 	OperatorId             types.OperatorId
 }
@@ -63,7 +63,7 @@ func (agg *Aggregator) ProcessSignedTaskResponse(signedTaskResponse *SignedTaskR
 	}
 	agg.taskResponsesMu.Lock()
 	if _, ok := agg.taskResponses[taskIndex]; !ok {
-		agg.taskResponses[taskIndex] = make(map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse)
+		agg.taskResponses[taskIndex] = make(map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerTaskResponse)
 	}
 	if _, ok := agg.taskResponses[taskIndex][taskResponseDigest]; !ok {
 		agg.taskResponses[taskIndex][taskResponseDigest] = signedTaskResponse.TaskResponse
@@ -90,7 +90,7 @@ func (agg *Aggregator) ProcessSignedOraclePullTaskResponse(signedOraclePullTaskR
 	}
 	agg.oracleTaskReponsesMu.Lock()
 	if _, ok := agg.oracleTaskReponses[taskIndex]; !ok {
-		agg.oracleTaskReponses[taskIndex] = make(map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerOraclePullTaskResponse)
+		agg.oracleTaskReponses[taskIndex] = make(map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse)
 	}
 	if _, ok := agg.oracleTaskReponses[taskIndex][taskResponseDigest]; !ok {
 		agg.oracleTaskReponses[taskIndex][taskResponseDigest] = signedOraclePullTaskResponse.OraclePullTaskResponse
