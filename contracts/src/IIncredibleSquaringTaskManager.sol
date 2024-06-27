@@ -9,8 +9,6 @@ interface IIncredibleSquaringTaskManager {
 
     event NewOraclePullTaskCreated(uint32 indexed taskIndex, OraclePullTask oraclePullTask);
 
-    event OraclePullTaskSolutionProposed(OraclePullTaskResponse oraclePullTaskResponse);
-
     event TaskResponded(TaskResponse taskResponse, TaskResponseMetadata taskResponseMetadata);
 
     event OraclePullTaskResponded(
@@ -79,9 +77,6 @@ interface IIncredibleSquaringTaskManager {
         uint32 quorumThresholdPercentage,
         bytes calldata quorumNumbers
     ) external;
-
-    // NOTE: this function submits task response.
-    function proposeOraclePullTaskSolution(uint32 taskIndex, int256 safetyFactor) external;
 
     /// @notice Returns the current 'taskNumber' for the middleware
     function taskNumber() external view returns (uint32);

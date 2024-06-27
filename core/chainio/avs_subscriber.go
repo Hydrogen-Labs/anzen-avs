@@ -16,7 +16,6 @@ import (
 type AvsSubscriberer interface {
 	SubscribeToNewTasks(newTaskCreatedChan chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated) event.Subscription
 	SubcribeToNewOraclePullTasks(newOraclePullTaskLogs chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewOraclePullTaskCreated) event.Subscription
-	SubscribeToOraclePullTaskSolutionProposed(oraclePullTaskSolutionProposedLogs chan *cstaskmanager.ContractIncredibleSquaringTaskManagerOraclePullTaskSolutionProposed) event.Subscription
 	SubscribeToTaskResponses(taskResponseLogs chan *cstaskmanager.ContractIncredibleSquaringTaskManagerTaskResponded) event.Subscription
 	ParseTaskResponded(rawLog types.Log) (*cstaskmanager.ContractIncredibleSquaringTaskManagerTaskResponded, error)
 }
@@ -74,17 +73,6 @@ func (s *AvsSubscriber) SubcribeToNewOraclePullTasks(newOraclePullTaskLogs chan 
 		s.logger.Error("Failed to subscribe to new OraclePullTask events", "err", err)
 	}
 	s.logger.Infof("Subscribed to new OraclePullTask events")
-	return sub
-}
-
-func (s *AvsSubscriber) SubscribeToOraclePullTaskSolutionProposed(oraclePullTaskSolutionProposedLogs chan *cstaskmanager.ContractIncredibleSquaringTaskManagerOraclePullTaskSolutionProposed) event.Subscription {
-	sub, err := s.AvsContractBindings.TaskManager.WatchOraclePullTaskSolutionProposed(
-		&bind.WatchOpts{}, oraclePullTaskSolutionProposedLogs,
-	)
-	if err != nil {
-		s.logger.Error("Failed to subscribe to OraclePullTaskSolutionProposed events", "err", err)
-	}
-	s.logger.Infof("Subscribed to OraclePullTaskSolutionProposed events")
 	return sub
 }
 

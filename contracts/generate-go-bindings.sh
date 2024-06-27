@@ -23,7 +23,7 @@ rm -rf bindings/*
 forge clean
 forge build
 
-avs_service_contracts="IncredibleSquaringServiceManager IncredibleSquaringTaskManager"
+avs_service_contracts="AnzenServiceManager IncredibleSquaringTaskManager"
 for contract in $avs_service_contracts; do
     create_binding . $contract ./bindings
 done

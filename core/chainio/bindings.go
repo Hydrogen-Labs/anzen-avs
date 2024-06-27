@@ -8,8 +8,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	gethcommon "github.com/ethereum/go-ethereum/common"
 
+	csservicemanager "anzen-avs/contracts/bindings/AnzenServiceManager"
 	erc20mock "anzen-avs/contracts/bindings/ERC20Mock"
-	csservicemanager "anzen-avs/contracts/bindings/IncredibleSquaringServiceManager"
 	cstaskmanager "anzen-avs/contracts/bindings/IncredibleSquaringTaskManager"
 
 	regcoord "github.com/Layr-Labs/eigensdk-go/contracts/bindings/RegistryCoordinator"
@@ -17,7 +17,7 @@ import (
 
 type AvsManagersBindings struct {
 	TaskManager    *cstaskmanager.ContractIncredibleSquaringTaskManager
-	ServiceManager *csservicemanager.ContractIncredibleSquaringServiceManager
+	ServiceManager *csservicemanager.ContractAnzenServiceManager
 	ethClient      eth.Client
 	logger         logging.Logger
 }
@@ -31,7 +31,7 @@ func NewAvsManagersBindings(registryCoordinatorAddr, operatorStateRetrieverAddr 
 	if err != nil {
 		return nil, err
 	}
-	contractServiceManager, err := csservicemanager.NewContractIncredibleSquaringServiceManager(serviceManagerAddr, ethclient)
+	contractServiceManager, err := csservicemanager.NewContractAnzenServiceManager(serviceManagerAddr, ethclient)
 	if err != nil {
 		logger.Error("Failed to fetch IServiceManager contract", "err", err)
 		return nil, err

@@ -41,8 +41,6 @@ contract IncredibleSquaringTaskManager is
     // mapping of task indices to hash of abi.encode(taskResponse, taskResponseMetadata)
     mapping(uint32 => bytes32) public allTaskResponses;
 
-    mapping(uint32 => int256) public proposedOraclePullTaskSolutions;
-
     mapping(uint32 => bool) public taskSuccesfullyChallenged;
 
     address public aggregator;
@@ -115,72 +113,6 @@ contract IncredibleSquaringTaskManager is
         emit NewOraclePullTaskCreated(latestTaskNum, newTask);
         latestTaskNum = latestTaskNum + 1;
     }
-
-    function proposeOraclePullTaskSolution(uint32 taskIndex, int256 safetyFactor) external onlyAggregator {
-        // create a new task struct
-        require(
-            proposedOraclePullTaskSolutions[taskIndex] == 0, "Aggregator has already proposed a solution for this task"
-        );
-
-        OraclePullTaskResponse memory newTaskResponse;
-        newTaskResponse.referenceTaskIndex = taskIndex;
-        newTaskResponse.safetyFactor = safetyFactor;
-
-        proposedOraclePullTaskSolutions[taskIndex] = safetyFactor;
-        emit OraclePullTaskSolutionProposed(newTaskResponse);
-    }
-
-    // NOTE: this function responds to existing tasks.
-    // function respondToTask(
-    //     Task calldata task,
-    //     TaskResponse calldata taskResponse,
-    //     NonSignerStakesAndSignature memory nonSignerStakesAndSignature
-    // ) external onlyAggregator {
-    // uint32 taskCreatedBlock = task.taskCreatedBlock;
-    // bytes calldata quorumNumbers = task.quorumNumbers;
-    // uint32 quorumThresholdPercentage = task.quorumThresholdPercentage;
-
-    // check that the task is valid, hasn't been responsed yet, and is being responsed in time
-    // require(
-    //     keccak256(abi.encode(task)) == allTaskHashes[taskResponse.referenceTaskIndex],
-    //     "supplied task does not match the one recorded in the contract"
-    // );
-    // // some logical checks
-    // require(
-    //     allTaskResponses[taskResponse.referenceTaskIndex] == bytes32(0),
-    //     "Aggregator has already responded to the task"
-    // );
-    // require(
-    //     uint32(block.number) <= taskCreatedBlock + TASK_RESPONSE_WINDOW_BLOCK,
-    //     "Aggregator has responded to the task too late"
-    // );
-
-    /* CHECKING SIGNATURES & WHETHER THRESHOLD IS MET OR NOT */
-    // calculate message which operators signed
-    // bytes32 message = keccak256(abi.encode(taskResponse));
-
-    // // check the BLS signature
-    // (QuorumStakeTotals memory quorumStakeTotals, bytes32 hashOfNonSigners) =
-    //     checkSignatures(message, quorumNumbers, taskCreatedBlock, nonSignerStakesAndSignature);
-
-    // // check that signatories own at least a threshold percentage of each quourm
-    // for (uint256 i = 0; i < quorumNumbers.length; i++) {
-    //     // we don't check that the quorumThresholdPercentages are not >100 because a greater value would trivially fail the check, implying
-    //     // signed stake > total stake
-    //     require(
-    //         quorumStakeTotals.signedStakeForQuorum[i] * _THRESHOLD_DENOMINATOR
-    //             >= quorumStakeTotals.totalStakeForQuorum[i] * uint8(quorumThresholdPercentage),
-    //         "Signatories do not own at least threshold percentage of a quorum"
-    //     );
-    // }
-
-    // TaskResponseMetadata memory taskResponseMetadata = TaskResponseMetadata(uint32(block.number), hashOfNonSigners);
-    // // updating the storage with task responsea
-    // allTaskResponses[taskResponse.referenceTaskIndex] = keccak256(abi.encode(taskResponse, taskResponseMetadata));
-
-    // // emitting event
-    // emit TaskResponded(taskResponse, taskResponseMetadata);
-    // }
 
     function respondToOracleTask(
         OraclePullTask calldata task,

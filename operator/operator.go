@@ -60,9 +60,7 @@ type Operator struct {
 	operatorAddr     common.Address
 	// receive new tasks in this chan (typically from listening to onchain event)
 	newTaskCreatedChan chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated
-	// receive new oracle pull tasks in this chan (typically from listening to onchain event)
-	newOraclePullTaskSolutionProposedChan chan *cstaskmanager.ContractIncredibleSquaringTaskManagerOraclePullTaskSolutionProposed
-	// receive new oracle pull tasks in this chan (typically from listening to onchain event)
+	// receive new oracle pull tasks in this chan (typically from listening to onchain event)	// receive new oracle pull tasks in this chan (typically from listening to onchain event)
 	newOraclePullTaskCreatedChan chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewOraclePullTaskCreated
 	// ip address of aggregator
 	aggregatorServerIpPortAddr string
@@ -220,27 +218,26 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 	safetyFactorService := safety_factor.NewSafetyFactorService()
 
 	operator := &Operator{
-		config:                                c,
-		logger:                                logger,
-		metricsReg:                            reg,
-		metrics:                               avsAndEigenMetrics,
-		nodeApi:                               nodeApi,
-		ethClient:                             ethRpcClient,
-		avsWriter:                             avsWriter,
-		avsReader:                             avsReader,
-		avsSubscriber:                         avsSubscriber,
-		eigenlayerReader:                      sdkClients.ElChainReader,
-		eigenlayerWriter:                      sdkClients.ElChainWriter,
-		blsKeypair:                            blsKeyPair,
-		operatorAddr:                          common.HexToAddress(c.OperatorAddress),
-		aggregatorServerIpPortAddr:            c.AggregatorServerIpPortAddress,
-		aggregatorRpcClient:                   aggregatorRpcClient,
-		newTaskCreatedChan:                    make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated),
-		newOraclePullTaskSolutionProposedChan: make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerOraclePullTaskSolutionProposed),
-		newOraclePullTaskCreatedChan:          make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewOraclePullTaskCreated),
-		credibleSquaringServiceManagerAddr:    common.HexToAddress(c.AVSRegistryCoordinatorAddress),
-		operatorId:                            [32]byte{0}, // this is set below
-		safetyFactorService:                   safetyFactorService,
+		config:                             c,
+		logger:                             logger,
+		metricsReg:                         reg,
+		metrics:                            avsAndEigenMetrics,
+		nodeApi:                            nodeApi,
+		ethClient:                          ethRpcClient,
+		avsWriter:                          avsWriter,
+		avsReader:                          avsReader,
+		avsSubscriber:                      avsSubscriber,
+		eigenlayerReader:                   sdkClients.ElChainReader,
+		eigenlayerWriter:                   sdkClients.ElChainWriter,
+		blsKeypair:                         blsKeyPair,
+		operatorAddr:                       common.HexToAddress(c.OperatorAddress),
+		aggregatorServerIpPortAddr:         c.AggregatorServerIpPortAddress,
+		aggregatorRpcClient:                aggregatorRpcClient,
+		newTaskCreatedChan:                 make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated),
+		newOraclePullTaskCreatedChan:       make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewOraclePullTaskCreated),
+		credibleSquaringServiceManagerAddr: common.HexToAddress(c.AVSRegistryCoordinatorAddress),
+		operatorId:                         [32]byte{0}, // this is set below
+		safetyFactorService:                safetyFactorService,
 	}
 
 	if c.RegisterOperatorOnStartup {
@@ -327,11 +324,6 @@ func (o *Operator) Start(ctx context.Context) error {
 			go o.aggregatorRpcClient.SendSignedOraclePullTaskReponseToAggregator(signedPullOracleTaskResponse)
 			o.logger.Info("Sending task response to aggregator", "taskResponse", taskResponse)
 
-		case newOraclePullTaskSolutionProposedLog := <-o.newOraclePullTaskSolutionProposedChan:
-			if err != nil {
-				continue
-			}
-			o.logger.Info("Received new oracle pull task solution proposed", "task", newOraclePullTaskSolutionProposedLog)
 		}
 
 	}

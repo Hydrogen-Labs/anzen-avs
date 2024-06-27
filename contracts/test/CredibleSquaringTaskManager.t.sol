@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.12;
 
-import "../src/IncredibleSquaringServiceManager.sol" as incsqsm;
+import "../src/AnzenServiceManager.sol" as incsqsm;
 import {IncredibleSquaringTaskManager} from "../src/IncredibleSquaringTaskManager.sol";
 import {BLSMockAVSDeployer} from "@eigenlayer-middleware/test/utils/BLSMockAVSDeployer.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract IncredibleSquaringTaskManagerTest is BLSMockAVSDeployer {
-    incsqsm.IncredibleSquaringServiceManager sm;
-    incsqsm.IncredibleSquaringServiceManager smImplementation;
+    incsqsm.AnzenServiceManager sm;
+    incsqsm.AnzenServiceManager smImplementation;
     IncredibleSquaringTaskManager tm;
     IncredibleSquaringTaskManager tmImplementation;
 

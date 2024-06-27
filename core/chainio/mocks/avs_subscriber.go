@@ -83,20 +83,6 @@ func (mr *MockAvsSubscribererMockRecorder) SubscribeToNewTasks(arg0 any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeToNewTasks", reflect.TypeOf((*MockAvsSubscriberer)(nil).SubscribeToNewTasks), arg0)
 }
 
-// SubscribeToOraclePullTaskSolutionProposed mocks base method.
-func (m *MockAvsSubscriberer) SubscribeToOraclePullTaskSolutionProposed(arg0 chan *contractIncredibleSquaringTaskManager.ContractIncredibleSquaringTaskManagerOraclePullTaskSolutionProposed) event.Subscription {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SubscribeToOraclePullTaskSolutionProposed", arg0)
-	ret0, _ := ret[0].(event.Subscription)
-	return ret0
-}
-
-// SubscribeToOraclePullTaskSolutionProposed indicates an expected call of SubscribeToOraclePullTaskSolutionProposed.
-func (mr *MockAvsSubscribererMockRecorder) SubscribeToOraclePullTaskSolutionProposed(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeToOraclePullTaskSolutionProposed", reflect.TypeOf((*MockAvsSubscriberer)(nil).SubscribeToOraclePullTaskSolutionProposed), arg0)
-}
-
 // SubscribeToTaskResponses mocks base method.
 func (m *MockAvsSubscriberer) SubscribeToTaskResponses(arg0 chan *contractIncredibleSquaringTaskManager.ContractIncredibleSquaringTaskManagerTaskResponded) event.Subscription {
 	m.ctrl.T.Helper()
