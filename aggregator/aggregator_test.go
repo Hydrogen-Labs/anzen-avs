@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	safety_factor "anzen-avs/safety-factor"
+
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 	sdklogging "github.com/Layr-Labs/eigensdk-go/logging"
 	blsaggservmock "github.com/Layr-Labs/eigensdk-go/services/mocks/blsagg"
@@ -58,12 +60,13 @@ func TestSendNewTask(t *testing.T) {
 
 	var TASK_INDEX = uint32(0)
 	var BLOCK_NUMBER = uint32(100)
-	var NUMBER_TO_SQUARE = uint32(3)
-	var NUMBER_TO_SQUARE_BIG_INT = big.NewInt(int64(NUMBER_TO_SQUARE))
+	var ORACLE_INDEX = uint32(0)
+	var ORACLE_INDEX_BIG_INT = big.NewInt(int64(ORACLE_INDEX))
+	var PROPSED_SAFETY_FACTOR = big.NewInt(400_000_000)
 
-	mockAvsWriterer.EXPECT().SendNewTaskNumberToSquare(
-		context.Background(), NUMBER_TO_SQUARE_BIG_INT, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS,
-	).Return(mocks.MockSendNewTaskNumberToSquareCall(BLOCK_NUMBER, TASK_INDEX, NUMBER_TO_SQUARE))
+	mockAvsWriterer.EXPECT().SendNewOraclePullTask(
+		context.Background(), ORACLE_INDEX_BIG_INT, PROPSED_SAFETY_FACTOR, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS,
+	).Return(mocks.MocksSendNewOraclePullTaskCall(BLOCK_NUMBER, TASK_INDEX, ORACLE_INDEX, *PROPSED_SAFETY_FACTOR))
 
 	// 100 blocks, each takes 12 seconds. We hardcode for now since aggregator also hardcodes this value
 	taskTimeToExpiry := 100 * 12 * time.Second
@@ -72,7 +75,7 @@ func TestSendNewTask(t *testing.T) {
 	// see https://hynek.me/articles/what-to-mock-in-5-mins/
 	mockBlsAggService.EXPECT().InitializeNewTask(TASK_INDEX, BLOCK_NUMBER, types.QUORUM_NUMBERS, sdktypes.QuorumThresholdPercentages{types.QUORUM_THRESHOLD_NUMERATOR}, taskTimeToExpiry)
 
-	err = aggregator.sendNewTask(NUMBER_TO_SQUARE_BIG_INT)
+	err = aggregator.sendNewOraclePullTask(ORACLE_INDEX_BIG_INT)
 	assert.Nil(t, err)
 }
 
@@ -82,13 +85,16 @@ func createMockAggregator(
 	logger := sdklogging.NewNoopLogger()
 	mockAvsWriter := chainiomocks.NewMockAvsWriterer(mockCtrl)
 	mockBlsAggregationService := blsaggservmock.NewMockBlsAggregationService(mockCtrl)
+	// TODO: create a mock safety factor service
+	mockSafetyFactorService := safety_factor.NewSafetyFactorService(logger)
 
 	aggregator := &Aggregator{
 		logger:                logger,
 		avsWriter:             mockAvsWriter,
 		blsAggregationService: mockBlsAggregationService,
-		tasks:                 make(map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerTask),
-		taskResponses:         make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerTaskResponse),
+		oracleTasks:           make(map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerOraclePullTask),
+		oracleTaskReponses:    make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse),
+		safetyFactorService:   mockSafetyFactorService,
 	}
 	return aggregator, mockAvsWriter, mockBlsAggregationService, nil
 }

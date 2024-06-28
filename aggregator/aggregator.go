@@ -73,10 +73,6 @@ type Aggregator struct {
 	safetyFactorService safety_factor.SafetyFactorServicer
 	// aggregation related fields
 	blsAggregationService blsagg.BlsAggregationService
-	tasks                 map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerTask
-	tasksMu               sync.RWMutex
-	taskResponses         map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerTaskResponse
-	taskResponsesMu       sync.RWMutex
 	oracleTasks           map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerOraclePullTask
 	oracleTasksMu         sync.RWMutex
 	oracleTaskReponses    map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse
@@ -115,7 +111,7 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 	operatorPubkeysService := oprsinfoserv.NewOperatorsInfoServiceInMemory(context.Background(), clients.AvsRegistryChainSubscriber, clients.AvsRegistryChainReader, c.Logger)
 	avsRegistryService := avsregistry.NewAvsRegistryServiceChainCaller(avsReader, operatorPubkeysService, c.Logger)
 	blsAggregationService := blsagg.NewBlsAggregatorService(avsRegistryService, c.Logger)
-	safetyFactorService := safety_factor.NewSafetyFactorService()
+	safetyFactorService := safety_factor.NewSafetyFactorService(c.Logger)
 
 	return &Aggregator{
 		logger:                c.Logger,
@@ -123,8 +119,6 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 		avsWriter:             avsWriter,
 		blsAggregationService: blsAggregationService,
 		safetyFactorService:   safetyFactorService,
-		tasks:                 make(map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerTask),
-		taskResponses:         make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerTaskResponse),
 		oracleTasks:           make(map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerOraclePullTask),
 		oracleTaskReponses:    make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse),
 	}, nil
@@ -142,7 +136,7 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 	taskNum := int64(0)
 	// ticker doesn't tick immediately, so we send the first task here
 	// see https://github.com/golang/go/issues/17601
-	_ = agg.sendNewTask(big.NewInt(taskNum))
+	_ = agg.sendNewOraclePullTask(big.NewInt(0))
 	taskNum++
 
 	for {
@@ -205,36 +199,6 @@ func (agg *Aggregator) sendAggregatedOracleResponseToContract(blsAggServiceResp 
 	}
 }
 
-// sendNewTask sends a new task to the task manager contract, and updates the Task dict struct
-// with the information of operators opted into quorum 0 at the block of task creation.
-func (agg *Aggregator) sendNewTask(numToSquare *big.Int) error {
-	agg.logger.Info("Aggregator sending new task", "numberToSquare", numToSquare)
-	// Send number to square to the task manager contract
-	newTask, taskIndex, err := agg.avsWriter.SendNewTaskNumberToSquare(context.Background(), numToSquare, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
-	if err != nil {
-		agg.logger.Error("Aggregator failed to send number to square", "err", err)
-		return err
-	}
-
-	agg.tasksMu.Lock()
-	agg.tasks[taskIndex] = newTask
-	agg.tasksMu.Unlock()
-
-	quorumThresholdPercentages := make(sdktypes.QuorumThresholdPercentages, len(newTask.QuorumNumbers))
-	for i := range newTask.QuorumNumbers {
-		quorumThresholdPercentages[i] = sdktypes.QuorumThresholdPercentage(newTask.QuorumThresholdPercentage)
-	}
-	// TODO(samlaf): we use seconds for now, but we should ideally pass a blocknumber to the blsAggregationService
-	// and it should monitor the chain and only expire the task aggregation once the chain has reached that block number.
-	taskTimeToExpiry := taskChallengeWindowBlock * blockTimeSeconds
-	var quorumNums sdktypes.QuorumNums
-	for _, quorumNum := range newTask.QuorumNumbers {
-		quorumNums = append(quorumNums, sdktypes.QuorumNum(quorumNum))
-	}
-	agg.blsAggregationService.InitializeNewTask(taskIndex, newTask.TaskCreatedBlock, quorumNums, quorumThresholdPercentages, taskTimeToExpiry)
-	return nil
-}
-
 func (agg *Aggregator) sendNewOraclePullTask(oracleIndex *big.Int) error {
 	agg.logger.Info("Aggregator sending new oracle pull task", "oracleIndex", oracleIndex)
 	// Send number to square to the task manager contract
@@ -253,9 +217,9 @@ func (agg *Aggregator) sendNewOraclePullTask(oracleIndex *big.Int) error {
 
 	agg.logger.Info("Aggregator sent new oracle pull task", "task", newPullTask)
 
-	agg.tasksMu.Lock()
+	agg.oracleTasksMu.Lock()
 	agg.oracleTasks[taskIndex] = newPullTask
-	agg.tasksMu.Unlock()
+	agg.oracleTasksMu.Unlock()
 
 	quorumThresholdPercentages := make(sdktypes.QuorumThresholdPercentages, len(newPullTask.QuorumNumbers))
 	for i := range newPullTask.QuorumNumbers {

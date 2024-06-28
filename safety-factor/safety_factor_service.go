@@ -1,6 +1,8 @@
 package safety_factor
 
 import (
+	"github.com/Layr-Labs/eigensdk-go/logging"
+
 	example_sf_module "anzen-avs/safety-factor/modules/example_module"
 	safety_factor_base "anzen-avs/safety-factor/safety-factor-base"
 	"errors"
@@ -13,12 +15,15 @@ type SafetyFactorServicer interface {
 }
 
 type SafetyFactorService struct {
+	logger logging.Logger
+
 	modules map[int]safety_factor_base.SFModule
 }
 
-func NewSafetyFactorService() *SafetyFactorService {
+func NewSafetyFactorService(logger logging.Logger) *SafetyFactorService {
 	service := &SafetyFactorService{
 		modules: make(map[int]safety_factor_base.SFModule),
+		logger:  logger,
 	}
 	service.registerModules()
 	return service

@@ -23,6 +23,18 @@ func MockSendNewTaskNumberToSquareCall(blockNum, taskNum, numberToSquare uint32)
 	return task, taskNum, nil
 }
 
+func MocksSendNewOraclePullTaskCall(blockNum, taskNum, oracleIndex uint32, proposedSafetyFactor big.Int) (cstaskmanager.IAnzenTaskManagerOraclePullTask, uint32, error) {
+	task := cstaskmanager.IAnzenTaskManagerOraclePullTask{
+		OracleIndex:               oracleIndex,
+		TaskCreatedBlock:          blockNum,
+		ProposedSafetyFactor:      &proposedSafetyFactor,
+		QuorumNumbers:             types.QUORUM_NUMBERS.UnderlyingType(),
+		QuorumThresholdPercentage: uint32(types.QUORUM_THRESHOLD_NUMERATOR),
+	}
+
+	return task, taskNum, nil
+}
+
 // ======= BLSOperatorStateRetriever Mocks =======
 type MockOperatorState struct {
 	OperatorId [32]byte
