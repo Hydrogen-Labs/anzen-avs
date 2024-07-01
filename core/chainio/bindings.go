@@ -8,15 +8,16 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	gethcommon "github.com/ethereum/go-ethereum/common"
 
+	csservicemanager "anzen-avs/contracts/bindings/AnzenServiceManager"
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	erc20mock "anzen-avs/contracts/bindings/ERC20Mock"
+
 	regcoord "github.com/Layr-Labs/eigensdk-go/contracts/bindings/RegistryCoordinator"
-	erc20mock "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/ERC20Mock"
-	csservicemanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringServiceManager"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
 )
 
 type AvsManagersBindings struct {
-	TaskManager    *cstaskmanager.ContractIncredibleSquaringTaskManager
-	ServiceManager *csservicemanager.ContractIncredibleSquaringServiceManager
+	TaskManager    *cstaskmanager.ContractAnzenTaskManager
+	ServiceManager *csservicemanager.ContractAnzenServiceManager
 	ethClient      eth.Client
 	logger         logging.Logger
 }
@@ -30,20 +31,20 @@ func NewAvsManagersBindings(registryCoordinatorAddr, operatorStateRetrieverAddr 
 	if err != nil {
 		return nil, err
 	}
-	contractServiceManager, err := csservicemanager.NewContractIncredibleSquaringServiceManager(serviceManagerAddr, ethclient)
+	contractServiceManager, err := csservicemanager.NewContractAnzenServiceManager(serviceManagerAddr, ethclient)
 	if err != nil {
 		logger.Error("Failed to fetch IServiceManager contract", "err", err)
 		return nil, err
 	}
 
-	taskManagerAddr, err := contractServiceManager.IncredibleSquaringTaskManager(&bind.CallOpts{})
+	taskManagerAddr, err := contractServiceManager.AnzenTaskManager(&bind.CallOpts{})
 	if err != nil {
 		logger.Error("Failed to fetch TaskManager address", "err", err)
 		return nil, err
 	}
-	contractTaskManager, err := cstaskmanager.NewContractIncredibleSquaringTaskManager(taskManagerAddr, ethclient)
+	contractTaskManager, err := cstaskmanager.NewContractAnzenTaskManager(taskManagerAddr, ethclient)
 	if err != nil {
-		logger.Error("Failed to fetch IIncredibleSquaringTaskManager contract", "err", err)
+		logger.Error("Failed to fetch IAnzenTaskManager contract", "err", err)
 		return nil, err
 	}
 

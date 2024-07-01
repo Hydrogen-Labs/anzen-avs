@@ -9,14 +9,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"anzen-avs/aggregator/types"
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	"anzen-avs/core"
+
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 	sdktypes "github.com/Layr-Labs/eigensdk-go/types"
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	"github.com/Layr-Labs/incredible-squaring-avs/core"
 )
 
-func TestProcessSignedTaskResponse(t *testing.T) {
+func TestProcessSignedOracleTaskResponse(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -42,13 +43,13 @@ func TestProcessSignedTaskResponse(t *testing.T) {
 	aggregator, _, mockBlsAggServ, err := createMockAggregator(mockCtrl, operatorPubkeyDict)
 	assert.Nil(t, err)
 
-	signedTaskResponse, err := createMockSignedTaskResponse(MockTask{
+	signedTaskResponse, err := createMockSignedOracleTaskResponse(MockTask{
 		TaskNum:        TASK_INDEX,
 		BlockNumber:    BLOCK_NUMBER,
 		NumberToSquare: NUMBER_TO_SQUARE,
 	}, *MOCK_OPERATOR_KEYPAIR)
 	assert.Nil(t, err)
-	signedTaskResponseDigest, err := core.GetTaskResponseDigest(&signedTaskResponse.TaskResponse)
+	signedTaskResponseDigest, err := core.GetPullOracleTaskResponseDigest(&signedTaskResponse.OraclePullTaskResponse)
 	assert.Nil(t, err)
 
 	// TODO(samlaf): is this the right way to test writing to external service?
@@ -56,26 +57,25 @@ func TestProcessSignedTaskResponse(t *testing.T) {
 	// see https://hynek.me/articles/what-to-mock-in-5-mins/
 	mockBlsAggServ.EXPECT().ProcessNewSignature(context.Background(), TASK_INDEX, signedTaskResponseDigest,
 		&signedTaskResponse.BlsSignature, signedTaskResponse.OperatorId)
-	err = aggregator.ProcessSignedTaskResponse(signedTaskResponse, nil)
+	err = aggregator.ProcessSignedOraclePullTaskResponse(signedTaskResponse, nil)
 	assert.Nil(t, err)
 }
 
 // mocks an operator signing on a task response
-func createMockSignedTaskResponse(mockTask MockTask, keypair bls.KeyPair) (*SignedTaskResponse, error) {
-	numberToSquareBigInt := big.NewInt(int64(mockTask.NumberToSquare))
-	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+func createMockSignedOracleTaskResponse(mockTask MockTask, keypair bls.KeyPair) (*SignedOraclePullTaskResponse, error) {
+	taskResponse := &cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
 		ReferenceTaskIndex: mockTask.TaskNum,
-		NumberSquared:      numberToSquareBigInt.Mul(numberToSquareBigInt, numberToSquareBigInt),
+		SafetyFactor:       big.NewInt(1_000_000_000),
 	}
-	taskResponseHash, err := core.GetTaskResponseDigest(taskResponse)
+	taskResponseHash, err := core.GetPullOracleTaskResponseDigest(taskResponse)
 	if err != nil {
 		return nil, err
 	}
 	blsSignature := keypair.SignMessage(taskResponseHash)
-	signedTaskResponse := &SignedTaskResponse{
-		TaskResponse: *taskResponse,
-		BlsSignature: *blsSignature,
-		OperatorId:   MOCK_OPERATOR_ID,
+	signedTaskResponse := &SignedOraclePullTaskResponse{
+		OraclePullTaskResponse: *taskResponse,
+		BlsSignature:           *blsSignature,
+		OperatorId:             MOCK_OPERATOR_ID,
 	}
 	return signedTaskResponse, nil
 }

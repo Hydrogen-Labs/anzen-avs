@@ -10,12 +10,13 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	"github.com/Layr-Labs/incredible-squaring-avs/core"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/chainio"
-	"github.com/Layr-Labs/incredible-squaring-avs/metrics"
-	"github.com/Layr-Labs/incredible-squaring-avs/types"
+	"anzen-avs/aggregator"
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	"anzen-avs/core"
+	"anzen-avs/core/chainio"
+	"anzen-avs/metrics"
+	safety_factor "anzen-avs/safety-factor"
+	"anzen-avs/types"
 
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients"
 	sdkelcontracts "github.com/Layr-Labs/eigensdk-go/chainio/clients/elcontracts"
@@ -58,13 +59,17 @@ type Operator struct {
 	operatorId       sdktypes.OperatorId
 	operatorAddr     common.Address
 	// receive new tasks in this chan (typically from listening to onchain event)
-	newTaskCreatedChan chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated
+	newTaskCreatedChan chan *cstaskmanager.ContractAnzenTaskManagerNewTaskCreated
+	// receive new oracle pull tasks in this chan (typically from listening to onchain event)	// receive new oracle pull tasks in this chan (typically from listening to onchain event)
+	newOraclePullTaskCreatedChan chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated
 	// ip address of aggregator
 	aggregatorServerIpPortAddr string
 	// rpc client to send signed task responses to aggregator
 	aggregatorRpcClient AggregatorRpcClienter
 	// needed when opting in to avs (allow this service manager contract to slash operator)
 	credibleSquaringServiceManagerAddr common.Address
+
+	safetyFactorService safety_factor.SafetyFactorServicer
 }
 
 // TODO(samlaf): config is a mess right now, since the chainio client constructors
@@ -210,6 +215,8 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 		return nil, err
 	}
 
+	safetyFactorService := safety_factor.NewSafetyFactorService(logger)
+
 	operator := &Operator{
 		config:                             c,
 		logger:                             logger,
@@ -226,10 +233,11 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 		operatorAddr:                       common.HexToAddress(c.OperatorAddress),
 		aggregatorServerIpPortAddr:         c.AggregatorServerIpPortAddress,
 		aggregatorRpcClient:                aggregatorRpcClient,
-		newTaskCreatedChan:                 make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated),
+		newTaskCreatedChan:                 make(chan *cstaskmanager.ContractAnzenTaskManagerNewTaskCreated),
+		newOraclePullTaskCreatedChan:       make(chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
 		credibleSquaringServiceManagerAddr: common.HexToAddress(c.AVSRegistryCoordinatorAddress),
 		operatorId:                         [32]byte{0}, // this is set below
-
+		safetyFactorService:                safetyFactorService,
 	}
 
 	if c.RegisterOperatorOnStartup {
@@ -279,7 +287,7 @@ func (o *Operator) Start(ctx context.Context) error {
 	}
 
 	// TODO(samlaf): wrap this call with increase in avs-node-spec metric
-	sub := o.avsSubscriber.SubscribeToNewTasks(o.newTaskCreatedChan)
+	sub := o.avsSubscriber.SubcribeToNewOraclePullTasks(o.newOraclePullTaskCreatedChan)
 	for {
 		select {
 		case <-ctx.Done():
@@ -293,7 +301,7 @@ func (o *Operator) Start(ctx context.Context) error {
 			// TODO(samlaf): write unit tests to check if this fixed the issues we were seeing
 			sub.Unsubscribe()
 			// TODO(samlaf): wrap this call with increase in avs-node-spec metric
-			sub = o.avsSubscriber.SubscribeToNewTasks(o.newTaskCreatedChan)
+			sub = o.avsSubscriber.SubcribeToNewOraclePullTasks(o.newOraclePullTaskCreatedChan)
 		case newTaskCreatedLog := <-o.newTaskCreatedChan:
 			o.metrics.IncNumTasksReceived()
 			taskResponse := o.ProcessNewTaskCreatedLog(newTaskCreatedLog)
@@ -302,13 +310,56 @@ func (o *Operator) Start(ctx context.Context) error {
 				continue
 			}
 			go o.aggregatorRpcClient.SendSignedTaskResponseToAggregator(signedTaskResponse)
+
+		case newOraclePullTaskCreatedLog := <-o.newOraclePullTaskCreatedChan:
+			o.logger.Info("Received new oracle pull task", "taskIndex", newOraclePullTaskCreatedLog.OraclePullTask)
+			taskResponse, err := o.ProcessNewOraclePullTaskLog(newOraclePullTaskCreatedLog)
+			if err != nil {
+				continue
+			}
+			signedPullOracleTaskResponse, err := o.SignOraclePullTaskResponse(taskResponse)
+			if err != nil {
+				continue
+			}
+			go o.aggregatorRpcClient.SendSignedOraclePullTaskReponseToAggregator(signedPullOracleTaskResponse)
+			o.logger.Info("Sending task response to aggregator", "taskResponse", taskResponse)
+
 		}
+
 	}
+}
+
+// Takes a newOraclePullTaskSolutionProposedLog struct as input and returns a TaskResponseHeader struct.
+// The TaskResponseHeader struct is the struct that is signed and sent to the contract as a task response.
+func (o *Operator) ProcessNewOraclePullTaskLog(newOraclePullTaskLog *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated) (*cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse, error) {
+	o.logger.Info("Received new oracle pull task solution proposed", "task", newOraclePullTaskLog)
+
+	oracleIndex := newOraclePullTaskLog.OraclePullTask.OracleIndex
+
+	safetyFactorInfo, err := o.safetyFactorService.GetSafetyFactorInfoByOracleIndex(int(oracleIndex))
+	if err != nil {
+		o.logger.Error("Error getting safety factor info", "err", err)
+		return nil, err
+	}
+
+	// Check if the proposed solution is equal to what we expect
+	if safetyFactorInfo.SF.Cmp(newOraclePullTaskLog.OraclePullTask.ProposedSafetyFactor) != 0 {
+		o.logger.Error("Proposed solution does not match expected solution", "expected", safetyFactorInfo.SF, "proposed", newOraclePullTaskLog.OraclePullTask.ProposedSafetyFactor)
+
+		return nil, fmt.Errorf("Proposed solution does not match expected solution")
+	}
+
+	taskResponse := &cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
+		ReferenceTaskIndex: newOraclePullTaskLog.TaskIndex,
+		SafetyFactor:       safetyFactorInfo.SF,
+	}
+
+	return taskResponse, nil
 }
 
 // Takes a NewTaskCreatedLog struct as input and returns a TaskResponseHeader struct.
 // The TaskResponseHeader struct is the struct that is signed and sent to the contract as a task response.
-func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated) *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse {
+func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.ContractAnzenTaskManagerNewTaskCreated) *cstaskmanager.IAnzenTaskManagerTaskResponse {
 	o.logger.Debug("Received new task", "task", newTaskCreatedLog)
 	o.logger.Info("Received new task",
 		"numberToBeSquared", newTaskCreatedLog.Task.NumberToBeSquared,
@@ -318,14 +369,15 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 		"QuorumThresholdPercentage", newTaskCreatedLog.Task.QuorumThresholdPercentage,
 	)
 	numberSquared := big.NewInt(0).Exp(newTaskCreatedLog.Task.NumberToBeSquared, big.NewInt(2), nil)
-	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+	taskResponse := &cstaskmanager.IAnzenTaskManagerTaskResponse{
 		ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
 		NumberSquared:      numberSquared,
 	}
+
 	return taskResponse
 }
 
-func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse) (*aggregator.SignedTaskResponse, error) {
+func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IAnzenTaskManagerTaskResponse) (*aggregator.SignedTaskResponse, error) {
 	taskResponseHash, err := core.GetTaskResponseDigest(taskResponse)
 	if err != nil {
 		o.logger.Error("Error getting task response header hash. skipping task (this is not expected and should be investigated)", "err", err)
@@ -339,4 +391,20 @@ func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IIncredibleSquar
 	}
 	o.logger.Debug("Signed task response", "signedTaskResponse", signedTaskResponse)
 	return signedTaskResponse, nil
+}
+
+func (o *Operator) SignOraclePullTaskResponse(oraclePullTaskResponse *cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse) (*aggregator.SignedOraclePullTaskResponse, error) {
+	oraclePullTaskResponseHash, err := core.GetPullOracleTaskResponseDigest(oraclePullTaskResponse)
+	if err != nil {
+		o.logger.Error("Error getting oracle pull task response header hash. skipping task (this is not expected and should be investigated)", "err", err)
+		return nil, err
+	}
+	blsSignature := o.blsKeypair.SignMessage(oraclePullTaskResponseHash)
+	signedOraclePullTaskResponse := &aggregator.SignedOraclePullTaskResponse{
+		OraclePullTaskResponse: *oraclePullTaskResponse,
+		BlsSignature:           *blsSignature,
+		OperatorId:             o.operatorId,
+	}
+	o.logger.Debug("Signed oracle pull task response", "signedOraclePullTaskResponse", signedOraclePullTaskResponse)
+	return signedOraclePullTaskResponse, nil
 }

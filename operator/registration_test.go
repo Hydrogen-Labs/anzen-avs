@@ -9,9 +9,10 @@ import (
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 	sdklogging "github.com/Layr-Labs/eigensdk-go/logging"
 
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	"github.com/Layr-Labs/incredible-squaring-avs/metrics"
-	"github.com/Layr-Labs/incredible-squaring-avs/tests"
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	"anzen-avs/metrics"
+	safety_factor "anzen-avs/safety-factor"
+	"anzen-avs/tests"
 )
 
 const MOCK_OPERATOR_BLS_PRIVATE_KEY = "69"
@@ -35,6 +36,7 @@ func createMockOperator() (*Operator, error) {
 	logger := sdklogging.NewNoopLogger()
 	reg := prometheus.NewRegistry()
 	noopMetrics := metrics.NewNoopMetrics()
+	mockSafetyFactorService := safety_factor.NewSafetyFactorService(logger)
 
 	blsPrivateKey, err := bls.NewPrivateKey(MOCK_OPERATOR_BLS_PRIVATE_KEY)
 	if err != nil {
@@ -43,12 +45,13 @@ func createMockOperator() (*Operator, error) {
 	operatorKeypair := bls.NewKeyPair(blsPrivateKey)
 
 	operator := &Operator{
-		logger:             logger,
-		blsKeypair:         operatorKeypair,
-		metricsReg:         reg,
-		metrics:            noopMetrics,
-		newTaskCreatedChan: make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated),
-		operatorId:         MOCK_OPERATOR_ID,
+		logger:                       logger,
+		blsKeypair:                   operatorKeypair,
+		metricsReg:                   reg,
+		metrics:                      noopMetrics,
+		safetyFactorService:          mockSafetyFactorService,
+		newOraclePullTaskCreatedChan: make(chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
+		operatorId:                   MOCK_OPERATOR_ID,
 	}
 	return operator, nil
 }

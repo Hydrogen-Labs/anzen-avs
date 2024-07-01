@@ -3,18 +3,31 @@ package mocks
 import (
 	"math/big"
 
+	"anzen-avs/aggregator/types"
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+
 	opstateretriever "github.com/Layr-Labs/eigensdk-go/contracts/bindings/OperatorStateRetriever"
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
 )
 
 // ====== TaskManager Mocks ======
 
-func MockSendNewTaskNumberToSquareCall(blockNum, taskNum, numberToSquare uint32) (cstaskmanager.IIncredibleSquaringTaskManagerTask, uint32, error) {
-	task := cstaskmanager.IIncredibleSquaringTaskManagerTask{
+func MockSendNewTaskNumberToSquareCall(blockNum, taskNum, numberToSquare uint32) (cstaskmanager.IAnzenTaskManagerTask, uint32, error) {
+	task := cstaskmanager.IAnzenTaskManagerTask{
 		NumberToBeSquared:         big.NewInt(int64(numberToSquare)),
 		TaskCreatedBlock:          blockNum,
+		QuorumNumbers:             types.QUORUM_NUMBERS.UnderlyingType(),
+		QuorumThresholdPercentage: uint32(types.QUORUM_THRESHOLD_NUMERATOR),
+	}
+
+	return task, taskNum, nil
+}
+
+func MocksSendNewOraclePullTaskCall(blockNum, taskNum, oracleIndex uint32, proposedSafetyFactor big.Int) (cstaskmanager.IAnzenTaskManagerOraclePullTask, uint32, error) {
+	task := cstaskmanager.IAnzenTaskManagerOraclePullTask{
+		OracleIndex:               oracleIndex,
+		TaskCreatedBlock:          blockNum,
+		ProposedSafetyFactor:      &proposedSafetyFactor,
 		QuorumNumbers:             types.QUORUM_NUMBERS.UnderlyingType(),
 		QuorumThresholdPercentage: uint32(types.QUORUM_THRESHOLD_NUMERATOR),
 	}

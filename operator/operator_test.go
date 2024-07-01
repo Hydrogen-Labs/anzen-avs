@@ -14,11 +14,11 @@ import (
 
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator"
-	aggtypes "github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	chainiomocks "github.com/Layr-Labs/incredible-squaring-avs/core/chainio/mocks"
-	operatormocks "github.com/Layr-Labs/incredible-squaring-avs/operator/mocks"
+	"anzen-avs/aggregator"
+	aggtypes "anzen-avs/aggregator/types"
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	chainiomocks "anzen-avs/core/chainio/mocks"
+	operatormocks "anzen-avs/operator/mocks"
 )
 
 func TestOperator(t *testing.T) {
@@ -27,34 +27,41 @@ func TestOperator(t *testing.T) {
 	const taskIndex = 1
 
 	t.Run("ProcessNewTaskCreatedLog", func(t *testing.T) {
-		var numberToBeSquared = big.NewInt(3)
-		newTaskCreatedLog := &cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated{
+		var ORACLE_INDEX = uint32(0)
+		var proposedSafetyFactor = big.NewInt(400_000_000)
+
+		newTaskCreatedLog := &cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated{
 			TaskIndex: taskIndex,
-			Task: cstaskmanager.IIncredibleSquaringTaskManagerTask{
-				NumberToBeSquared:         numberToBeSquared,
+			OraclePullTask: cstaskmanager.IAnzenTaskManagerOraclePullTask{
+				OracleIndex:               ORACLE_INDEX,
+				ProposedSafetyFactor:      proposedSafetyFactor,
 				TaskCreatedBlock:          1000,
 				QuorumNumbers:             aggtypes.QUORUM_NUMBERS.UnderlyingType(),
 				QuorumThresholdPercentage: uint32(aggtypes.QUORUM_THRESHOLD_NUMERATOR),
 			},
 			Raw: types.Log{},
 		}
-		got := operator.ProcessNewTaskCreatedLog(newTaskCreatedLog)
-		numberSquared := big.NewInt(0).Mul(numberToBeSquared, numberToBeSquared)
-		want := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+
+		got, err := operator.ProcessNewOraclePullTaskLog(newTaskCreatedLog)
+		assert.Nil(t, err)
+
+		want := &cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
 			ReferenceTaskIndex: taskIndex,
-			NumberSquared:      numberSquared,
+			SafetyFactor:       proposedSafetyFactor,
 		}
 		assert.Equal(t, got, want)
 	})
 
 	t.Run("Start", func(t *testing.T) {
-		var numberToBeSquared = big.NewInt(3)
+		var ORACLE_INDEX = uint32(0)
+		var proposedSafetyFactor = big.NewInt(400_000_000)
 
 		// new task event
-		newTaskCreatedEvent := &cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated{
+		newTaskCreatedEvent := &cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated{
 			TaskIndex: taskIndex,
-			Task: cstaskmanager.IIncredibleSquaringTaskManagerTask{
-				NumberToBeSquared:         numberToBeSquared,
+			OraclePullTask: cstaskmanager.IAnzenTaskManagerOraclePullTask{
+				OracleIndex:               ORACLE_INDEX,
+				ProposedSafetyFactor:      proposedSafetyFactor,
 				TaskCreatedBlock:          1000,
 				QuorumNumbers:             aggtypes.QUORUM_NUMBERS.UnderlyingType(),
 				QuorumThresholdPercentage: uint32(aggtypes.QUORUM_THRESHOLD_NUMERATOR),
@@ -62,15 +69,15 @@ func TestOperator(t *testing.T) {
 			Raw: types.Log{},
 		}
 		fmt.Println("newTaskCreatedEvent", newTaskCreatedEvent)
-		X, ok := big.NewInt(0).SetString("7926134832136282318561896451042374984489965925674521194255549259381336496956", 10)
+		X, ok := big.NewInt(0).SetString("9021072218505966130870962639715395918774808826906850912982707609409475544839", 10)
 		assert.True(t, ok)
-		Y, ok := big.NewInt(0).SetString("15243507701692917330954619280683582177901049846125926696838777109165913318327", 10)
+		Y, ok := big.NewInt(0).SetString("13150337747840177229943570937415137795286280110433164353723356045586207798531", 10)
 		assert.True(t, ok)
 
-		signedTaskResponse := &aggregator.SignedTaskResponse{
-			TaskResponse: cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+		signedTaskResponse := &aggregator.SignedOraclePullTaskResponse{
+			OraclePullTaskResponse: cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
 				ReferenceTaskIndex: taskIndex,
-				NumberSquared:      big.NewInt(0).Mul(numberToBeSquared, numberToBeSquared),
+				SafetyFactor:       proposedSafetyFactor,
 			},
 			BlsSignature: bls.Signature{
 				G1Point: bls.NewG1Point(X, Y),
@@ -81,11 +88,11 @@ func TestOperator(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		mockAggregatorRpcClient := operatormocks.NewMockAggregatorRpcClienter(mockCtrl)
-		mockAggregatorRpcClient.EXPECT().SendSignedTaskResponseToAggregator(signedTaskResponse)
+		mockAggregatorRpcClient.EXPECT().SendSignedOraclePullTaskReponseToAggregator(signedTaskResponse)
 		operator.aggregatorRpcClient = mockAggregatorRpcClient
 
 		mockSubscriber := chainiomocks.NewMockAvsSubscriberer(mockCtrl)
-		mockSubscriber.EXPECT().SubscribeToNewTasks(operator.newTaskCreatedChan).Return(event.NewSubscription(func(quit <-chan struct{}) error {
+		mockSubscriber.EXPECT().SubcribeToNewOraclePullTasks(operator.newOraclePullTaskCreatedChan).Return(event.NewSubscription(func(quit <-chan struct{}) error {
 			// loop forever
 			<-quit
 			return nil
@@ -101,7 +108,7 @@ func TestOperator(t *testing.T) {
 			err := operator.Start(ctx)
 			assert.Nil(t, err)
 		}()
-		operator.newTaskCreatedChan <- newTaskCreatedEvent
+		operator.newOraclePullTaskCreatedChan <- newTaskCreatedEvent
 		time.Sleep(1 * time.Second)
 
 		cancel()

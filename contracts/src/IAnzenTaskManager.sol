@@ -3,26 +3,23 @@ pragma solidity ^0.8.9;
 
 import "@eigenlayer-middleware/src/libraries/BN254.sol";
 
-interface IIncredibleSquaringTaskManager {
+interface IAnzenTaskManager {
     // EVENTS
     event NewTaskCreated(uint32 indexed taskIndex, Task task);
 
-    event TaskResponded(
-        TaskResponse taskResponse,
-        TaskResponseMetadata taskResponseMetadata
+    event NewOraclePullTaskCreated(uint32 indexed taskIndex, OraclePullTask oraclePullTask);
+
+    event TaskResponded(TaskResponse taskResponse, TaskResponseMetadata taskResponseMetadata);
+
+    event OraclePullTaskResponded(
+        OraclePullTaskResponse oraclePullTaskResponse, TaskResponseMetadata taskResponseMetadata
     );
 
     event TaskCompleted(uint32 indexed taskIndex);
 
-    event TaskChallengedSuccessfully(
-        uint32 indexed taskIndex,
-        address indexed challenger
-    );
+    event TaskChallengedSuccessfully(uint32 indexed taskIndex, address indexed challenger);
 
-    event TaskChallengedUnsuccessfully(
-        uint32 indexed taskIndex,
-        address indexed challenger
-    );
+    event TaskChallengedUnsuccessfully(uint32 indexed taskIndex, address indexed challenger);
 
     // STRUCTS
     struct Task {
@@ -38,6 +35,14 @@ interface IIncredibleSquaringTaskManager {
         uint32 quorumThresholdPercentage;
     }
 
+    struct OraclePullTask {
+        uint32 oracleIndex;
+        int256 proposedSafetyFactor;
+        uint32 taskCreatedBlock;
+        bytes quorumNumbers;
+        uint32 quorumThresholdPercentage;
+    }
+
     // Task response is hashed and signed by operators.
     // these signatures are aggregated and sent to the contract as response.
     struct TaskResponse {
@@ -45,6 +50,11 @@ interface IIncredibleSquaringTaskManager {
         uint32 referenceTaskIndex;
         // This is just the response that the operator has to compute by itself.
         uint256 numberSquared;
+    }
+
+    struct OraclePullTaskResponse {
+        uint32 referenceTaskIndex;
+        int256 safetyFactor;
     }
 
     // Extra information related to taskResponse, which is filled inside the contract.
@@ -56,9 +66,11 @@ interface IIncredibleSquaringTaskManager {
     }
 
     // FUNCTIONS
-    // NOTE: this function creates new task.
-    function createNewTask(
-        uint256 numberToBeSquared,
+
+    // NOTE: this function creates new oracle pull task.
+    function createNewOraclePullTask(
+        uint32 oracleIndex,
+        int256 proposedSafetyFactor,
         uint32 quorumThresholdPercentage,
         bytes calldata quorumNumbers
     ) external;

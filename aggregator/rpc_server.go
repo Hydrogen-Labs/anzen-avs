@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/rpc"
 
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	"github.com/Layr-Labs/incredible-squaring-avs/core"
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	"anzen-avs/core"
 
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 	"github.com/Layr-Labs/eigensdk-go/types"
@@ -39,34 +39,40 @@ func (agg *Aggregator) startServer(ctx context.Context) error {
 }
 
 type SignedTaskResponse struct {
-	TaskResponse cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse
+	TaskResponse cstaskmanager.IAnzenTaskManagerTaskResponse
 	BlsSignature bls.Signature
 	OperatorId   types.OperatorId
 }
 
+type SignedOraclePullTaskResponse struct {
+	OraclePullTaskResponse cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse
+	BlsSignature           bls.Signature
+	OperatorId             types.OperatorId
+}
+
 // rpc endpoint which is called by operator
-// reply doesn't need to be checked. If there are no errors, the task response is accepted
+// reply doesn't need to be checked. If there are no errors, the oracle pull task response is accepted
 // rpc framework forces a reply type to exist, so we put bool as a placeholder
-func (agg *Aggregator) ProcessSignedTaskResponse(signedTaskResponse *SignedTaskResponse, reply *bool) error {
-	agg.logger.Infof("Received signed task response: %#v", signedTaskResponse)
-	taskIndex := signedTaskResponse.TaskResponse.ReferenceTaskIndex
-	taskResponseDigest, err := core.GetTaskResponseDigest(&signedTaskResponse.TaskResponse)
+func (agg *Aggregator) ProcessSignedOraclePullTaskResponse(signedOraclePullTaskResponse *SignedOraclePullTaskResponse, reply *bool) error {
+	agg.logger.Infof("Received signed oracle pull task response: %#v", signedOraclePullTaskResponse)
+	taskIndex := signedOraclePullTaskResponse.OraclePullTaskResponse.ReferenceTaskIndex
+	taskResponseDigest, err := core.GetPullOracleTaskResponseDigest(&signedOraclePullTaskResponse.OraclePullTaskResponse)
 	if err != nil {
 		agg.logger.Error("Failed to get task response digest", "err", err)
 		return TaskResponseDigestNotFoundError500
 	}
-	agg.taskResponsesMu.Lock()
-	if _, ok := agg.taskResponses[taskIndex]; !ok {
-		agg.taskResponses[taskIndex] = make(map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse)
+	agg.oracleTaskReponsesMu.Lock()
+	if _, ok := agg.oracleTaskReponses[taskIndex]; !ok {
+		agg.oracleTaskReponses[taskIndex] = make(map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse)
 	}
-	if _, ok := agg.taskResponses[taskIndex][taskResponseDigest]; !ok {
-		agg.taskResponses[taskIndex][taskResponseDigest] = signedTaskResponse.TaskResponse
+	if _, ok := agg.oracleTaskReponses[taskIndex][taskResponseDigest]; !ok {
+		agg.oracleTaskReponses[taskIndex][taskResponseDigest] = signedOraclePullTaskResponse.OraclePullTaskResponse
 	}
-	agg.taskResponsesMu.Unlock()
+	agg.oracleTaskReponsesMu.Unlock()
 
 	err = agg.blsAggregationService.ProcessNewSignature(
 		context.Background(), taskIndex, taskResponseDigest,
-		&signedTaskResponse.BlsSignature, signedTaskResponse.OperatorId,
+		&signedOraclePullTaskResponse.BlsSignature, signedOraclePullTaskResponse.OperatorId,
 	)
 	return err
 }

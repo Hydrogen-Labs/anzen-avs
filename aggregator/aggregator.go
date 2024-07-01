@@ -8,18 +8,20 @@ import (
 
 	"github.com/Layr-Labs/eigensdk-go/logging"
 
+	"anzen-avs/aggregator/types"
+	"anzen-avs/core"
+	"anzen-avs/core/chainio"
+	"anzen-avs/core/config"
+	safety_factor "anzen-avs/safety-factor"
+
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients"
 	sdkclients "github.com/Layr-Labs/eigensdk-go/chainio/clients"
 	"github.com/Layr-Labs/eigensdk-go/services/avsregistry"
 	blsagg "github.com/Layr-Labs/eigensdk-go/services/bls_aggregation"
 	oprsinfoserv "github.com/Layr-Labs/eigensdk-go/services/operatorsinfo"
 	sdktypes "github.com/Layr-Labs/eigensdk-go/types"
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
-	"github.com/Layr-Labs/incredible-squaring-avs/core"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/chainio"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
 
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 )
 
 const (
@@ -65,15 +67,16 @@ const (
 // Upon sending a task onchain (or receiving a NewTaskCreated Event if the tasks were sent by an external task generator), the aggregator can get the list of all operators opted into each quorum at that
 // block number by calling the getOperatorState() function of the BLSOperatorStateRetriever.sol contract.
 type Aggregator struct {
-	logger           logging.Logger
-	serverIpPortAddr string
-	avsWriter        chainio.AvsWriterer
+	logger              logging.Logger
+	serverIpPortAddr    string
+	avsWriter           chainio.AvsWriterer
+	safetyFactorService safety_factor.SafetyFactorServicer
 	// aggregation related fields
 	blsAggregationService blsagg.BlsAggregationService
-	tasks                 map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerTask
-	tasksMu               sync.RWMutex
-	taskResponses         map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse
-	taskResponsesMu       sync.RWMutex
+	oracleTasks           map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerOraclePullTask
+	oracleTasksMu         sync.RWMutex
+	oracleTaskReponses    map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse
+	oracleTaskReponsesMu  sync.RWMutex
 }
 
 // NewAggregator creates a new Aggregator with the provided config.
@@ -108,14 +111,16 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 	operatorPubkeysService := oprsinfoserv.NewOperatorsInfoServiceInMemory(context.Background(), clients.AvsRegistryChainSubscriber, clients.AvsRegistryChainReader, c.Logger)
 	avsRegistryService := avsregistry.NewAvsRegistryServiceChainCaller(avsReader, operatorPubkeysService, c.Logger)
 	blsAggregationService := blsagg.NewBlsAggregatorService(avsRegistryService, c.Logger)
+	safetyFactorService := safety_factor.NewSafetyFactorService(c.Logger)
 
 	return &Aggregator{
 		logger:                c.Logger,
 		serverIpPortAddr:      c.AggregatorServerIpPortAddr,
 		avsWriter:             avsWriter,
 		blsAggregationService: blsAggregationService,
-		tasks:                 make(map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerTask),
-		taskResponses:         make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse),
+		safetyFactorService:   safetyFactorService,
+		oracleTasks:           make(map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerOraclePullTask),
+		oracleTaskReponses:    make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse),
 	}, nil
 }
 
@@ -131,7 +136,7 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 	taskNum := int64(0)
 	// ticker doesn't tick immediately, so we send the first task here
 	// see https://github.com/golang/go/issues/17601
-	_ = agg.sendNewTask(big.NewInt(taskNum))
+	_ = agg.sendNewOraclePullTask(big.NewInt(0))
 	taskNum++
 
 	for {
@@ -140,9 +145,10 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 			return nil
 		case blsAggServiceResp := <-agg.blsAggregationService.GetResponseChannel():
 			agg.logger.Info("Received response from blsAggregationService", "blsAggServiceResp", blsAggServiceResp)
-			agg.sendAggregatedResponseToContract(blsAggServiceResp)
+			agg.sendAggregatedOracleResponseToContract(blsAggServiceResp)
 		case <-ticker.C:
-			err := agg.sendNewTask(big.NewInt(taskNum))
+			// TODO: create some policy for when to send oracle pull tasks
+			err := agg.sendNewOraclePullTask(big.NewInt(0))
 			taskNum++
 			if err != nil {
 				// we log the errors inside sendNewTask() so here we just continue to the next task
@@ -152,7 +158,7 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 	}
 }
 
-func (agg *Aggregator) sendAggregatedResponseToContract(blsAggServiceResp blsagg.BlsAggregationServiceResponse) {
+func (agg *Aggregator) sendAggregatedOracleResponseToContract(blsAggServiceResp blsagg.BlsAggregationServiceResponse) {
 	// TODO: check if blsAggServiceResp contains an err
 	if blsAggServiceResp.Err != nil {
 		agg.logger.Error("BlsAggregationServiceResponse contains an error", "err", blsAggServiceResp.Err)
@@ -181,44 +187,50 @@ func (agg *Aggregator) sendAggregatedResponseToContract(blsAggServiceResp blsagg
 	agg.logger.Info("Threshold reached. Sending aggregated response onchain.",
 		"taskIndex", blsAggServiceResp.TaskIndex,
 	)
-	agg.tasksMu.RLock()
-	task := agg.tasks[blsAggServiceResp.TaskIndex]
-	agg.tasksMu.RUnlock()
-	agg.taskResponsesMu.RLock()
-	taskResponse := agg.taskResponses[blsAggServiceResp.TaskIndex][blsAggServiceResp.TaskResponseDigest]
-	agg.taskResponsesMu.RUnlock()
-	_, err := agg.avsWriter.SendAggregatedResponse(context.Background(), task, taskResponse, nonSignerStakesAndSignature)
+	agg.oracleTasksMu.RLock()
+	task := agg.oracleTasks[blsAggServiceResp.TaskIndex]
+	agg.oracleTasksMu.RUnlock()
+	agg.oracleTaskReponsesMu.RLock()
+	taskResponse := agg.oracleTaskReponses[blsAggServiceResp.TaskIndex][blsAggServiceResp.TaskResponseDigest]
+	agg.oracleTaskReponsesMu.RUnlock()
+	_, err := agg.avsWriter.SendAggregatedOracleResponse(context.Background(), task, taskResponse, nonSignerStakesAndSignature)
 	if err != nil {
 		agg.logger.Error("Aggregator failed to respond to task", "err", err)
 	}
 }
 
-// sendNewTask sends a new task to the task manager contract, and updates the Task dict struct
-// with the information of operators opted into quorum 0 at the block of task creation.
-func (agg *Aggregator) sendNewTask(numToSquare *big.Int) error {
-	agg.logger.Info("Aggregator sending new task", "numberToSquare", numToSquare)
+func (agg *Aggregator) sendNewOraclePullTask(oracleIndex *big.Int) error {
+	agg.logger.Info("Aggregator sending new oracle pull task", "oracleIndex", oracleIndex)
 	// Send number to square to the task manager contract
-	newTask, taskIndex, err := agg.avsWriter.SendNewTaskNumberToSquare(context.Background(), numToSquare, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
+	proposedSafetyFactorInfo, err := agg.safetyFactorService.GetSafetyFactorInfoByOracleIndex(int(oracleIndex.Int64()))
 	if err != nil {
-		agg.logger.Error("Aggregator failed to send number to square", "err", err)
+		agg.logger.Error("Aggregator failed to get safety factor info", "err", err)
 		return err
 	}
 
-	agg.tasksMu.Lock()
-	agg.tasks[taskIndex] = newTask
-	agg.tasksMu.Unlock()
+	newPullTask, taskIndex, err := agg.avsWriter.SendNewOraclePullTask(context.Background(), oracleIndex, proposedSafetyFactorInfo.SF, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
 
-	quorumThresholdPercentages := make(sdktypes.QuorumThresholdPercentages, len(newTask.QuorumNumbers))
-	for i := range newTask.QuorumNumbers {
-		quorumThresholdPercentages[i] = sdktypes.QuorumThresholdPercentage(newTask.QuorumThresholdPercentage)
+	if err != nil {
+		agg.logger.Error("Aggregator failed to send new oracle pull task", "err", err)
+		return err
 	}
-	// TODO(samlaf): we use seconds for now, but we should ideally pass a blocknumber to the blsAggregationService
-	// and it should monitor the chain and only expire the task aggregation once the chain has reached that block number.
+
+	agg.logger.Info("Aggregator sent new oracle pull task", "task", newPullTask)
+
+	agg.oracleTasksMu.Lock()
+	agg.oracleTasks[taskIndex] = newPullTask
+	agg.oracleTasksMu.Unlock()
+
+	quorumThresholdPercentages := make(sdktypes.QuorumThresholdPercentages, len(newPullTask.QuorumNumbers))
+	for i := range newPullTask.QuorumNumbers {
+		quorumThresholdPercentages[i] = sdktypes.QuorumThresholdPercentage(newPullTask.QuorumThresholdPercentage)
+	}
+
 	taskTimeToExpiry := taskChallengeWindowBlock * blockTimeSeconds
 	var quorumNums sdktypes.QuorumNums
-	for _, quorumNum := range newTask.QuorumNumbers {
+	for _, quorumNum := range newPullTask.QuorumNumbers {
 		quorumNums = append(quorumNums, sdktypes.QuorumNum(quorumNum))
 	}
-	agg.blsAggregationService.InitializeNewTask(taskIndex, newTask.TaskCreatedBlock, quorumNums, quorumThresholdPercentages, taskTimeToExpiry)
+	agg.blsAggregationService.InitializeNewTask(taskIndex, newPullTask.TaskCreatedBlock, quorumNums, quorumThresholdPercentages, taskTimeToExpiry)
 	return nil
 }
