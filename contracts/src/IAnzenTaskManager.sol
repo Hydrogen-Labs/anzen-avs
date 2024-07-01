@@ -66,14 +66,11 @@ interface IAnzenTaskManager {
     }
 
     // FUNCTIONS
-    // NOTE: this function creates new task.
-    function createNewTask(uint256 numberToBeSquared, uint32 quorumThresholdPercentage, bytes calldata quorumNumbers)
-        external;
 
     // NOTE: this function creates new oracle pull task.
     function createNewOraclePullTask(
         uint32 oracleIndex,
-        int256 safetyFactor,
+        int256 proposedSafetyFactor,
         uint32 quorumThresholdPercentage,
         bytes calldata quorumNumbers
     ) external;
