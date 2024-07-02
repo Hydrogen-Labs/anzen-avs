@@ -61,21 +61,6 @@ func (mr *MockAvsWritererMockRecorder) DeregisterOperator(arg0, arg1, arg2 any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeregisterOperator", reflect.TypeOf((*MockAvsWriterer)(nil).DeregisterOperator), arg0, arg1, arg2)
 }
 
-// RaiseChallenge mocks base method.
-func (m *MockAvsWriterer) RaiseChallenge(arg0 context.Context, arg1 contractAnzenTaskManager.IAnzenTaskManagerTask, arg2 contractAnzenTaskManager.IAnzenTaskManagerTaskResponse, arg3 contractAnzenTaskManager.IAnzenTaskManagerTaskResponseMetadata, arg4 []contractAnzenTaskManager.BN254G1Point) (*types0.Receipt, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RaiseChallenge", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].(*types0.Receipt)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RaiseChallenge indicates an expected call of RaiseChallenge.
-func (mr *MockAvsWritererMockRecorder) RaiseChallenge(arg0, arg1, arg2, arg3, arg4 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RaiseChallenge", reflect.TypeOf((*MockAvsWriterer)(nil).RaiseChallenge), arg0, arg1, arg2, arg3, arg4)
-}
-
 // RegisterOperatorInQuorumWithAVSRegistryCoordinator mocks base method.
 func (m *MockAvsWriterer) RegisterOperatorInQuorumWithAVSRegistryCoordinator(arg0 context.Context, arg1 *ecdsa.PrivateKey, arg2 [32]byte, arg3 *big.Int, arg4 *bls.KeyPair, arg5 types.QuorumNums, arg6 string) (*types0.Receipt, error) {
 	m.ctrl.T.Helper()
@@ -120,22 +105,6 @@ func (m *MockAvsWriterer) SendNewOraclePullTask(arg0 context.Context, arg1, arg2
 func (mr *MockAvsWritererMockRecorder) SendNewOraclePullTask(arg0, arg1, arg2, arg3, arg4 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendNewOraclePullTask", reflect.TypeOf((*MockAvsWriterer)(nil).SendNewOraclePullTask), arg0, arg1, arg2, arg3, arg4)
-}
-
-// SendNewTaskNumberToSquare mocks base method.
-func (m *MockAvsWriterer) SendNewTaskNumberToSquare(arg0 context.Context, arg1 *big.Int, arg2 types.QuorumThresholdPercentage, arg3 types.QuorumNums) (contractAnzenTaskManager.IAnzenTaskManagerTask, uint32, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendNewTaskNumberToSquare", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].(contractAnzenTaskManager.IAnzenTaskManagerTask)
-	ret1, _ := ret[1].(uint32)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// SendNewTaskNumberToSquare indicates an expected call of SendNewTaskNumberToSquare.
-func (mr *MockAvsWritererMockRecorder) SendNewTaskNumberToSquare(arg0, arg1, arg2, arg3 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendNewTaskNumberToSquare", reflect.TypeOf((*MockAvsWriterer)(nil).SendNewTaskNumberToSquare), arg0, arg1, arg2, arg3)
 }
 
 // UpdateStakesOfEntireOperatorSetForQuorums mocks base method.

@@ -5,11 +5,8 @@ import "@eigenlayer-middleware/src/libraries/BN254.sol";
 
 interface IAnzenTaskManager {
     // EVENTS
-    event NewTaskCreated(uint32 indexed taskIndex, Task task);
 
     event NewOraclePullTaskCreated(uint32 indexed taskIndex, OraclePullTask oraclePullTask);
-
-    event TaskResponded(TaskResponse taskResponse, TaskResponseMetadata taskResponseMetadata);
 
     event OraclePullTaskResponded(
         OraclePullTaskResponse oraclePullTaskResponse, TaskResponseMetadata taskResponseMetadata
@@ -21,20 +18,6 @@ interface IAnzenTaskManager {
 
     event TaskChallengedUnsuccessfully(uint32 indexed taskIndex, address indexed challenger);
 
-    // STRUCTS
-    struct Task {
-        uint256 numberToBeSquared;
-        uint32 taskCreatedBlock;
-        // task submitter decides on the criteria for a task to be completed
-        // note that this does not mean the task was "correctly" answered (i.e. the number was squared correctly)
-        //      this is for the challenge logic to verify
-        // task is completed (and contract will accept its TaskResponse) when each quorumNumbers specified here
-        // are signed by at least quorumThresholdPercentage of the operators
-        // note that we set the quorumThresholdPercentage to be the same for all quorumNumbers, but this could be changed
-        bytes quorumNumbers;
-        uint32 quorumThresholdPercentage;
-    }
-
     struct OraclePullTask {
         uint32 oracleIndex;
         int256 proposedSafetyFactor;
@@ -45,13 +28,6 @@ interface IAnzenTaskManager {
 
     // Task response is hashed and signed by operators.
     // these signatures are aggregated and sent to the contract as response.
-    struct TaskResponse {
-        // Can be obtained by the operator from the event NewTaskCreated.
-        uint32 referenceTaskIndex;
-        // This is just the response that the operator has to compute by itself.
-        uint256 numberSquared;
-    }
-
     struct OraclePullTaskResponse {
         uint32 referenceTaskIndex;
         int256 safetyFactor;
@@ -79,12 +55,12 @@ interface IAnzenTaskManager {
     function taskNumber() external view returns (uint32);
 
     // // NOTE: this function raises challenge to existing tasks.
-    function raiseAndResolveChallenge(
-        Task calldata task,
-        TaskResponse calldata taskResponse,
-        TaskResponseMetadata calldata taskResponseMetadata,
-        BN254.G1Point[] memory pubkeysOfNonSigningOperators
-    ) external;
+    // function raiseAndResolveChallenge(
+    //     Task calldata task,
+    //     TaskResponse calldata taskResponse,
+    //     TaskResponseMetadata calldata taskResponseMetadata,
+    //     BN254.G1Point[] memory pubkeysOfNonSigningOperators
+    // ) external;
 
     /// @notice Returns the TASK_RESPONSE_WINDOW_BLOCK
     function getTaskResponseWindowBlock() external view returns (uint32);

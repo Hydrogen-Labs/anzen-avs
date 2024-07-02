@@ -77,6 +77,6 @@ func MockTaskResponseLog() gethtypes.Log {
 	}
 }
 
-func MockTaskResponseReferenceTaskIndex(taskResponse cstaskmanager.IAnzenTaskManagerTaskResponse) uint32 {
+func MockTaskResponseReferenceTaskIndex(taskResponse cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse) uint32 {
 	return taskResponse.ReferenceTaskIndex
 }

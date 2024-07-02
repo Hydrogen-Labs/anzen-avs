@@ -49,15 +49,3 @@ func (mr *MockAggregatorRpcClienterMockRecorder) SendSignedOraclePullTaskReponse
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendSignedOraclePullTaskReponseToAggregator", reflect.TypeOf((*MockAggregatorRpcClienter)(nil).SendSignedOraclePullTaskReponseToAggregator), arg0)
 }
-
-// SendSignedTaskResponseToAggregator mocks base method.
-func (m *MockAggregatorRpcClienter) SendSignedTaskResponseToAggregator(arg0 *aggregator.SignedTaskResponse) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SendSignedTaskResponseToAggregator", arg0)
-}
-
-// SendSignedTaskResponseToAggregator indicates an expected call of SendSignedTaskResponseToAggregator.
-func (mr *MockAggregatorRpcClienterMockRecorder) SendSignedTaskResponseToAggregator(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendSignedTaskResponseToAggregator", reflect.TypeOf((*MockAggregatorRpcClienter)(nil).SendSignedTaskResponseToAggregator), arg0)
-}

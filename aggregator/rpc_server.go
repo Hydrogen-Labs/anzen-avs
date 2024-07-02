@@ -38,12 +38,6 @@ func (agg *Aggregator) startServer(ctx context.Context) error {
 	return nil
 }
 
-type SignedTaskResponse struct {
-	TaskResponse cstaskmanager.IAnzenTaskManagerTaskResponse
-	BlsSignature bls.Signature
-	OperatorId   types.OperatorId
-}
-
 type SignedOraclePullTaskResponse struct {
 	OraclePullTaskResponse cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse
 	BlsSignature           bls.Signature

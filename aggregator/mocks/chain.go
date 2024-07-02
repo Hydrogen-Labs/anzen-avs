@@ -11,18 +11,7 @@ import (
 )
 
 // ====== TaskManager Mocks ======
-
-func MockSendNewTaskNumberToSquareCall(blockNum, taskNum, numberToSquare uint32) (cstaskmanager.IAnzenTaskManagerTask, uint32, error) {
-	task := cstaskmanager.IAnzenTaskManagerTask{
-		NumberToBeSquared:         big.NewInt(int64(numberToSquare)),
-		TaskCreatedBlock:          blockNum,
-		QuorumNumbers:             types.QUORUM_NUMBERS.UnderlyingType(),
-		QuorumThresholdPercentage: uint32(types.QUORUM_THRESHOLD_NUMERATOR),
-	}
-
-	return task, taskNum, nil
-}
-
+// Mocks the SendNewOraclePullTask method of the AvsWriter struct
 func MocksSendNewOraclePullTaskCall(blockNum, taskNum, oracleIndex uint32, proposedSafetyFactor big.Int) (cstaskmanager.IAnzenTaskManagerOraclePullTask, uint32, error) {
 	task := cstaskmanager.IAnzenTaskManagerOraclePullTask{
 		OracleIndex:               oracleIndex,

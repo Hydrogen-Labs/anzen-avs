@@ -26,14 +26,7 @@ contract AnzenServiceManager is ServiceManagerBase {
         IRegistryCoordinator _registryCoordinator,
         IStakeRegistry _stakeRegistry,
         IAnzenTaskManager _anzenTaskManager
-    )
-        ServiceManagerBase(
-            _avsDirectory,
-            IPaymentCoordinator(address(0)), // inc-sq doesn't need to deal with payments
-            _registryCoordinator,
-            _stakeRegistry
-        )
-    {
+    ) ServiceManagerBase(_avsDirectory, IPaymentCoordinator(address(0)), _registryCoordinator, _stakeRegistry) {
         anzenTaskManager = _anzenTaskManager;
     }
 

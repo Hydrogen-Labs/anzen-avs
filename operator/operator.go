@@ -3,7 +3,6 @@ package operator
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"os"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -58,8 +57,6 @@ type Operator struct {
 	blsKeypair       *bls.KeyPair
 	operatorId       sdktypes.OperatorId
 	operatorAddr     common.Address
-	// receive new tasks in this chan (typically from listening to onchain event)
-	newTaskCreatedChan chan *cstaskmanager.ContractAnzenTaskManagerNewTaskCreated
 	// receive new oracle pull tasks in this chan (typically from listening to onchain event)	// receive new oracle pull tasks in this chan (typically from listening to onchain event)
 	newOraclePullTaskCreatedChan chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated
 	// ip address of aggregator
@@ -233,7 +230,6 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 		operatorAddr:                       common.HexToAddress(c.OperatorAddress),
 		aggregatorServerIpPortAddr:         c.AggregatorServerIpPortAddress,
 		aggregatorRpcClient:                aggregatorRpcClient,
-		newTaskCreatedChan:                 make(chan *cstaskmanager.ContractAnzenTaskManagerNewTaskCreated),
 		newOraclePullTaskCreatedChan:       make(chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
 		credibleSquaringServiceManagerAddr: common.HexToAddress(c.AVSRegistryCoordinatorAddress),
 		operatorId:                         [32]byte{0}, // this is set below
@@ -302,16 +298,9 @@ func (o *Operator) Start(ctx context.Context) error {
 			sub.Unsubscribe()
 			// TODO(samlaf): wrap this call with increase in avs-node-spec metric
 			sub = o.avsSubscriber.SubcribeToNewOraclePullTasks(o.newOraclePullTaskCreatedChan)
-		case newTaskCreatedLog := <-o.newTaskCreatedChan:
-			o.metrics.IncNumTasksReceived()
-			taskResponse := o.ProcessNewTaskCreatedLog(newTaskCreatedLog)
-			signedTaskResponse, err := o.SignTaskResponse(taskResponse)
-			if err != nil {
-				continue
-			}
-			go o.aggregatorRpcClient.SendSignedTaskResponseToAggregator(signedTaskResponse)
 
 		case newOraclePullTaskCreatedLog := <-o.newOraclePullTaskCreatedChan:
+			// TODO Record metrics for new oracle pull task
 			o.logger.Info("Received new oracle pull task", "taskIndex", newOraclePullTaskCreatedLog.OraclePullTask)
 			taskResponse, err := o.ProcessNewOraclePullTaskLog(newOraclePullTaskCreatedLog)
 			if err != nil {
@@ -359,39 +348,6 @@ func (o *Operator) ProcessNewOraclePullTaskLog(newOraclePullTaskLog *cstaskmanag
 
 // Takes a NewTaskCreatedLog struct as input and returns a TaskResponseHeader struct.
 // The TaskResponseHeader struct is the struct that is signed and sent to the contract as a task response.
-func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.ContractAnzenTaskManagerNewTaskCreated) *cstaskmanager.IAnzenTaskManagerTaskResponse {
-	o.logger.Debug("Received new task", "task", newTaskCreatedLog)
-	o.logger.Info("Received new task",
-		"numberToBeSquared", newTaskCreatedLog.Task.NumberToBeSquared,
-		"taskIndex", newTaskCreatedLog.TaskIndex,
-		"taskCreatedBlock", newTaskCreatedLog.Task.TaskCreatedBlock,
-		"quorumNumbers", newTaskCreatedLog.Task.QuorumNumbers,
-		"QuorumThresholdPercentage", newTaskCreatedLog.Task.QuorumThresholdPercentage,
-	)
-	numberSquared := big.NewInt(0).Exp(newTaskCreatedLog.Task.NumberToBeSquared, big.NewInt(2), nil)
-	taskResponse := &cstaskmanager.IAnzenTaskManagerTaskResponse{
-		ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
-		NumberSquared:      numberSquared,
-	}
-
-	return taskResponse
-}
-
-func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IAnzenTaskManagerTaskResponse) (*aggregator.SignedTaskResponse, error) {
-	taskResponseHash, err := core.GetTaskResponseDigest(taskResponse)
-	if err != nil {
-		o.logger.Error("Error getting task response header hash. skipping task (this is not expected and should be investigated)", "err", err)
-		return nil, err
-	}
-	blsSignature := o.blsKeypair.SignMessage(taskResponseHash)
-	signedTaskResponse := &aggregator.SignedTaskResponse{
-		TaskResponse: *taskResponse,
-		BlsSignature: *blsSignature,
-		OperatorId:   o.operatorId,
-	}
-	o.logger.Debug("Signed task response", "signedTaskResponse", signedTaskResponse)
-	return signedTaskResponse, nil
-}
 
 func (o *Operator) SignOraclePullTaskResponse(oraclePullTaskResponse *cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse) (*aggregator.SignedOraclePullTaskResponse, error) {
 	oraclePullTaskResponseHash, err := core.GetPullOracleTaskResponseDigest(oraclePullTaskResponse)
