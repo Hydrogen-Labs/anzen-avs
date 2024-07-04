@@ -6,7 +6,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-import {IPaymentCoordinator} from "eigenlayer-contracts/src/contracts/interfaces/IPaymentCoordinator.sol";
+import {IPaymentCoordinator} from "@eigenlayer/contracts/interfaces/IPaymentCoordinator.sol";
 
 import {IAVSReservesManager} from "./interfaces/IAVSReservesManager.sol";
 import {AVSReservesManagerStorage} from "./AVSReservesManagerStorage.sol";

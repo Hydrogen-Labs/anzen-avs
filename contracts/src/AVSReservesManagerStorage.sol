@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import {IPaymentCoordinator} from "eigenlayer-contracts/src/contracts/interfaces/IPaymentCoordinator.sol";
+import {IPaymentCoordinator} from "@eigenlayer/contracts/interfaces/IPaymentCoordinator.sol";
 
 import {IAVSReservesManager} from "./interfaces/IAVSReservesManager.sol";
 import {ISafetyFactorOracle} from "./interfaces/ISafetyFactorOracle.sol";
