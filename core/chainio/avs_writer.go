@@ -27,19 +27,6 @@ type AvsWriterer interface {
 		quorumThresholdPercentage sdktypes.QuorumThresholdPercentage,
 		quorumNumbers sdktypes.QuorumNums,
 	) (cstaskmanager.IAnzenTaskManagerOraclePullTask, uint32, error)
-	SendNewTaskNumberToSquare(
-		ctx context.Context,
-		numToSquare *big.Int,
-		quorumThresholdPercentage sdktypes.QuorumThresholdPercentage,
-		quorumNumbers sdktypes.QuorumNums,
-	) (cstaskmanager.IAnzenTaskManagerTask, uint32, error)
-	RaiseChallenge(
-		ctx context.Context,
-		task cstaskmanager.IAnzenTaskManagerTask,
-		taskResponse cstaskmanager.IAnzenTaskManagerTaskResponse,
-		taskResponseMetadata cstaskmanager.IAnzenTaskManagerTaskResponseMetadata,
-		pubkeysOfNonSigningOperators []cstaskmanager.BN254G1Point,
-	) (*types.Receipt, error)
 	SendAggregatedOracleResponse(ctx context.Context,
 		task cstaskmanager.IAnzenTaskManagerOraclePullTask,
 		taskResponse cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse,
@@ -112,31 +99,6 @@ func (w *AvsWriter) SendNewOraclePullTask(
 	return newTaskCreatedEvent.OraclePullTask, newTaskCreatedEvent.TaskIndex, nil
 }
 
-// returns the tx receipt, as well as the task index (which it gets from parsing the tx receipt logs)
-func (w *AvsWriter) SendNewTaskNumberToSquare(ctx context.Context, numToSquare *big.Int, quorumThresholdPercentage sdktypes.QuorumThresholdPercentage, quorumNumbers sdktypes.QuorumNums) (cstaskmanager.IAnzenTaskManagerTask, uint32, error) {
-	txOpts, err := w.TxMgr.GetNoSendTxOpts()
-	if err != nil {
-		w.logger.Errorf("Error getting tx opts")
-		return cstaskmanager.IAnzenTaskManagerTask{}, 0, err
-	}
-	tx, err := w.AvsContractBindings.TaskManager.CreateNewTask(txOpts, numToSquare, uint32(quorumThresholdPercentage), quorumNumbers.UnderlyingType())
-	if err != nil {
-		w.logger.Errorf("Error assembling CreateNewTask tx")
-		return cstaskmanager.IAnzenTaskManagerTask{}, 0, err
-	}
-	receipt, err := w.TxMgr.Send(ctx, tx)
-	if err != nil {
-		w.logger.Errorf("Error submitting CreateNewTask tx")
-		return cstaskmanager.IAnzenTaskManagerTask{}, 0, err
-	}
-	newTaskCreatedEvent, err := w.AvsContractBindings.TaskManager.ContractAnzenTaskManagerFilterer.ParseNewTaskCreated(*receipt.Logs[0])
-	if err != nil {
-		w.logger.Error("Aggregator failed to parse new task created event", "err", err)
-		return cstaskmanager.IAnzenTaskManagerTask{}, 0, err
-	}
-	return newTaskCreatedEvent.Task, newTaskCreatedEvent.TaskIndex, nil
-}
-
 func (w *AvsWriter) SendAggregatedOracleResponse(
 	ctx context.Context, task cstaskmanager.IAnzenTaskManagerOraclePullTask,
 	taskResponse cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse,
@@ -155,31 +117,6 @@ func (w *AvsWriter) SendAggregatedOracleResponse(
 	receipt, err := w.TxMgr.Send(ctx, tx)
 	if err != nil {
 		w.logger.Errorf("Error submitting respondToTask tx")
-		return nil, err
-	}
-	return receipt, nil
-}
-
-func (w *AvsWriter) RaiseChallenge(
-	ctx context.Context,
-	task cstaskmanager.IAnzenTaskManagerTask,
-	taskResponse cstaskmanager.IAnzenTaskManagerTaskResponse,
-	taskResponseMetadata cstaskmanager.IAnzenTaskManagerTaskResponseMetadata,
-	pubkeysOfNonSigningOperators []cstaskmanager.BN254G1Point,
-) (*types.Receipt, error) {
-	txOpts, err := w.TxMgr.GetNoSendTxOpts()
-	if err != nil {
-		w.logger.Errorf("Error getting tx opts")
-		return nil, err
-	}
-	tx, err := w.AvsContractBindings.TaskManager.RaiseAndResolveChallenge(txOpts, task, taskResponse, taskResponseMetadata, pubkeysOfNonSigningOperators)
-	if err != nil {
-		w.logger.Errorf("Error assembling RaiseChallenge tx")
-		return nil, err
-	}
-	receipt, err := w.TxMgr.Send(ctx, tx)
-	if err != nil {
-		w.logger.Errorf("Error submitting RaiseChallenge tx")
 		return nil, err
 	}
 	return receipt, nil

@@ -3,7 +3,6 @@ package chainio
 import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	gethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
 
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients/eth"
@@ -14,10 +13,7 @@ import (
 )
 
 type AvsSubscriberer interface {
-	SubscribeToNewTasks(newTaskCreatedChan chan *cstaskmanager.ContractAnzenTaskManagerNewTaskCreated) event.Subscription
 	SubcribeToNewOraclePullTasks(newOraclePullTaskLogs chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated) event.Subscription
-	SubscribeToTaskResponses(taskResponseLogs chan *cstaskmanager.ContractAnzenTaskManagerTaskResponded) event.Subscription
-	ParseTaskResponded(rawLog types.Log) (*cstaskmanager.ContractAnzenTaskManagerTaskResponded, error)
 }
 
 // Subscribers use a ws connection instead of http connection like Readers
@@ -54,17 +50,6 @@ func NewAvsSubscriber(avsContractBindings *AvsManagersBindings, logger sdkloggin
 	}
 }
 
-func (s *AvsSubscriber) SubscribeToNewTasks(newTaskCreatedChan chan *cstaskmanager.ContractAnzenTaskManagerNewTaskCreated) event.Subscription {
-	sub, err := s.AvsContractBindings.TaskManager.WatchNewTaskCreated(
-		&bind.WatchOpts{}, newTaskCreatedChan, nil,
-	)
-	if err != nil {
-		s.logger.Error("Failed to subscribe to new TaskManager tasks", "err", err)
-	}
-	s.logger.Infof("Subscribed to new TaskManager tasks")
-	return sub
-}
-
 func (s *AvsSubscriber) SubcribeToNewOraclePullTasks(newOraclePullTaskLogs chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated) event.Subscription {
 	sub, err := s.AvsContractBindings.TaskManager.WatchNewOraclePullTaskCreated(
 		&bind.WatchOpts{}, newOraclePullTaskLogs, nil,
@@ -74,19 +59,4 @@ func (s *AvsSubscriber) SubcribeToNewOraclePullTasks(newOraclePullTaskLogs chan 
 	}
 	s.logger.Infof("Subscribed to new OraclePullTask events")
 	return sub
-}
-
-func (s *AvsSubscriber) SubscribeToTaskResponses(taskResponseChan chan *cstaskmanager.ContractAnzenTaskManagerTaskResponded) event.Subscription {
-	sub, err := s.AvsContractBindings.TaskManager.WatchTaskResponded(
-		&bind.WatchOpts{}, taskResponseChan,
-	)
-	if err != nil {
-		s.logger.Error("Failed to subscribe to TaskResponded events", "err", err)
-	}
-	s.logger.Infof("Subscribed to TaskResponded events")
-	return sub
-}
-
-func (s *AvsSubscriber) ParseTaskResponded(rawLog types.Log) (*cstaskmanager.ContractAnzenTaskManagerTaskResponded, error) {
-	return s.AvsContractBindings.TaskManager.ContractAnzenTaskManagerFilterer.ParseTaskResponded(rawLog)
 }

@@ -20,7 +20,8 @@ import "@eigenlayer-middleware/src/OperatorStateRetriever.sol";
 
 import {AnzenServiceManager, IServiceManager} from "../src/AnzenServiceManager.sol";
 import {AnzenTaskManager} from "../src/AnzenTaskManager.sol";
-import {IAnzenTaskManager} from "../src/IAnzenTaskManager.sol";
+import {SafetyFactorOracle} from "../src/SafetyFactorOracle.sol";
+import {IAnzenTaskManager} from "../src/interfaces/IAnzenTaskManager.sol";
 import "../src/ERC20Mock.sol";
 
 import {Utils} from "./utils/Utils.sol";
@@ -69,6 +70,8 @@ contract AnzenDeployer is Script, Utils {
 
     AnzenTaskManager public anzenTaskManager;
     IAnzenTaskManager public anzenTaskManagerImplementation;
+
+    SafetyFactorOracle public safetyFactorOracle;
 
     function run() external {
         // Eigenlayer contracts
@@ -133,8 +136,8 @@ contract AnzenDeployer is Script, Utils {
         IDelegationManager delegationManager,
         IAVSDirectory avsDirectory,
         IStrategy strat,
-        address incredibleSquaringCommunityMultisig,
-        address credibleSquaringPauser
+        address anzenCommunityMultisig,
+        address anzenPauser
     ) internal {
         // Adding this as a temporary fix to make the rest of the script work with a single strategy
         // since it was originally written to work with an array of strategies
@@ -147,9 +150,9 @@ contract AnzenDeployer is Script, Utils {
         // deploy pauser registry
         {
             address[] memory pausers = new address[](2);
-            pausers[0] = credibleSquaringPauser;
-            pausers[1] = incredibleSquaringCommunityMultisig;
-            anzenPauserReg = new PauserRegistry(pausers, incredibleSquaringCommunityMultisig);
+            pausers[0] = anzenPauser;
+            pausers[1] = anzenCommunityMultisig;
+            anzenPauserReg = new PauserRegistry(pausers, anzenCommunityMultisig);
         }
 
         EmptyContract emptyContract = new EmptyContract();
@@ -246,9 +249,9 @@ contract AnzenDeployer is Script, Utils {
                 abi.encodeWithSelector(
                     regcoord.RegistryCoordinator.initialize.selector,
                     // we set churnApprover and ejector to communityMultisig because we don't need them
-                    incredibleSquaringCommunityMultisig,
-                    incredibleSquaringCommunityMultisig,
-                    incredibleSquaringCommunityMultisig,
+                    anzenCommunityMultisig,
+                    anzenCommunityMultisig,
+                    anzenCommunityMultisig,
                     anzenPauserReg,
                     0, // 0 initialPausedStatus means everything unpaused
                     quorumsOperatorSetParams,
@@ -268,6 +271,11 @@ contract AnzenDeployer is Script, Utils {
 
         anzenTaskManagerImplementation = new AnzenTaskManager(registryCoordinator, TASK_RESPONSE_WINDOW_BLOCK);
 
+        safetyFactorOracle = new SafetyFactorOracle(address(anzenTaskManager), anzenCommunityMultisig);
+
+        // TODO: Add the avsReservesManager address
+        safetyFactorOracle.addProtocol(0, address(anzenServiceManager));
+
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
         anzenProxyAdmin.upgradeAndCall(
             TransparentUpgradeableProxy(payable(address(anzenTaskManager))),
@@ -275,9 +283,10 @@ contract AnzenDeployer is Script, Utils {
             abi.encodeWithSelector(
                 anzenTaskManager.initialize.selector,
                 anzenPauserReg,
-                incredibleSquaringCommunityMultisig,
+                anzenCommunityMultisig,
                 AGGREGATOR_ADDR,
-                TASK_GENERATOR_ADDR
+                TASK_GENERATOR_ADDR,
+                address(safetyFactorOracle)
             )
         );
 
@@ -301,6 +310,7 @@ contract AnzenDeployer is Script, Utils {
         vm.serializeAddress(
             deployed_addresses, "registryCoordinatorImplementation", address(registryCoordinatorImplementation)
         );
+        vm.serializeAddress(deployed_addresses, "safeFactorOracle", address(safetyFactorOracle));
         string memory deployed_addresses_output =
             vm.serializeAddress(deployed_addresses, "operatorStateRetriever", address(operatorStateRetriever));
 

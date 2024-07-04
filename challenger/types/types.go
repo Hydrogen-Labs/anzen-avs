@@ -7,7 +7,7 @@ import (
 )
 
 type TaskResponseData struct {
-	TaskResponse              cstaskmanager.IAnzenTaskManagerTaskResponse
+	TaskResponse              cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse
 	TaskResponseMetadata      cstaskmanager.IAnzenTaskManagerTaskResponseMetadata
 	NonSigningOperatorPubKeys []cstaskmanager.BN254G1Point
 }
