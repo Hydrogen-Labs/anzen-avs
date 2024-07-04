@@ -10,7 +10,8 @@ import {RegistryCoordinator} from "@eigenlayer-middleware/src/RegistryCoordinato
 import {BLSSignatureChecker, IRegistryCoordinator} from "@eigenlayer-middleware/src/BLSSignatureChecker.sol";
 import {OperatorStateRetriever} from "@eigenlayer-middleware/src/OperatorStateRetriever.sol";
 import "@eigenlayer-middleware/src/libraries/BN254.sol";
-import "./IAnzenTaskManager.sol";
+import "./interfaces/IAnzenTaskManager.sol";
+import "./interfaces/ISafetyFactorOracle.sol";
 
 contract AnzenTaskManager is
     Initializable,
@@ -45,6 +46,7 @@ contract AnzenTaskManager is
 
     address public aggregator;
     address public generator;
+    ISafetyFactorOracle public safetyFactorOracle;
 
     /* MODIFIERS */
     modifier onlyAggregator() {
@@ -65,14 +67,18 @@ contract AnzenTaskManager is
         TASK_RESPONSE_WINDOW_BLOCK = _taskResponseWindowBlock;
     }
 
-    function initialize(IPauserRegistry _pauserRegistry, address initialOwner, address _aggregator, address _generator)
-        public
-        initializer
-    {
+    function initialize(
+        IPauserRegistry _pauserRegistry,
+        address initialOwner,
+        address _aggregator,
+        address _generator,
+        address _safetyFactorOracle
+    ) public initializer {
         _initializePauser(_pauserRegistry, UNPAUSE_ALL);
         _transferOwnership(initialOwner);
         aggregator = _aggregator;
         generator = _generator;
+        safetyFactorOracle = ISafetyFactorOracle(_safetyFactorOracle);
     }
 
     /* FUNCTIONS */
@@ -148,6 +154,7 @@ contract AnzenTaskManager is
         emit OraclePullTaskResponded(taskResponse, taskResponseMetadata);
 
         // TODO: Pass the response to the oracle
+        safetyFactorOracle.setSafetyFactor(task.oracleIndex, taskResponse.safetyFactor);
     }
 
     function taskNumber() external view returns (uint32) {

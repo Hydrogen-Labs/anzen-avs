@@ -201,13 +201,14 @@ func (agg *Aggregator) sendAggregatedOracleResponseToContract(blsAggServiceResp 
 
 func (agg *Aggregator) sendNewOraclePullTask(oracleIndex *big.Int) error {
 	agg.logger.Info("Aggregator sending new oracle pull task", "oracleIndex", oracleIndex)
-	// Send number to square to the task manager contract
+	// Send new oracle task
 	proposedSafetyFactorInfo, err := agg.safetyFactorService.GetSafetyFactorInfoByOracleIndex(int(oracleIndex.Int64()))
 	if err != nil {
 		agg.logger.Error("Aggregator failed to get safety factor info", "err", err)
 		return err
 	}
 
+	// TODO: Implement policy on when to update the safety factor
 	newPullTask, taskIndex, err := agg.avsWriter.SendNewOraclePullTask(context.Background(), oracleIndex, proposedSafetyFactorInfo.SF, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
 
 	if err != nil {

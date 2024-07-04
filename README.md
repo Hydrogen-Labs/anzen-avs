@@ -78,7 +78,7 @@ The architecture of the AVS contains:
 
 3. [Operator] The operators who are currently opted-in with the AVS need to read the task number from the Task contract, compute its square, sign on that computed result (over the BN254 curve) and send their taskResponse and signature to the aggregator.
 
-4. [Aggregator] The aggregator collects the signatures from the operators and aggregates them using BLS aggregation. If any response passes the [quorumThresholdPercentage](contracts/src/IAnzenTaskManager.sol#L36) set by the task generator when posting the task, the aggregator posts the aggregated response to the Task contract.
+4. [Aggregator] The aggregator collects the signatures from the operators and aggregates them using BLS aggregation. If any response passes the [quorumThresholdPercentage](contracts/src/interfaces/IAnzenTaskManager.sol#L36) set by the task generator when posting the task, the aggregator posts the aggregated response to the Task contract.
 
 5. If a response was sent within the [response window](contracts/src/AnzenTaskManager.sol#L119), we enter the [Dispute resolution] period.
    - [Off-chain] A challenge window is launched during which anyone can [raise a dispute](contracts/src/AnzenTaskManager.sol#L171) in a DisputeResolution contract (in our case, this is the same as the TaskManager contract)
