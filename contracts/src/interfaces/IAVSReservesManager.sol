@@ -18,4 +18,9 @@ interface IAVSReservesManager {
     // function transferToPaymentManager() external;
 
     // Use this function to get the amount of tokens that can be claimed by the AVS
+
+    /**
+     * Getter Functions
+     */
+    function getSafetyFactorConfig() external view returns (SafetyFactorConfig memory);
 }

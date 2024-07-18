@@ -200,6 +200,15 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl {
 
     /**
      *
+     *                            View Functions
+     *
+     */
+    function getSafetyFactorConfig() external view returns (SafetyFactorConfig memory) {
+        return safetyFactorConfig;
+    }
+
+    /**
+     *
      *                            Anzen Governance Functions
      *
      */

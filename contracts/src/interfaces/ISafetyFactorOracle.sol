@@ -7,9 +7,26 @@ interface ISafetyFactorOracle {
     // Events
     event SFUpdated(int256 newSF, uint32 protocolId);
 
-    // Setter functions
+    /**
+     *
+     *                         Anzen Gov Functions
+     *
+     */
+    function addProtocol(uint32 protocolIdToAdd, address reservesManager) external;
+
+    function removeProtocol(uint32 protocolIdToRemove) external;
+
+    /**
+     *
+     *                         Anzen Task Manager Functions
+     *
+     */
     function setSafetyFactor(uint32 protocolId, int256 safetyFactor) external;
 
-    // Getter functions
+    /**
+     *
+     *                         Getter Functions
+     *
+     */
     function getSafetyFactor(uint32 protocolId) external view returns (SafetyFactorSnapshot memory safetyFactor);
 }

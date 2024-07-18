@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.12;
 
-import "../src/AnzenServiceManager.sol" as anzensm;
-import {AnzenTaskManager} from "../src/AnzenTaskManager.sol";
-import {SafetyFactorOracle} from "../src/SafetyFactorOracle.sol";
+import "../../../src/AnzenServiceManager.sol" as anzensm;
+import {AnzenTaskManager} from "../../../src/AnzenTaskManager.sol";
+import {SafetyFactorOracle} from "../../../src/SafetyFactorOracle.sol";
 import {BLSMockAVSDeployer} from "@eigenlayer-middleware/test/utils/BLSMockAVSDeployer.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
