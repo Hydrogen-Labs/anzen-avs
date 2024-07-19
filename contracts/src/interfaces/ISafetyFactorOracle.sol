@@ -5,7 +5,19 @@ import "../static/Structs.sol";
 
 interface ISafetyFactorOracle {
     // Events
-    event SFUpdated(int256 newSF, uint32 protocolId);
+    event SFUpdated(uint32 protocolId, int256 newSF);
+
+    event ProtocolAdded(uint32 protocolId, address reservesManager);
+
+    event ProtocolRemoved(uint32 protocolId);
+
+    /**
+     *
+     *                         Public Functions
+     *
+     */
+    function setDisputeStatus(bool status) external;
+    // TODO: remove input parameter when $EIGEN dispute is implemented
 
     /**
      *
@@ -29,4 +41,6 @@ interface ISafetyFactorOracle {
      *
      */
     function getSafetyFactor(uint32 protocolId) external view returns (SafetyFactorSnapshot memory safetyFactor);
+
+    function getDisputeStatus() external view returns (bool);
 }

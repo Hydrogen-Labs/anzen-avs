@@ -8,8 +8,6 @@ import "../../static/Structs.sol";
 import "../../AVSReservesManager.sol";
 import "../../SafetyFactorOracle.sol";
 
-// Mocks
-
 contract SafetyFactorOracleTests is Test {
     AVSReservesManager public reservesManager;
     SafetyFactorOracle public safetyFactorOracle;
@@ -17,6 +15,7 @@ contract SafetyFactorOracleTests is Test {
 
     address public anzenTaskManager;
     address public anzenGov;
+    address public fallBackSafetyFactorPoster;
 
     address public avsGov;
     address public avsServiceManager;
@@ -28,12 +27,13 @@ contract SafetyFactorOracleTests is Test {
     function setUp() public {
         anzenTaskManager = address(0x123);
         anzenGov = address(0x456);
+        fallBackSafetyFactorPoster = address(0x789);
 
         avsId = uint32(1);
-        avsGov = address(0x789);
+        avsGov = address(0x111);
         avsServiceManager = address(0x222);
 
-        safetyFactorOracle = new SafetyFactorOracle(anzenTaskManager, anzenGov);
+        safetyFactorOracle = new SafetyFactorOracle(anzenTaskManager, anzenGov, fallBackSafetyFactorPoster);
     }
 
     function test_addProtocol() public virtual {
@@ -74,5 +74,38 @@ contract SafetyFactorOracleTests is Test {
     function test_reverts_setSafetyFactor_notAnzenTaskManager(int256 _sf) public virtual {
         vm.expectRevert();
         safetyFactorOracle.setSafetyFactor(avsId, _sf);
+    }
+
+    function test_setDisputeStatus() public virtual {
+        vm.prank(anzenGov);
+        // TODO: remove prank in future since this will be callable by anyone
+        safetyFactorOracle.setDisputeStatus(true);
+        assertEq(safetyFactorOracle.getDisputeStatus(), true);
+    }
+
+    function test_FallbackSafetyFactorPosterCanPostWhenDisputed() public virtual {
+        avsId = uint32(1);
+        vm.prank(anzenGov);
+        safetyFactorOracle.addProtocol(avsId, avsGov);
+
+        vm.prank(anzenTaskManager);
+        safetyFactorOracle.setSafetyFactor(avsId, 100);
+
+        vm.prank(fallBackSafetyFactorPoster);
+        safetyFactorOracle.setDisputeStatus(true);
+
+        vm.prank(fallBackSafetyFactorPoster);
+        safetyFactorOracle.setSafetyFactor(avsId, 200);
+        SafetyFactorSnapshot memory snapshot = safetyFactorOracle.getSafetyFactor(avsId);
+        assertEq(snapshot.safetyFactor, 200);
+        assertEq(snapshot.timestamp, block.timestamp);
+    }
+
+    function test_reverts_DisputeIsLiveNotFallbackPoster() public virtual {
+        vm.prank(anzenGov);
+        safetyFactorOracle.setDisputeStatus(true);
+
+        vm.expectRevert();
+        safetyFactorOracle.setSafetyFactor(avsId, 200);
     }
 }

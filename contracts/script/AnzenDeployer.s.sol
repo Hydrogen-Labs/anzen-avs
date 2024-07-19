@@ -271,7 +271,10 @@ contract AnzenDeployer is Script, Utils {
 
         anzenTaskManagerImplementation = new AnzenTaskManager(registryCoordinator, TASK_RESPONSE_WINDOW_BLOCK);
 
-        safetyFactorOracle = new SafetyFactorOracle(address(anzenTaskManager), anzenCommunityMultisig);
+        safetyFactorOracle =
+            new SafetyFactorOracle(address(anzenTaskManager), anzenCommunityMultisig, anzenCommunityMultisig);
+
+        // TODO: Replace 3rd param with fallbackposter address
 
         // TODO: Add the avsReservesManager address
         safetyFactorOracle.addProtocol(0, address(anzenServiceManager));
