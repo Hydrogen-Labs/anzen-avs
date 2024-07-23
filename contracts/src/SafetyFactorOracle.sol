@@ -4,15 +4,10 @@ pragma solidity ^0.8.12;
 import "./static/Structs.sol";
 import {ISafetyFactorOracle} from "./interfaces/ISafetyFactorOracle.sol";
 import {SafetyFactorOracleStorage} from "./SafetyFactorOracleStorage.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract SafetyFactorOracle is SafetyFactorOracleStorage, Ownable {
-    constructor(address _anzenTaskManager, address _anzenGov, address _fallBackSafetyFactorPoster) Ownable() {
-        anzenTaskManager = _anzenTaskManager;
-        anzenGov = _anzenGov;
-        fallBackSafetyFactorPoster = _fallBackSafetyFactorPoster;
-    }
+import "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 
+contract SafetyFactorOracle is SafetyFactorOracleStorage, Initializable {
     // AnzenTaskManager uses BLS signatures to sign the safety factor updates
     modifier onlyAnzenTaskManager() {
         require(msg.sender == anzenTaskManager, "onlyAnzenTaskManager: not from anzen task manager");
@@ -31,6 +26,15 @@ contract SafetyFactorOracle is SafetyFactorOracleStorage, Ownable {
     modifier onlyAnzenGov() {
         require(msg.sender == anzenGov, "onlyAnzenGov: not from anzen gov");
         _;
+    }
+
+    function initialize(address _anzenTaskManager, address _anzenGov, address _fallBackSafetyFactorPoster)
+        public
+        initializer
+    {
+        anzenTaskManager = _anzenTaskManager;
+        anzenGov = _anzenGov;
+        fallBackSafetyFactorPoster = _fallBackSafetyFactorPoster;
     }
 
     function addProtocol(uint32 _protocolIdToAdd, address _reservesManager) external onlyAnzenGov {

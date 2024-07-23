@@ -4,6 +4,8 @@ pragma solidity ^0.8.12;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+
 import "../../static/Structs.sol";
 import "../../AVSReservesManager.sol";
 
@@ -11,10 +13,15 @@ import "../../AVSReservesManager.sol";
 import "../mocks/MockSafetyFactorOracle.sol";
 
 contract AVSReservesManagerTests is Test {
-    AVSReservesManager public reservesManager;
+    AVSReservesManager public avsReservesManager;
+    AVSReservesManager public avsReservesManagerImplementation;
+
     MockSafetyFactorOracle public safetyFactorOracle;
+    MockSafetyFactorOracle public safetyFactorOracleImplementation;
+
     SafetyFactorConfig public safetyFactorConfig;
 
+    address public proxyAdmin;
     address public avsGov;
     address public avsServiceManager;
     uint32 public avsId;
@@ -25,6 +32,7 @@ contract AVSReservesManagerTests is Test {
     function setUp() public {
         safetyFactorOracle = new MockSafetyFactorOracle();
 
+        proxyAdmin = address(0x789);
         avsGov = address(0x456);
         avsId = uint32(782);
         avsServiceManager = address(0x123);
@@ -49,27 +57,36 @@ contract AVSReservesManagerTests is Test {
             3 days
         );
 
-        reservesManager = new AVSReservesManager(
-            safetyFactorConfig,
-            500,
-            address(safetyFactorOracle),
-            avsGov,
-            avsId,
-            avsServiceManager,
-            rewardTokens,
-            initialTokenFlows
+        avsReservesManagerImplementation = new AVSReservesManager(avsServiceManager);
+
+        avsReservesManager = AVSReservesManager(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(avsReservesManagerImplementation),
+                    proxyAdmin,
+                    abi.encodeWithSelector(
+                        avsReservesManager.initialize.selector,
+                        safetyFactorConfig,
+                        address(safetyFactorOracle),
+                        avsGov,
+                        avsId,
+                        rewardTokens,
+                        initialTokenFlows
+                    )
+                )
+            )
         );
     }
 
     function test_constructor() public virtual {
-        SafetyFactorConfig memory newConfig = reservesManager.getSafetyFactorConfig();
+        SafetyFactorConfig memory newConfig = avsReservesManager.getSafetyFactorConfig();
 
         assertEq(newConfig.TARGET_SF_LOWER_BOUND, safetyFactorConfig.TARGET_SF_LOWER_BOUND);
         assertEq(newConfig.TARGET_SF_UPPER_BOUND, safetyFactorConfig.TARGET_SF_UPPER_BOUND);
         assertEq(newConfig.REDUCTION_FACTOR, safetyFactorConfig.REDUCTION_FACTOR);
         assertEq(newConfig.INCREASE_FACTOR, safetyFactorConfig.INCREASE_FACTOR);
         assertEq(newConfig.minEpochDuration, safetyFactorConfig.minEpochDuration);
-        assertEq(reservesManager.lastEpochUpdateTimestamp(), 1);
+        assertEq(avsReservesManager.lastEpochUpdateTimestamp(), 1);
 
         // Loop through each reward token and perform assertions
         for (uint256 i = 0; i < rewardTokens.length; i++) {
@@ -79,7 +96,7 @@ contract AVSReservesManagerTests is Test {
                 uint256 tokensPerSecond,
                 uint256 prevTokensPerSecond,
                 int256 lastSafetyFactor
-            ) = reservesManager.rewardTokenAccumulator(rewardTokens[i]);
+            ) = avsReservesManager.rewardTokenAccumulator(rewardTokens[i]);
 
             // Assert that the values match the expected initial token flows and default values
             assertEq(tokensPerSecond, initialTokenFlows[i]);
@@ -96,7 +113,7 @@ contract AVSReservesManagerTests is Test {
 
         vm.warp(timeElapsed + 1); // 1 second default start time
 
-        reservesManager.updateFlow();
+        avsReservesManager.updateFlow();
 
         // Loop through each reward token and perform assertions
         for (uint256 i = 0; i < rewardTokens.length; i++) {
@@ -106,7 +123,7 @@ contract AVSReservesManagerTests is Test {
                 uint256 tokensPerSecond,
                 uint256 prevTokensPerSecond,
                 int256 safetyFactor
-            ) = reservesManager.rewardTokenAccumulator(rewardTokens[i]);
+            ) = avsReservesManager.rewardTokenAccumulator(rewardTokens[i]);
 
             // Assert that the values match the expected initial token flows and default values
             assertEq(tokensPerSecond, initialTokenFlows[i]);
@@ -123,7 +140,7 @@ contract AVSReservesManagerTests is Test {
         vm.warp(timeElapsed + 1); // 1 second default start time
 
         vm.expectRevert("Epoch not yet expired");
-        reservesManager.updateFlow();
+        avsReservesManager.updateFlow();
     }
 
     function test_updateSafetyFactorParams() public {
@@ -136,9 +153,9 @@ contract AVSReservesManagerTests is Test {
         );
 
         vm.prank(avsGov);
-        reservesManager.updateSafetyFactorParams(newConfig);
+        avsReservesManager.updateSafetyFactorParams(newConfig);
 
-        SafetyFactorConfig memory updatedConfig = reservesManager.getSafetyFactorConfig();
+        SafetyFactorConfig memory updatedConfig = avsReservesManager.getSafetyFactorConfig();
 
         assertEq(updatedConfig.TARGET_SF_LOWER_BOUND, newConfig.TARGET_SF_LOWER_BOUND);
         assertEq(updatedConfig.TARGET_SF_UPPER_BOUND, newConfig.TARGET_SF_UPPER_BOUND);

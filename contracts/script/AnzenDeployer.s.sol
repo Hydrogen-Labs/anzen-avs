@@ -72,6 +72,7 @@ contract AnzenDeployer is Script, Utils {
     IAnzenTaskManager public anzenTaskManagerImplementation;
 
     SafetyFactorOracle public safetyFactorOracle;
+    SafetyFactorOracle public safetyFactorOracleImplementation;
 
     function run() external {
         // Eigenlayer contracts
@@ -181,6 +182,9 @@ contract AnzenDeployer is Script, Utils {
         stakeRegistry = IStakeRegistry(
             address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
         );
+        safetyFactorOracle = SafetyFactorOracle(
+            address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
+        );
 
         operatorStateRetriever = new OperatorStateRetriever();
 
@@ -271,10 +275,19 @@ contract AnzenDeployer is Script, Utils {
 
         anzenTaskManagerImplementation = new AnzenTaskManager(registryCoordinator, TASK_RESPONSE_WINDOW_BLOCK);
 
-        safetyFactorOracle =
-            new SafetyFactorOracle(address(anzenTaskManager), anzenCommunityMultisig, anzenCommunityMultisig);
+        safetyFactorOracleImplementation = new SafetyFactorOracle();
 
         // TODO: Replace 3rd param with fallbackposter address
+        anzenProxyAdmin.upgradeAndCall(
+            TransparentUpgradeableProxy(payable(address(safetyFactorOracle))),
+            address(safetyFactorOracleImplementation),
+            abi.encodeWithSelector(
+                safetyFactorOracleImplementation.initialize.selector,
+                address(anzenTaskManager),
+                anzenCommunityMultisig,
+                anzenCommunityMultisig
+            )
+        );
 
         // TODO: Add the avsReservesManager address
         safetyFactorOracle.addProtocol(0, address(anzenServiceManager));

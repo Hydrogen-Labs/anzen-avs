@@ -5,6 +5,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 
 import {IPaymentCoordinator} from "@eigenlayer/contracts/interfaces/IPaymentCoordinator.sol";
 
@@ -24,7 +25,7 @@ import "forge-std/console.sol";
 
 // The reserves manager serves as a 'battery' for the Service Manager contract:
 // Storing excess tokens when the protocol is healthy and releasing them when the protocol is in need of more security
-contract AVSReservesManager is AVSReservesManagerStorage, AccessControl {
+contract AVSReservesManager is AVSReservesManagerStorage, AccessControl, Initializable {
     using SafeERC20 for IERC20;
     using AccumulatorLib for Accumulator;
 
@@ -57,18 +58,19 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl {
         _;
     }
 
-    constructor(
+    constructor(address _avsServiceManager) {
+        avsServiceManager = IServiceManager(_avsServiceManager);
+    }
+
+    function initialize(
         SafetyFactorConfig memory _safetyFactorConfig,
-        uint256 _performanceFeeBPS,
         address _safetyFactorOracle,
         address _avsGov,
         uint32 _protocolId,
-        address _avsServiceManager,
         address[] memory _rewardTokens,
         uint256[] memory _initial_tokenFlowsPerSecond
-    ) {
+    ) external initializer {
         _validateSafetyFactorConfig(_safetyFactorConfig);
-        _validatePerformanceFee(_performanceFeeBPS);
         // require that the number of reward tokens is equal to the number of initial token flows
         require(_rewardTokens.length == _initial_tokenFlowsPerSecond.length, "Invalid number of reward tokens");
 
@@ -83,7 +85,6 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl {
 
         protocolId = _protocolId;
         rewardTokens = _rewardTokens;
-        performanceFeeBPS = _performanceFeeBPS;
         int256 currentSafetyFactor = safetyFactorOracle.getSafetyFactor(protocolId).safetyFactor;
 
         // initialize token flow for each reward token
@@ -96,11 +97,10 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl {
         lastEpochUpdateTimestamp = block.timestamp;
         lastPaymentTimestamp = uint32(block.timestamp);
 
-        avsServiceManager = IServiceManager(_avsServiceManager);
-
         _grantRole(AVS_GOV_ROLE, _avsGov);
         _grantRole(ANZEN_GOV_ROLE, msg.sender);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        // TODO: set the anzen address
     }
 
     function updateFlow() public afterEpochExpired {

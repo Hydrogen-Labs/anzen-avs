@@ -10,8 +10,10 @@ import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transpa
 contract AnzenTaskManagerTest is BLSMockAVSDeployer {
     anzensm.AnzenServiceManager sm;
     anzensm.AnzenServiceManager smImplementation;
+
     AnzenTaskManager tm;
     AnzenTaskManager tmImplementation;
+
     SafetyFactorOracle sfo;
 
     uint32 public constant TASK_RESPONSE_WINDOW_BLOCK = 30;
@@ -22,7 +24,7 @@ contract AnzenTaskManagerTest is BLSMockAVSDeployer {
         _setUpBLSMockAVSDeployer();
 
         // First, deploy the SafetyFactorOracle contract.
-        sfo = new SafetyFactorOracle(address(0), address(0), address(0));
+        sfo = new SafetyFactorOracle();
 
         tmImplementation =
             new AnzenTaskManager(anzensm.IRegistryCoordinator(address(registryCoordinator)), TASK_RESPONSE_WINDOW_BLOCK);

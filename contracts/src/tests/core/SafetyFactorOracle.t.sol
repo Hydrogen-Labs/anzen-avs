@@ -4,15 +4,20 @@ pragma solidity ^0.8.12;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+
 import "../../static/Structs.sol";
 import "../../AVSReservesManager.sol";
 import "../../SafetyFactorOracle.sol";
 
 contract SafetyFactorOracleTests is Test {
     AVSReservesManager public reservesManager;
+
+    SafetyFactorOracle public safetyFactorOracleImplementation;
     SafetyFactorOracle public safetyFactorOracle;
     SafetyFactorConfig public safetyFactorConfig;
 
+    address public proxyAdmin;
     address public anzenTaskManager;
     address public anzenGov;
     address public fallBackSafetyFactorPoster;
@@ -27,13 +32,29 @@ contract SafetyFactorOracleTests is Test {
     function setUp() public {
         anzenTaskManager = address(0x123);
         anzenGov = address(0x456);
+
         fallBackSafetyFactorPoster = address(0x789);
 
         avsId = uint32(1);
         avsGov = address(0x111);
         avsServiceManager = address(0x222);
+        proxyAdmin = address(0x333);
 
-        safetyFactorOracle = new SafetyFactorOracle(anzenTaskManager, anzenGov, fallBackSafetyFactorPoster);
+        safetyFactorOracleImplementation = new SafetyFactorOracle();
+        safetyFactorOracle = SafetyFactorOracle(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(safetyFactorOracleImplementation),
+                    proxyAdmin,
+                    abi.encodeWithSelector(
+                        safetyFactorOracleImplementation.initialize.selector,
+                        anzenTaskManager,
+                        anzenGov,
+                        fallBackSafetyFactorPoster
+                    )
+                )
+            )
+        );
     }
 
     function test_addProtocol() public virtual {

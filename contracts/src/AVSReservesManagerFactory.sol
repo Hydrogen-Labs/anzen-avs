@@ -1,0 +1,76 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.9;
+
+import "@eigenlayer/contracts/libraries/BytesLib.sol";
+import "@eigenlayer-middleware/src/ServiceManagerBase.sol";
+
+import "./interfaces/ISafetyFactorOracle.sol";
+import "./AnzenTaskManager.sol";
+import "./AVSReservesManager.sol";
+
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+
+contract AVSReservesManagerFactory {
+    ISafetyFactorOracle public immutable safetyFactorOracle;
+
+    address public anzenGov;
+
+    uint32 public lastAVSReservesManagerId = 0;
+    mapping(uint32 => address) public avsReservesManagers;
+    mapping(address => bool) public hasAVSReservesManager;
+
+    event AVSReservesManagerCreated(
+        address indexed avsReservesManager, uint32 avsReservesManagerId, address avsServiceManager
+    );
+
+    modifier onlyAnzenGov() {
+        require(msg.sender == anzenGov, "Only Anzen Gov can call this function");
+        _;
+    }
+
+    constructor(address _safetyFactorOracle, address _anzenGov) {
+        safetyFactorOracle = ISafetyFactorOracle(_safetyFactorOracle);
+        anzenGov = _anzenGov;
+    }
+
+    function createAVSReservesManager(
+        address proxyAdmin,
+        SafetyFactorConfig memory _safetyFactorConfig,
+        address _avsGov,
+        address _avsServiceManager,
+        address[] memory _initial_rewardTokens,
+        uint256[] memory _initial_tokenFlowsPerSecond
+    ) external onlyAnzenGov returns (address) {
+        require(
+            !hasAVSReservesManager[_avsServiceManager],
+            "AVSReservesManagerFactory: Only one AVSReservesManager per address"
+        );
+
+        AVSReservesManager avsReservesManagerImplementation = new AVSReservesManager(_avsServiceManager);
+        AVSReservesManager avsReservesManager = AVSReservesManager(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(avsReservesManagerImplementation),
+                    proxyAdmin,
+                    abi.encodeWithSelector(
+                        avsReservesManagerImplementation.initialize.selector,
+                        _safetyFactorConfig,
+                        address(safetyFactorOracle),
+                        _avsGov,
+                        lastAVSReservesManagerId,
+                        _initial_rewardTokens,
+                        _initial_tokenFlowsPerSecond
+                    )
+                )
+            )
+        );
+
+        safetyFactorOracle.addProtocol(lastAVSReservesManagerId, address(avsReservesManager));
+
+        hasAVSReservesManager[_avsServiceManager] = true;
+        avsReservesManagers[lastAVSReservesManagerId] = address(avsReservesManager);
+        lastAVSReservesManagerId++;
+
+        return address(avsReservesManager);
+    }
+}

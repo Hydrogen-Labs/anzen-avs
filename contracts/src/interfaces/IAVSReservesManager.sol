@@ -9,6 +9,15 @@ interface IAVSReservesManager {
 
     event TokensTransferredToPaymentMaster(uint256 totalTokenTransfered);
 
+    function initialize(
+        SafetyFactorConfig memory _safetyFactorConfig,
+        address _safetyFactorOracle,
+        address _avsGov,
+        uint32 _protocolId,
+        address[] memory _rewardTokens,
+        uint256[] memory _initial_tokenFlowsPerSecond
+    ) external;
+
     function updateFlow() external;
 
     function overrideTokensPerSecond(uint256[] memory newTokensPerSecond) external;
