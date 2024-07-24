@@ -11,6 +11,8 @@ interface ISafetyFactorOracle {
 
     event ProtocolRemoved(uint32 protocolId);
 
+    event DisputeStatusSet(bool status);
+
     /**
      *
      *                         Public Functions

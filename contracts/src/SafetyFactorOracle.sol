@@ -74,6 +74,8 @@ contract SafetyFactorOracle is SafetyFactorOracleStorage, Initializable {
         // TODO: set pendingDispute to true if an $EIGEN dispute is pending
         // TODO: for testing purposes, we will can modify the status of the dispute
         pendingDispute = _status;
+
+        emit DisputeStatusSet(_status);
     }
 
     function getDisputeStatus() external view returns (bool) {

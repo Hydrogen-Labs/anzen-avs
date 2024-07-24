@@ -7,21 +7,13 @@ import "@eigenlayer-middleware/src/ServiceManagerBase.sol";
 import "./interfaces/ISafetyFactorOracle.sol";
 import "./AnzenTaskManager.sol";
 import "./AVSReservesManager.sol";
+import "./AVSReservesManagerFactoryStorage.sol";
 
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract AVSReservesManagerFactory {
+contract AVSReservesManagerFactory is AVSReservesManagerFactoryStorage {
     ISafetyFactorOracle public immutable safetyFactorOracle;
-
-    address public anzenGov;
-
-    uint32 public lastAVSReservesManagerId = 0;
-    mapping(uint32 => address) public avsReservesManagers;
-    mapping(address => bool) public hasAVSReservesManager;
-
-    event AVSReservesManagerCreated(
-        address indexed avsReservesManager, uint32 avsReservesManagerId, address avsServiceManager
-    );
+    address public immutable anzenGov;
 
     modifier onlyAnzenGov() {
         require(msg.sender == anzenGov, "Only Anzen Gov can call this function");

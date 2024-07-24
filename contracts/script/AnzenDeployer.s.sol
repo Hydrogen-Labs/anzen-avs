@@ -22,7 +22,7 @@ import {AnzenServiceManager, IServiceManager} from "../src/AnzenServiceManager.s
 import {AnzenTaskManager} from "../src/AnzenTaskManager.sol";
 import {SafetyFactorOracle} from "../src/SafetyFactorOracle.sol";
 import {IAnzenTaskManager} from "../src/interfaces/IAnzenTaskManager.sol";
-import "../src/ERC20Mock.sol";
+import "../../src/tests/mocks/ERC20Mock.sol";
 
 import {Utils} from "./utils/Utils.sol";
 
