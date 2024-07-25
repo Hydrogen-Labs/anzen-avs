@@ -20,7 +20,7 @@ interface IAVSReservesManager {
 
     function updateFlow() external;
 
-    function overrideTokensPerSecond(uint256[] memory newTokensPerSecond) external;
+    function overrideTokensPerSecond(address[] memory _tokenAddresses, uint256[] memory _newTokensPerSecond) external;
 
     function updateSafetyFactorParams(SafetyFactorConfig memory newSafetyFactorConfig) external;
 

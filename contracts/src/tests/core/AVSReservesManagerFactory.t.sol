@@ -51,10 +51,10 @@ contract AVSReservesManagerFactoryTests is Test {
         initialTokenFlows[1] = 200;
 
         safetyFactorConfig = SafetyFactorConfig(
-            (int256(PRECISION) * 120) / 100, // 120% of the current value
-            (int256(PRECISION) * 140) / 100, // 140% of the current value
+            (int256(PRECISION) * 20) / 100, // 120% of the current value
+            (int256(PRECISION) * 40) / 100, // 140% of the current value
             (PRECISION * 95) / 100, // 95% of the current value
-            (PRECISION * 105) / 10, // 105% of the current value
+            (PRECISION * 10) / 100, // 105% of the current value
             3 days
         );
 
@@ -79,10 +79,10 @@ contract AVSReservesManagerFactoryTests is Test {
         initialTokenFlows[1] = 200;
 
         safetyFactorConfig = SafetyFactorConfig(
-            (int256(PRECISION) * 120) / 100, // 120% of the current value
-            (int256(PRECISION) * 140) / 100, // 140% of the current value
+            (int256(PRECISION) * 20) / 100, // 120% of the current value
+            (int256(PRECISION) * 40) / 100, // 140% of the current value
             (PRECISION * 95) / 100, // 95% of the current value
-            (PRECISION * 105) / 10, // 105% of the current value
+            (PRECISION * 5) / 100, // 105% of the current value
             3 days
         );
 
@@ -104,10 +104,10 @@ contract AVSReservesManagerFactoryTests is Test {
         initialTokenFlows[1] = 200;
 
         safetyFactorConfig = SafetyFactorConfig(
-            (int256(PRECISION) * 120) / 100, // 120% of the current value
-            (int256(PRECISION) * 140) / 100, // 140% of the current value
+            (int256(PRECISION) * 20) / 100, // 120% of the current value
+            (int256(PRECISION) * 40) / 100, // 140% of the current value
             (PRECISION * 95) / 100, // 95% of the current value
-            (PRECISION * 105) / 10, // 105% of the current value
+            (PRECISION * 5) / 100, // 105% of the current value
             3 days
         );
 

@@ -8,6 +8,7 @@ abstract contract SafetyFactorOracleStorage is ISafetyFactorOracle {
     address public anzenTaskManager; // Anzen Task Manager address
     address public anzenGov; // Anzen Governance address
     address public fallBackSafetyFactorPoster; // Fallback safety factor poster in the case of a pending $EIGEN dispute
+    address public avsReservesManagerFactory; // AVSReservesManagerFactory address
 
     bool public pendingDispute; // Pending dispute status
 

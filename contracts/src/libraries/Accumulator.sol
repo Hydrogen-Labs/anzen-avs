@@ -5,6 +5,7 @@ import "forge-std/console.sol";
 import {
     Accumulator, SafetyFactorConfig, BPS_DENOMINATOR, PRECISION, MAX_PERFORMANCE_FEE_BPS
 } from "../static/Structs.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 library AccumulatorLib {
     function init(Accumulator storage accumulator, uint256 tokensPerSecond, int256 initSafetyFactor) external {
@@ -27,22 +28,27 @@ library AccumulatorLib {
         }
 
         uint256 prevTokensPerSecond = accumulator.tokensPerSecond;
-
-        uint256 newTokensPerSecond;
-        // Todo: make this linearly interpolate with these max and min bounds
-        // This will be basically "newton's method" to converge to the target safety factor
+        uint256 newTokensPerSecond = prevTokensPerSecond;
 
         if (currentSafetyFactor > config.TARGET_SF_UPPER_BOUND) {
-            newTokensPerSecond = (accumulator.tokensPerSecond * config.REDUCTION_FACTOR) / PRECISION;
+            uint256 factorDifference = uint256(currentSafetyFactor - config.TARGET_SF_UPPER_BOUND);
+            uint256 reduction = (prevTokensPerSecond * factorDifference) / uint256(config.TARGET_SF_UPPER_BOUND);
+            uint256 maxReduction = _maxReduction(prevTokensPerSecond, config.REDUCTION_FACTOR);
+            reduction = Math.min(reduction, maxReduction);
+            newTokensPerSecond = prevTokensPerSecond - reduction;
         } else if (currentSafetyFactor < config.TARGET_SF_LOWER_BOUND) {
-            newTokensPerSecond =
-                accumulator.tokensPerSecond + (accumulator.tokensPerSecond * config.INCREASE_FACTOR) / PRECISION;
-        } else {
-            newTokensPerSecond = accumulator.tokensPerSecond;
+            uint256 factorDifference = uint256(config.TARGET_SF_LOWER_BOUND - currentSafetyFactor);
+            uint256 increase = (prevTokensPerSecond * factorDifference) / uint256(config.TARGET_SF_LOWER_BOUND);
+            uint256 maxIncrease = _maxIncrease(prevTokensPerSecond, config.INCREASE_FACTOR);
+
+            increase = Math.min(increase, maxIncrease);
+
+            newTokensPerSecond = prevTokensPerSecond + increase;
         }
 
         accumulator.tokensPerSecond = newTokensPerSecond;
         accumulator.prevTokensPerSecond = prevTokensPerSecond;
+        accumulator.lastSafetyFactor = currentSafetyFactor;
     }
 
     function claim(Accumulator storage accumulator, uint256 performanceFeeBPS, uint256 lastEpochUpdateTimestamp)
@@ -101,5 +107,13 @@ library AccumulatorLib {
 
         accumulator.claimableTokens += tokensGained;
         accumulator.claimableFees += fee;
+    }
+
+    function _maxReduction(uint256 tokensPerSecond, uint256 reductionFactor) internal pure returns (uint256) {
+        return (tokensPerSecond * reductionFactor) / PRECISION;
+    }
+
+    function _maxIncrease(uint256 tokensPerSecond, uint256 increaseFactor) internal pure returns (uint256) {
+        return (tokensPerSecond * increaseFactor) / PRECISION;
     }
 }

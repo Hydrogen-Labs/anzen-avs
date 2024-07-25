@@ -133,13 +133,17 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl, Initial
      *                            AVS Governance Functions
      *
      */
-    function overrideTokensPerSecond(uint256[] memory _newTokensPerSecond) external onlyAvsGov {
+    function overrideTokensPerSecond(address[] memory _tokenAddresses, uint256[] memory _newTokensPerSecond)
+        external
+        onlyAvsGov
+    {
         // require that the number of reward tokens is equal to the number of new token flows
-        require(rewardTokens.length == _newTokensPerSecond.length, "Invalid number of reward tokens");
+        require(_tokenAddresses.length == _newTokensPerSecond.length, "Invalid number of reward tokens");
 
         // This function is only callable by the AVS delegated address and should only be used in emergency situations
-        for (uint256 index = 0; index < rewardTokens.length; index++) {
-            rewardTokenAccumulator[rewardTokens[index]].overrideTokensPerSecond(
+        for (uint256 index = 0; index < _tokenAddresses.length; index++) {
+            require(rewardTokenAccumulator[_tokenAddresses[index]].tokensPerSecond != 0, "Reward token does not exist");
+            rewardTokenAccumulator[_tokenAddresses[index]].overrideTokensPerSecond(
                 _newTokensPerSecond[index], lastEpochUpdateTimestamp
             );
         }
@@ -223,10 +227,11 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl, Initial
      *
      */
     function _validateSafetyFactorConfig(SafetyFactorConfig memory _config) internal pure {
-        require(int256(PRECISION) < _config.TARGET_SF_LOWER_BOUND, "Invalid lower bound");
+        require(0 <= _config.TARGET_SF_LOWER_BOUND, "Invalid lower bound");
+        require(_config.TARGET_SF_UPPER_BOUND <= int256(PRECISION), "Invalid upper bound");
         require(_config.TARGET_SF_LOWER_BOUND < _config.TARGET_SF_UPPER_BOUND, "Invalid Safety Factor Config");
         require(_config.REDUCTION_FACTOR < PRECISION, "Invalid Reduction Factor");
-        require(PRECISION < _config.INCREASE_FACTOR, "Invalid Increase Factor");
+        require(_config.INCREASE_FACTOR < PRECISION, "Invalid Increase Factor");
     }
 
     function _validatePerformanceFee(uint256 _fee) internal pure {

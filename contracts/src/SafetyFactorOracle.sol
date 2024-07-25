@@ -9,10 +9,6 @@ import "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 
 contract SafetyFactorOracle is SafetyFactorOracleStorage, Initializable {
     // AnzenTaskManager uses BLS signatures to sign the safety factor updates
-    modifier onlyAnzenTaskManager() {
-        require(msg.sender == anzenTaskManager, "onlyAnzenTaskManager: not from anzen task manager");
-        _;
-    }
 
     modifier onlyAnzenTaskManagerOrFallBackIfDisputePending() {
         require(
@@ -25,6 +21,13 @@ contract SafetyFactorOracle is SafetyFactorOracleStorage, Initializable {
 
     modifier onlyAnzenGov() {
         require(msg.sender == anzenGov, "onlyAnzenGov: not from anzen gov");
+        _;
+    }
+
+    modifier onlyAvsReservesManagerFactory() {
+        require(
+            msg.sender == avsReservesManagerFactory, "onlyAvsReservesManagerFactory: not from AVSReservesManagerFactory"
+        );
         _;
     }
 
