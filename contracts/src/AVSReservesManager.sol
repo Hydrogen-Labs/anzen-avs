@@ -66,6 +66,7 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl, Initial
         SafetyFactorConfig memory _safetyFactorConfig,
         address _safetyFactorOracle,
         address _avsGov,
+        address _anzenGov,
         uint32 _protocolId,
         address[] memory _rewardTokens,
         uint256[] memory _initial_tokenFlowsPerSecond
@@ -97,9 +98,11 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl, Initial
         lastEpochUpdateTimestamp = block.timestamp;
         lastPaymentTimestamp = uint32(block.timestamp);
 
+        anzen = _anzenGov;
+
         _grantRole(AVS_GOV_ROLE, _avsGov);
-        _grantRole(ANZEN_GOV_ROLE, msg.sender);
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, _avsGov);
+        _grantRole(ANZEN_GOV_ROLE, _anzenGov);
         // TODO: set the anzen address
     }
 
@@ -226,22 +229,6 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl, Initial
      *                            Internal Functions
      *
      */
-    function _validateSafetyFactorConfig(SafetyFactorConfig memory _config) internal pure {
-        require(0 <= _config.TARGET_SF_LOWER_BOUND, "Invalid lower bound");
-        require(_config.TARGET_SF_UPPER_BOUND <= int256(PRECISION), "Invalid upper bound");
-        require(_config.TARGET_SF_LOWER_BOUND < _config.TARGET_SF_UPPER_BOUND, "Invalid Safety Factor Config");
-        require(_config.REDUCTION_FACTOR < PRECISION, "Invalid Reduction Factor");
-        require(_config.INCREASE_FACTOR < PRECISION, "Invalid Increase Factor");
-    }
-
-    function _validatePerformanceFee(uint256 _fee) internal pure {
-        require(_fee <= MAX_PERFORMANCE_FEE_BPS, "Fee cannot be greater than 5%");
-    }
-
-    function _validateInitialTokensPerSecond(uint256 _tokensPerSecond) internal pure {
-        require(_tokensPerSecond > 0, "Invalid initial token flow");
-    }
-
     function _setStrategyAndMultipliers(
         address _rewardToken,
         IPaymentCoordinator.StrategyAndMultiplier[] memory _strategyAndMultipliers
@@ -292,6 +279,30 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl, Initial
 
     function _transferPerformanceFeeToAnzen(IERC20 _rewardToken, uint256 _fee) internal {
         // Transfer the fee to the Anzen contract
+        if (_fee == 0) {
+            return;
+        }
         _rewardToken.safeTransfer(anzen, _fee);
+    }
+
+    /**
+     *
+     *                            Validation Functions
+     *
+     */
+    function _validateSafetyFactorConfig(SafetyFactorConfig memory _config) internal pure {
+        require(0 <= _config.TARGET_SF_LOWER_BOUND, "Invalid lower bound");
+        require(_config.TARGET_SF_UPPER_BOUND <= int256(PRECISION), "Invalid upper bound");
+        require(_config.TARGET_SF_LOWER_BOUND < _config.TARGET_SF_UPPER_BOUND, "Invalid Safety Factor Config");
+        require(_config.MAX_REDUCTION_FACTOR < PRECISION, "Invalid Reduction Factor");
+        require(_config.MAX_INCREASE_FACTOR < PRECISION, "Invalid Increase Factor");
+    }
+
+    function _validatePerformanceFee(uint256 _fee) internal pure {
+        require(_fee <= MAX_PERFORMANCE_FEE_BPS, "Fee cannot be greater than 5%");
+    }
+
+    function _validateInitialTokensPerSecond(uint256 _tokensPerSecond) internal pure {
+        require(_tokensPerSecond > 0, "Invalid initial token flow");
     }
 }

@@ -20,7 +20,7 @@ abstract contract AVSReservesManagerStorage is IAVSReservesManager {
     address[] public rewardTokens; // List of reward tokens
 
     mapping(address => Accumulator) public rewardTokenAccumulator; // mapping of reward tokens to Safety Factor Updaters
-    mapping(address => IPaymentCoordinator.StrategyAndMultiplier[]) public strategyAndMultipliers; // mapping of reward tokens to payments (for future use
+    mapping(address => IPaymentCoordinator.StrategyAndMultiplier[]) public strategyAndMultipliers; // mapping of reward tokens to payments (for future use with multiple strategies)
 
     uint32 public lastPaymentTimestamp; // Timestamp of the last payment
     uint256 public lastEpochUpdateTimestamp;

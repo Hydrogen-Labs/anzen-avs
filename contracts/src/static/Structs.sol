@@ -13,8 +13,8 @@ bytes32 constant AVS_GOV_ROLE = keccak256("AVS_GOV_ROLE");
 struct SafetyFactorConfig {
     int256 TARGET_SF_LOWER_BOUND;
     int256 TARGET_SF_UPPER_BOUND;
-    uint256 REDUCTION_FACTOR;
-    uint256 INCREASE_FACTOR;
+    uint256 MAX_REDUCTION_FACTOR;
+    uint256 MAX_INCREASE_FACTOR;
     uint256 minEpochDuration;
 }
 

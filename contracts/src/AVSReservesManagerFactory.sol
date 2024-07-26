@@ -49,6 +49,7 @@ contract AVSReservesManagerFactory is AVSReservesManagerFactoryStorage {
                         _safetyFactorConfig,
                         address(safetyFactorOracle),
                         _avsGov,
+                        anzenGov,
                         lastAVSReservesManagerId,
                         _initial_rewardTokens,
                         _initial_tokenFlowsPerSecond

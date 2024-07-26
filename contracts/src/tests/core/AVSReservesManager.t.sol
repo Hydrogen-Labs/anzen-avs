@@ -6,26 +6,32 @@ import "forge-std/console.sol";
 
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
+import {IStrategy} from "@eigenlayer/contracts/interfaces/IPaymentCoordinator.sol";
 import "../../static/Structs.sol";
 import "../../AVSReservesManager.sol";
 
 // Mocks
 import "../mocks/MockSafetyFactorOracle.sol";
+import "../mocks/ERC20Mock.sol";
+// Harnesses
+import "../harnesses/AVSReservesManagerHarness.sol";
 
 contract AVSReservesManagerTests is Test {
-    AVSReservesManager public avsReservesManager;
-    AVSReservesManager public avsReservesManagerImplementation;
+    AVSReservesManagerHarness public avsReservesManager;
+    AVSReservesManagerHarness public avsReservesManagerImplementation;
 
     MockSafetyFactorOracle public safetyFactorOracle;
     MockSafetyFactorOracle public safetyFactorOracleImplementation;
 
     SafetyFactorConfig public safetyFactorConfig;
 
+    address public anzenGov;
     address public proxyAdmin;
     address public avsGov;
     address public avsServiceManager;
     uint32 public avsId;
 
+    ERC20Mock[] public rewardTokenMocks;
     address[] public rewardTokens;
     uint256[] public initialTokenFlows;
 
@@ -35,6 +41,7 @@ contract AVSReservesManagerTests is Test {
     function setUp() public {
         safetyFactorOracle = new MockSafetyFactorOracle();
 
+        anzenGov = address(0x1235);
         proxyAdmin = address(0x789);
         avsGov = address(0x456);
         avsId = uint32(782);
@@ -44,9 +51,13 @@ contract AVSReservesManagerTests is Test {
         int256 safetyFactorInit = (int256(PRECISION) * 25) / 100;
         safetyFactorOracle.setSafetyFactor(avsId, safetyFactorInit);
 
+        rewardTokenMocks = new ERC20Mock[](2);
+        rewardTokenMocks[0] = new ERC20Mock();
+        rewardTokenMocks[1] = new ERC20Mock();
+
         rewardTokens = new address[](2);
-        rewardTokens[0] = address(0xabc);
-        rewardTokens[1] = address(0xdef);
+        rewardTokens[0] = address(rewardTokenMocks[0]);
+        rewardTokens[1] = address(rewardTokenMocks[1]);
 
         initialTokenFlows = new uint256[](2);
         initialTokenFlows[0] = 100;
@@ -60,9 +71,9 @@ contract AVSReservesManagerTests is Test {
             3 days
         );
 
-        avsReservesManagerImplementation = new AVSReservesManager(avsServiceManager);
+        avsReservesManagerImplementation = new AVSReservesManagerHarness(avsServiceManager);
 
-        avsReservesManager = AVSReservesManager(
+        avsReservesManager = AVSReservesManagerHarness(
             address(
                 new TransparentUpgradeableProxy(
                     address(avsReservesManagerImplementation),
@@ -72,6 +83,7 @@ contract AVSReservesManagerTests is Test {
                         safetyFactorConfig,
                         address(safetyFactorOracle),
                         avsGov,
+                        anzenGov,
                         avsId,
                         rewardTokens,
                         initialTokenFlows
@@ -79,6 +91,9 @@ contract AVSReservesManagerTests is Test {
                 )
             )
         );
+
+        rewardTokenMocks[0].mint(address(avsReservesManager), 1_000_000);
+        rewardTokenMocks[1].mint(address(avsReservesManager), 1_000_000);
     }
 
     function test_constructor() public virtual {
@@ -86,8 +101,8 @@ contract AVSReservesManagerTests is Test {
 
         assertEq(newConfig.TARGET_SF_LOWER_BOUND, safetyFactorConfig.TARGET_SF_LOWER_BOUND);
         assertEq(newConfig.TARGET_SF_UPPER_BOUND, safetyFactorConfig.TARGET_SF_UPPER_BOUND);
-        assertEq(newConfig.REDUCTION_FACTOR, safetyFactorConfig.REDUCTION_FACTOR);
-        assertEq(newConfig.INCREASE_FACTOR, safetyFactorConfig.INCREASE_FACTOR);
+        assertEq(newConfig.MAX_REDUCTION_FACTOR, safetyFactorConfig.MAX_REDUCTION_FACTOR);
+        assertEq(newConfig.MAX_INCREASE_FACTOR, safetyFactorConfig.MAX_INCREASE_FACTOR);
         assertEq(newConfig.minEpochDuration, safetyFactorConfig.minEpochDuration);
         assertEq(avsReservesManager.lastEpochUpdateTimestamp(), 1);
 
@@ -162,8 +177,8 @@ contract AVSReservesManagerTests is Test {
 
         assertEq(updatedConfig.TARGET_SF_LOWER_BOUND, newConfig.TARGET_SF_LOWER_BOUND);
         assertEq(updatedConfig.TARGET_SF_UPPER_BOUND, newConfig.TARGET_SF_UPPER_BOUND);
-        assertEq(updatedConfig.REDUCTION_FACTOR, newConfig.REDUCTION_FACTOR);
-        assertEq(updatedConfig.INCREASE_FACTOR, newConfig.INCREASE_FACTOR);
+        assertEq(updatedConfig.MAX_REDUCTION_FACTOR, newConfig.MAX_REDUCTION_FACTOR);
+        assertEq(updatedConfig.MAX_INCREASE_FACTOR, newConfig.MAX_INCREASE_FACTOR);
         assertEq(updatedConfig.minEpochDuration, newConfig.minEpochDuration);
     }
 
@@ -264,7 +279,7 @@ contract AVSReservesManagerTests is Test {
         assertEq(prevTokensPerSecond, newTokensPerSecond);
     }
 
-    function test_overrideTokensPerSecondRevert() public {
+    function test_overrideTokensPerSecondRevertsNotGov() public {
         address[] memory rewardTokensUpdated = new address[](1);
         rewardTokensUpdated[0] = address(rewardTokens[0]);
 
@@ -283,5 +298,54 @@ contract AVSReservesManagerTests is Test {
     function test_removeRewardTokenRevert() public {
         vm.expectRevert();
         avsReservesManager.removeRewardToken(rewardTokens[0]);
+    }
+
+    function test_createAllRangePaymentsAllEmpty() public {
+        IPaymentCoordinator.RangePayment[] memory rangePayments = avsReservesManager.createAllRangePayments();
+
+        for (uint256 i = 0; i < rangePayments.length; i++) {
+            assertEq(rangePayments[i].amount, 0);
+        }
+    }
+
+    function test_createAllRangePaymentsTimeElapsed(uint256 timeElapsed) public {
+        vm.assume(timeElapsed <= 90 days); // safe to assume that the time elapsed between operator payments is less than 90 days
+        vm.warp(timeElapsed + 1); // 1 second default start time
+
+        rewardTokenMocks[0].mint(address(avsReservesManager), timeElapsed * initialTokenFlows[0]);
+        rewardTokenMocks[1].mint(address(avsReservesManager), timeElapsed * initialTokenFlows[1]);
+
+        IPaymentCoordinator.RangePayment[] memory rangePayments = avsReservesManager.createAllRangePayments();
+
+        for (uint256 i = 0; i < rangePayments.length; i++) {
+            assertEq(rangePayments[i].amount, timeElapsed * initialTokenFlows[i]);
+            assertEq(rangePayments[i].startTimestamp, 1);
+            assertEq(rangePayments[i].duration, timeElapsed);
+        }
+    }
+
+    function test_setStrategyAndMultipliers() public {
+        address rewardToken = address(rewardTokenMocks[0]);
+
+        IPaymentCoordinator.StrategyAndMultiplier[] memory strategies =
+            new IPaymentCoordinator.StrategyAndMultiplier[](2);
+
+        strategies[0] = IPaymentCoordinator.StrategyAndMultiplier({strategy: IStrategy(address(0x123)), multiplier: 1});
+        strategies[1] = IPaymentCoordinator.StrategyAndMultiplier({strategy: IStrategy(address(0x456)), multiplier: 2});
+
+        vm.prank(avsGov);
+        avsReservesManager.setStrategyAndMultipliers(rewardToken, strategies);
+    }
+
+    function test_setStrategyAndMultipliersRevert() public {
+        address rewardToken = address(rewardTokenMocks[0]);
+
+        IPaymentCoordinator.StrategyAndMultiplier[] memory strategies =
+            new IPaymentCoordinator.StrategyAndMultiplier[](1);
+
+        strategies[0] = IPaymentCoordinator.StrategyAndMultiplier({strategy: IStrategy(address(0x123)), multiplier: 1});
+
+        vm.expectRevert();
+        avsReservesManager.setStrategyAndMultipliers(rewardToken, strategies);
     }
 }

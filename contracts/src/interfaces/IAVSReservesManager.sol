@@ -13,6 +13,7 @@ interface IAVSReservesManager {
         SafetyFactorConfig memory _safetyFactorConfig,
         address _safetyFactorOracle,
         address _avsGov,
+        address _anzenGov,
         uint32 _protocolId,
         address[] memory _rewardTokens,
         uint256[] memory _initial_tokenFlowsPerSecond

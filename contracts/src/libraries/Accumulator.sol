@@ -33,13 +33,13 @@ library AccumulatorLib {
         if (currentSafetyFactor > config.TARGET_SF_UPPER_BOUND) {
             uint256 factorDifference = uint256(currentSafetyFactor - config.TARGET_SF_UPPER_BOUND);
             uint256 reduction = (prevTokensPerSecond * factorDifference) / uint256(config.TARGET_SF_UPPER_BOUND);
-            uint256 maxReduction = _maxReduction(prevTokensPerSecond, config.REDUCTION_FACTOR);
+            uint256 maxReduction = _maxReduction(prevTokensPerSecond, config.MAX_REDUCTION_FACTOR);
             reduction = Math.min(reduction, maxReduction);
             newTokensPerSecond = prevTokensPerSecond - reduction;
         } else if (currentSafetyFactor < config.TARGET_SF_LOWER_BOUND) {
             uint256 factorDifference = uint256(config.TARGET_SF_LOWER_BOUND - currentSafetyFactor);
             uint256 increase = (prevTokensPerSecond * factorDifference) / uint256(config.TARGET_SF_LOWER_BOUND);
-            uint256 maxIncrease = _maxIncrease(prevTokensPerSecond, config.INCREASE_FACTOR);
+            uint256 maxIncrease = _maxIncrease(prevTokensPerSecond, config.MAX_INCREASE_FACTOR);
 
             increase = Math.min(increase, maxIncrease);
 
