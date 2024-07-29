@@ -349,3 +349,4 @@ contract AVSReservesManagerTests is Test {
         avsReservesManager.setStrategyAndMultipliers(rewardToken, strategies);
     }
 }
+ 

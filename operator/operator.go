@@ -64,7 +64,7 @@ type Operator struct {
 	// rpc client to send signed task responses to aggregator
 	aggregatorRpcClient AggregatorRpcClienter
 	// needed when opting in to avs (allow this service manager contract to slash operator)
-	credibleSquaringServiceManagerAddr common.Address
+	anzenServiceManagerAddr common.Address
 
 	safetyFactorService safety_factor.SafetyFactorServicer
 }
@@ -215,25 +215,25 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 	safetyFactorService := safety_factor.NewSafetyFactorService(logger)
 
 	operator := &Operator{
-		config:                             c,
-		logger:                             logger,
-		metricsReg:                         reg,
-		metrics:                            avsAndEigenMetrics,
-		nodeApi:                            nodeApi,
-		ethClient:                          ethRpcClient,
-		avsWriter:                          avsWriter,
-		avsReader:                          avsReader,
-		avsSubscriber:                      avsSubscriber,
-		eigenlayerReader:                   sdkClients.ElChainReader,
-		eigenlayerWriter:                   sdkClients.ElChainWriter,
-		blsKeypair:                         blsKeyPair,
-		operatorAddr:                       common.HexToAddress(c.OperatorAddress),
-		aggregatorServerIpPortAddr:         c.AggregatorServerIpPortAddress,
-		aggregatorRpcClient:                aggregatorRpcClient,
-		newOraclePullTaskCreatedChan:       make(chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
-		credibleSquaringServiceManagerAddr: common.HexToAddress(c.AVSRegistryCoordinatorAddress),
-		operatorId:                         [32]byte{0}, // this is set below
-		safetyFactorService:                safetyFactorService,
+		config:                       c,
+		logger:                       logger,
+		metricsReg:                   reg,
+		metrics:                      avsAndEigenMetrics,
+		nodeApi:                      nodeApi,
+		ethClient:                    ethRpcClient,
+		avsWriter:                    avsWriter,
+		avsReader:                    avsReader,
+		avsSubscriber:                avsSubscriber,
+		eigenlayerReader:             sdkClients.ElChainReader,
+		eigenlayerWriter:             sdkClients.ElChainWriter,
+		blsKeypair:                   blsKeyPair,
+		operatorAddr:                 common.HexToAddress(c.OperatorAddress),
+		aggregatorServerIpPortAddr:   c.AggregatorServerIpPortAddress,
+		aggregatorRpcClient:          aggregatorRpcClient,
+		newOraclePullTaskCreatedChan: make(chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
+		anzenServiceManagerAddr:      common.HexToAddress(c.AVSRegistryCoordinatorAddress),
+		operatorId:                   [32]byte{0}, // this is set below
+		safetyFactorService:          safetyFactorService,
 	}
 
 	if c.RegisterOperatorOnStartup {

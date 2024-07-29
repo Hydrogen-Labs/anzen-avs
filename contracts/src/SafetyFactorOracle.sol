@@ -9,7 +9,6 @@ import "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 
 contract SafetyFactorOracle is SafetyFactorOracleStorage, Initializable {
     // AnzenTaskManager uses BLS signatures to sign the safety factor updates
-
     modifier onlyAnzenTaskManagerOrFallBackIfDisputePending() {
         require(
             (msg.sender == anzenTaskManager && !pendingDispute)

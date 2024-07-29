@@ -312,21 +312,19 @@ contract AnzenDeployer is Script, Utils {
         string memory deployed_addresses = "addresses";
         vm.serializeAddress(deployed_addresses, "erc20Mock", address(erc20Mock));
         vm.serializeAddress(deployed_addresses, "erc20MockStrategy", address(erc20MockStrategy));
-        vm.serializeAddress(deployed_addresses, "credibleSquaringServiceManager", address(anzenServiceManager));
+        vm.serializeAddress(deployed_addresses, "anzenServiceManager", address(anzenServiceManager));
         vm.serializeAddress(
-            deployed_addresses,
-            "credibleSquaringServiceManagerImplementation",
-            address(anzenServiceManagerImplementation)
+            deployed_addresses, "anzenServiceManagerImplementation", address(anzenServiceManagerImplementation)
         );
-        vm.serializeAddress(deployed_addresses, "credibleSquaringTaskManager", address(anzenTaskManager));
+        vm.serializeAddress(deployed_addresses, "anzenTaskManager", address(anzenTaskManager));
         vm.serializeAddress(
-            deployed_addresses, "credibleSquaringTaskManagerImplementation", address(anzenTaskManagerImplementation)
+            deployed_addresses, "anzenTaskManagerImplementation", address(anzenTaskManagerImplementation)
         );
         vm.serializeAddress(deployed_addresses, "registryCoordinator", address(registryCoordinator));
         vm.serializeAddress(
             deployed_addresses, "registryCoordinatorImplementation", address(registryCoordinatorImplementation)
         );
-        vm.serializeAddress(deployed_addresses, "safeFactorOracle", address(safetyFactorOracle));
+        vm.serializeAddress(deployed_addresses, "safetyFactorOracle", address(safetyFactorOracle));
         string memory deployed_addresses_output =
             vm.serializeAddress(deployed_addresses, "operatorStateRetriever", address(operatorStateRetriever));
 
