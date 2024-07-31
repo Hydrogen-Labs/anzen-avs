@@ -16,7 +16,8 @@ interface IAVSReservesManager {
         address _anzenGov,
         uint32 _protocolId,
         address[] memory _rewardTokens,
-        uint256[] memory _initial_tokenFlowsPerSecond
+        uint256[] memory _initial_tokenFlowsPerSecond,
+        uint256 _performanceFeeBPS
     ) external;
 
     function updateFlow() external;

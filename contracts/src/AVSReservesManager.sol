@@ -69,7 +69,8 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl, Initial
         address _anzenGov,
         uint32 _protocolId,
         address[] memory _rewardTokens,
-        uint256[] memory _initial_tokenFlowsPerSecond
+        uint256[] memory _initial_tokenFlowsPerSecond,
+        uint256 _performanceFeeBPS
     ) external initializer {
         _validateSafetyFactorConfig(_safetyFactorConfig);
         // require that the number of reward tokens is equal to the number of initial token flows
@@ -97,13 +98,13 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl, Initial
 
         lastEpochUpdateTimestamp = block.timestamp;
         lastPaymentTimestamp = uint32(block.timestamp);
+        performanceFeeBPS = _performanceFeeBPS;
 
         anzen = _anzenGov;
 
         _grantRole(AVS_GOV_ROLE, _avsGov);
         _grantRole(DEFAULT_ADMIN_ROLE, _avsGov);
         _grantRole(ANZEN_GOV_ROLE, _anzenGov);
-        // TODO: set the anzen address
     }
 
     function updateFlow() public afterEpochExpired {

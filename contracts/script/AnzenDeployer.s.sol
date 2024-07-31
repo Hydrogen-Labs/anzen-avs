@@ -331,6 +331,6 @@ contract AnzenDeployer is Script, Utils {
         // serialize all the data
         string memory finalJson = vm.serializeString(parent_object, deployed_addresses, deployed_addresses_output);
 
-        writeOutput(finalJson, "credible_squaring_avs_deployment_output");
+        writeOutput(finalJson, "anzen_avs_deployment_output");
     }
 }

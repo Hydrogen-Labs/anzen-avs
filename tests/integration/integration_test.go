@@ -54,7 +54,7 @@ func TestIntegration(t *testing.T) {
 	aggConfigRaw.EthWsUrl = "ws://" + anvilEndpoint
 
 	var credibleSquaringDeploymentRaw config.IncredibleSquaringDeploymentRaw
-	credibleSquaringDeploymentFilePath := "../../contracts/script/output/31337/credible_squaring_avs_deployment_output.json"
+	credibleSquaringDeploymentFilePath := "../../contracts/script/output/31337/anzen_avs_deployment_output.json"
 	sdkutils.ReadJsonConfig(credibleSquaringDeploymentFilePath, &credibleSquaringDeploymentRaw)
 
 	logger, err := sdklogging.NewZapLogger(aggConfigRaw.Environment)

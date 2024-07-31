@@ -16,7 +16,7 @@ import "./libraries/Accumulator.sol";
 // Storing excess tokens when the protocol is healthy and releasing them when the protocol is in need of more security
 abstract contract AVSReservesManagerStorage is IAVSReservesManager {
     SafetyFactorConfig public safetyFactorConfig; // Safety Factor configuration
-    uint256 public performanceFeeBPS = 500; // Performance-based fee
+    uint256 public performanceFeeBPS; // Performance-based fee
     address[] public rewardTokens; // List of reward tokens
 
     mapping(address => Accumulator) public rewardTokenAccumulator; // mapping of reward tokens to Safety Factor Updaters

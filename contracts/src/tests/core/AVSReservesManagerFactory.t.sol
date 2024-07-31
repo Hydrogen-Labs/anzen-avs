@@ -61,7 +61,7 @@ contract AVSReservesManagerFactoryTests is Test {
         vm.prank(avsGov);
         avsReservesManager = AVSReservesManager(
             avsReservesManagerFactory.createAVSReservesManager(
-                proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows
+                proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows, 50
             )
         );
 
@@ -89,7 +89,7 @@ contract AVSReservesManagerFactoryTests is Test {
         vm.expectRevert();
         avsReservesManager = AVSReservesManager(
             avsReservesManagerFactory.createAVSReservesManager(
-                proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows
+                proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows, 50
             )
         );
     }
@@ -114,14 +114,14 @@ contract AVSReservesManagerFactoryTests is Test {
         vm.prank(avsGov);
         avsReservesManager = AVSReservesManager(
             avsReservesManagerFactory.createAVSReservesManager(
-                proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows
+                proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows, 50
             )
         );
 
         vm.expectRevert();
         avsReservesManager = AVSReservesManager(
             avsReservesManagerFactory.createAVSReservesManager(
-                proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows
+                proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows, 50
             )
         );
     }

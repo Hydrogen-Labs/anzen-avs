@@ -34,7 +34,7 @@ import (
 	sdktypes "github.com/Layr-Labs/eigensdk-go/types"
 )
 
-const AVS_NAME = "incredible-squaring"
+const AVS_NAME = "anzen"
 const SEM_VER = "0.0.1"
 
 type Operator struct {

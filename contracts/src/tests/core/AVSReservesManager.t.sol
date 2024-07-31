@@ -37,6 +37,7 @@ contract AVSReservesManagerTests is Test {
 
     uint256 public MAX_REDUCTION_RATE = PRECISION * 30 / 100;
     uint256 public MAX_INCREASE_RATE = PRECISION * 25 / 100;
+    uint256 public INITIAL_PERFORMANCE_FEE = 50;
 
     function setUp() public {
         safetyFactorOracle = new MockSafetyFactorOracle();
@@ -86,7 +87,8 @@ contract AVSReservesManagerTests is Test {
                         anzenGov,
                         avsId,
                         rewardTokens,
-                        initialTokenFlows
+                        initialTokenFlows,
+                        INITIAL_PERFORMANCE_FEE
                     )
                 )
             )
@@ -348,5 +350,50 @@ contract AVSReservesManagerTests is Test {
         vm.expectRevert();
         avsReservesManager.setStrategyAndMultipliers(rewardToken, strategies);
     }
+
+    function test_performanceFee() public {
+        uint256 performanceFee = avsReservesManager.performanceFeeBPS();
+
+        assertEq(performanceFee, INITIAL_PERFORMANCE_FEE);
+    }
+
+    function test_setPerformanceFee() public {
+        uint256 newPerformanceFee = 100;
+
+        vm.prank(anzenGov);
+        avsReservesManager.adjustFeeBps(newPerformanceFee);
+
+        uint256 performanceFee = avsReservesManager.performanceFeeBPS();
+
+        assertEq(performanceFee, newPerformanceFee);
+    }
+
+    function test_setPerformanceFeeRevert() public {
+        uint256 newPerformanceFee = 100;
+
+        vm.expectRevert();
+        avsReservesManager.adjustFeeBps(newPerformanceFee);
+    }
+
+    function test_performanceFeeProperlyCalculated(uint256 timeElapsed) public {
+        vm.assume(timeElapsed >= 3 days);
+        vm.assume(timeElapsed < 90 days);
+        vm.warp(3 days + 1); // 1 second default start time
+
+        int256 newSafetyFactor = int256(PRECISION);
+        safetyFactorOracle.setSafetyFactor(avsId, newSafetyFactor);
+        avsReservesManager.updateFlow();
+
+        vm.warp(3 days + 1 + timeElapsed); // 1 second default start time
+        avsReservesManager.updateFlow();
+
+        for (uint256 i = 0; i < rewardTokens.length; i++) {
+            (, uint256 claimableFees, uint256 tokensPerSecond, uint256 prevTokensPerSecond,) =
+                avsReservesManager.rewardTokenAccumulator(rewardTokens[i]);
+
+            uint256 tokensSaved = timeElapsed * (prevTokensPerSecond - tokensPerSecond);
+            uint256 expectedPerformanceFees = (tokensSaved * INITIAL_PERFORMANCE_FEE) / 10_000;
+            assertEq(claimableFees, expectedPerformanceFees);
+        }
+    }
 }
- 
