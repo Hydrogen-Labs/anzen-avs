@@ -33,39 +33,35 @@ contract AVSReservesManagerFactory is AVSReservesManagerFactoryStorage {
         address[] memory _initial_rewardTokens,
         uint256[] memory _initial_tokenFlowsPerSecond,
         uint256 _performanceFeeBPS
-    ) external onlyAnzenGov returns (address) {
+    ) external onlyAnzenGov returns (address, address) {
         require(
             !hasAVSReservesManager[_avsServiceManager],
             "AVSReservesManagerFactory: Only one AVSReservesManager per address"
         );
 
         AVSReservesManager avsReservesManagerImplementation = new AVSReservesManager(_avsServiceManager);
+
         AVSReservesManager avsReservesManager = AVSReservesManager(
-            address(
-                new TransparentUpgradeableProxy(
-                    address(avsReservesManagerImplementation),
-                    proxyAdmin,
-                    abi.encodeWithSelector(
-                        avsReservesManagerImplementation.initialize.selector,
-                        _safetyFactorConfig,
-                        address(safetyFactorOracle),
-                        _avsGov,
-                        anzenGov,
-                        lastAVSReservesManagerId,
-                        _initial_rewardTokens,
-                        _initial_tokenFlowsPerSecond,
-                        _performanceFeeBPS
-                    )
-                )
-            )
+            address(new TransparentUpgradeableProxy(address(avsReservesManagerImplementation), proxyAdmin, ""))
         );
 
         safetyFactorOracle.addProtocol(lastAVSReservesManagerId, address(avsReservesManager));
+
+        avsReservesManager.initialize(
+            _safetyFactorConfig,
+            address(safetyFactorOracle),
+            _avsGov,
+            anzenGov,
+            lastAVSReservesManagerId,
+            _initial_rewardTokens,
+            _initial_tokenFlowsPerSecond,
+            _performanceFeeBPS
+        );
 
         hasAVSReservesManager[_avsServiceManager] = true;
         avsReservesManagers[lastAVSReservesManagerId] = address(avsReservesManager);
         lastAVSReservesManagerId++;
 
-        return address(avsReservesManager);
+        return (address(avsReservesManager), address(avsReservesManagerImplementation));
     }
 }

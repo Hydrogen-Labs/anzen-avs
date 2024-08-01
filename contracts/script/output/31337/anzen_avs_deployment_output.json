@@ -1,14 +1,19 @@
 {
   "addresses": {
-    "anzenServiceManager": "0x84eA74d481Ee0A5332c457a4d796187F6Ba67fEB",
-    "anzenServiceManagerImplementation": "0x809d550fca64d94Bd9F66E60752A544199cfAC3D",
-    "anzenTaskManager": "0x9E545E3C0baAB3E08CdfD552C960A1050f373042",
-    "anzenTaskManagerImplementation": "0x1291Be112d480055DaFd8a610b7d1e203891C274",
-    "erc20Mock": "0x7a2088a1bFc9d81c55368AE168C2C02570cB814F",
-    "erc20MockStrategy": "0x09635F643e140090A9A8Dcd712eD6285858ceBef",
-    "operatorStateRetriever": "0x998abeb3E57409262aE5b751f60747921B33613E",
-    "registryCoordinator": "0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9",
-    "registryCoordinatorImplementation": "0x5eb3Bc0a489C5A8288765d2336659EbCA68FCd00",
-    "safetyFactorOracle": "0x95401dc811bb5740090279Ba06cfA8fcF6113778"
+    "anzenServiceManager": "0x9E545E3C0baAB3E08CdfD552C960A1050f373042",
+    "anzenServiceManagerImplementation": "0x1291Be112d480055DaFd8a610b7d1e203891C274",
+    "anzenTaskManager": "0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9",
+    "anzenTaskManagerImplementation": "0xb7278A61aa25c888815aFC32Ad3cC52fF24fE575",
+    "avsReservesManagerFactory": "0x70e0bA845a1A0F2DA3359C97E0285013525FFC49",
+    "avsReservesManagerFactoryImplementation": "0x2bdCC0de6bE1f7D2ee689a0342D76F52E8EFABa3",
+    "erc20Mock": "0x09635F643e140090A9A8Dcd712eD6285858ceBef",
+    "erc20MockStrategy": "0xc5a5C42992dECbae36851359345FE25997F5C42d",
+    "mockAVSRM": "0x3c5bb6747794374fA8E812f2BAA33f63349cAB40",
+    "mockAVSRMImplementation": "0x47b36E824631e97E94d462F822181Ed08A459384",
+    "operatorStateRetriever": "0x4826533B4897376654Bb4d4AD88B7faFD0C98528",
+    "registryCoordinator": "0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8",
+    "registryCoordinatorImplementation": "0x809d550fca64d94Bd9F66E60752A544199cfAC3D",
+    "safetyFactorOracle": "0x998abeb3E57409262aE5b751f60747921B33613E",
+    "safetyFactorOracleImplementation": "0xCD8a1C3ba11CF5ECfa6267617243239504a98d90"
   }
 }

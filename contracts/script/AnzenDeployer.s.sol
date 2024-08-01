@@ -19,8 +19,9 @@ import {StakeRegistry} from "@eigenlayer-middleware/src/StakeRegistry.sol";
 import "@eigenlayer-middleware/src/OperatorStateRetriever.sol";
 
 import {AnzenServiceManager, IServiceManager} from "../src/AnzenServiceManager.sol";
+import {AVSReservesManagerFactory} from "../src/AVSReservesManagerFactory.sol";
 import {AnzenTaskManager} from "../src/AnzenTaskManager.sol";
-import {SafetyFactorOracle} from "../src/SafetyFactorOracle.sol";
+import {SafetyFactorOracle, SafetyFactorConfig} from "../src/SafetyFactorOracle.sol";
 import {IAnzenTaskManager} from "../src/interfaces/IAnzenTaskManager.sol";
 import "../../src/tests/mocks/ERC20Mock.sol";
 
@@ -73,6 +74,12 @@ contract AnzenDeployer is Script, Utils {
 
     SafetyFactorOracle public safetyFactorOracle;
     SafetyFactorOracle public safetyFactorOracleImplementation;
+
+    AVSReservesManagerFactory public avsReservesManagerFactory;
+    AVSReservesManagerFactory public avsReservesManagerFactoryImplementation;
+
+    address public mockAVSRM;
+    address public mockAVSRMImplementation;
 
     function run() external {
         // Eigenlayer contracts
@@ -185,6 +192,9 @@ contract AnzenDeployer is Script, Utils {
         safetyFactorOracle = SafetyFactorOracle(
             address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
         );
+        avsReservesManagerFactory = AVSReservesManagerFactory(
+            address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
+        );
 
         operatorStateRetriever = new OperatorStateRetriever();
 
@@ -284,13 +294,33 @@ contract AnzenDeployer is Script, Utils {
             abi.encodeWithSelector(
                 safetyFactorOracleImplementation.initialize.selector,
                 address(anzenTaskManager),
-                anzenCommunityMultisig,
+                address(avsReservesManagerFactory),
                 anzenCommunityMultisig
             )
         );
 
+        avsReservesManagerFactoryImplementation =
+            new AVSReservesManagerFactory(address(safetyFactorOracle), anzenCommunityMultisig);
+
+        anzenProxyAdmin.upgrade(
+            TransparentUpgradeableProxy(payable(address(avsReservesManagerFactory))),
+            address(avsReservesManagerFactoryImplementation)
+        );
+
+        SafetyFactorConfig memory safetyFactorConfig = SafetyFactorConfig(200_000, 300_000, 200_000, 200_000, 1 days);
+
+        (mockAVSRM, mockAVSRMImplementation) = avsReservesManagerFactory.createAVSReservesManager(
+            address(anzenProxyAdmin),
+            safetyFactorConfig,
+            anzenCommunityMultisig,
+            address(anzenServiceManager),
+            new address[](0),
+            new uint256[](0),
+            50
+        );
+
         // TODO: Add the avsReservesManager address
-        safetyFactorOracle.addProtocol(0, address(anzenServiceManager));
+        // safetyFactorOracle.addProtocol(0, address(anzenServiceManager));
 
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
         anzenProxyAdmin.upgradeAndCall(
@@ -304,6 +334,11 @@ contract AnzenDeployer is Script, Utils {
                 TASK_GENERATOR_ADDR,
                 address(safetyFactorOracle)
             )
+        );
+
+        anzenProxyAdmin.upgrade(
+            TransparentUpgradeableProxy(payable(address(avsReservesManagerFactory))),
+            address(avsReservesManagerFactoryImplementation)
         );
 
         // WRITE JSON DATA
@@ -325,6 +360,18 @@ contract AnzenDeployer is Script, Utils {
             deployed_addresses, "registryCoordinatorImplementation", address(registryCoordinatorImplementation)
         );
         vm.serializeAddress(deployed_addresses, "safetyFactorOracle", address(safetyFactorOracle));
+        vm.serializeAddress(
+            deployed_addresses, "safetyFactorOracleImplementation", address(safetyFactorOracleImplementation)
+        );
+        vm.serializeAddress(deployed_addresses, "avsReservesManagerFactory", address(avsReservesManagerFactory));
+        vm.serializeAddress(
+            deployed_addresses,
+            "avsReservesManagerFactoryImplementation",
+            address(avsReservesManagerFactoryImplementation)
+        );
+        vm.serializeAddress(deployed_addresses, "mockAVSRM", mockAVSRM);
+        vm.serializeAddress(deployed_addresses, "mockAVSRMImplementation", mockAVSRMImplementation);
+
         string memory deployed_addresses_output =
             vm.serializeAddress(deployed_addresses, "operatorStateRetriever", address(operatorStateRetriever));
 

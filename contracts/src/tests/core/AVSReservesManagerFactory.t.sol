@@ -17,6 +17,7 @@ contract AVSReservesManagerFactoryTests is Test {
     AVSReservesManagerFactory public avsReservesManagerFactory;
 
     AVSReservesManager public avsReservesManager;
+    AVSReservesManager public avsReservesManagerImplementation;
 
     MockSafetyFactorOracle public safetyFactorOracle;
 
@@ -59,11 +60,13 @@ contract AVSReservesManagerFactoryTests is Test {
         );
 
         vm.prank(avsGov);
-        avsReservesManager = AVSReservesManager(
-            avsReservesManagerFactory.createAVSReservesManager(
-                proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows, 50
-            )
+        (address avsReservesManagerAddr, address avsReservesManagerImplementationAddr) = avsReservesManagerFactory
+            .createAVSReservesManager(
+            proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows, 50
         );
+
+        avsReservesManager = AVSReservesManager(avsReservesManagerAddr);
+        avsReservesManagerImplementation = AVSReservesManager(avsReservesManagerImplementationAddr);
 
         assertEq(avsReservesManagerFactory.avsReservesManagers(0), address(avsReservesManager));
         assertEq(avsReservesManagerFactory.lastAVSReservesManagerId(), 1);
@@ -87,10 +90,8 @@ contract AVSReservesManagerFactoryTests is Test {
         );
 
         vm.expectRevert();
-        avsReservesManager = AVSReservesManager(
-            avsReservesManagerFactory.createAVSReservesManager(
-                proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows, 50
-            )
+        avsReservesManagerFactory.createAVSReservesManager(
+            proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows, 50
         );
     }
 
@@ -112,17 +113,18 @@ contract AVSReservesManagerFactoryTests is Test {
         );
 
         vm.prank(avsGov);
-        avsReservesManager = AVSReservesManager(
-            avsReservesManagerFactory.createAVSReservesManager(
-                proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows, 50
-            )
+        (address avsReservesManagerAddr, address avsReservesManagerImplementationAddr) = avsReservesManagerFactory
+            .createAVSReservesManager(
+            proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows, 50
         );
 
+        avsReservesManager = AVSReservesManager(avsReservesManagerAddr);
+        avsReservesManagerImplementation = AVSReservesManager(avsReservesManagerImplementationAddr);
+
         vm.expectRevert();
-        avsReservesManager = AVSReservesManager(
-            avsReservesManagerFactory.createAVSReservesManager(
-                proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows, 50
-            )
+
+        avsReservesManagerFactory.createAVSReservesManager(
+            proxyAdmin, safetyFactorConfig, avsGov, avsServiceManager, rewardTokens, initialTokenFlows, 50
         );
     }
 }
