@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.12;
 
-import "../src/AnzenServiceManager.sol" as anzensm;
-import {AnzenTaskManager} from "../src/AnzenTaskManager.sol";
-import {SafetyFactorOracle} from "../src/SafetyFactorOracle.sol";
+import "../../../src/AnzenServiceManager.sol" as anzensm;
+import {AnzenTaskManager} from "../../../src/AnzenTaskManager.sol";
+import {SafetyFactorOracle} from "../../../src/SafetyFactorOracle.sol";
 import {BLSMockAVSDeployer} from "@eigenlayer-middleware/test/utils/BLSMockAVSDeployer.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract AnzenTaskManagerTest is BLSMockAVSDeployer {
     anzensm.AnzenServiceManager sm;
     anzensm.AnzenServiceManager smImplementation;
+
     AnzenTaskManager tm;
     AnzenTaskManager tmImplementation;
+
     SafetyFactorOracle sfo;
 
     uint32 public constant TASK_RESPONSE_WINDOW_BLOCK = 30;
@@ -22,7 +24,7 @@ contract AnzenTaskManagerTest is BLSMockAVSDeployer {
         _setUpBLSMockAVSDeployer();
 
         // First, deploy the SafetyFactorOracle contract.
-        sfo = new SafetyFactorOracle(address(0), address(0));
+        sfo = new SafetyFactorOracle();
 
         tmImplementation =
             new AnzenTaskManager(anzensm.IRegistryCoordinator(address(registryCoordinator)), TASK_RESPONSE_WINDOW_BLOCK);

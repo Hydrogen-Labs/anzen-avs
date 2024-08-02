@@ -19,10 +19,11 @@ import {StakeRegistry} from "@eigenlayer-middleware/src/StakeRegistry.sol";
 import "@eigenlayer-middleware/src/OperatorStateRetriever.sol";
 
 import {AnzenServiceManager, IServiceManager} from "../src/AnzenServiceManager.sol";
+import {AVSReservesManagerFactory} from "../src/AVSReservesManagerFactory.sol";
 import {AnzenTaskManager} from "../src/AnzenTaskManager.sol";
-import {SafetyFactorOracle} from "../src/SafetyFactorOracle.sol";
+import {SafetyFactorOracle, SafetyFactorConfig} from "../src/SafetyFactorOracle.sol";
 import {IAnzenTaskManager} from "../src/interfaces/IAnzenTaskManager.sol";
-import "../src/ERC20Mock.sol";
+import "../../src/tests/mocks/ERC20Mock.sol";
 
 import {Utils} from "./utils/Utils.sol";
 
@@ -72,6 +73,13 @@ contract AnzenDeployer is Script, Utils {
     IAnzenTaskManager public anzenTaskManagerImplementation;
 
     SafetyFactorOracle public safetyFactorOracle;
+    SafetyFactorOracle public safetyFactorOracleImplementation;
+
+    AVSReservesManagerFactory public avsReservesManagerFactory;
+    AVSReservesManagerFactory public avsReservesManagerFactoryImplementation;
+
+    address public mockAVSRM;
+    address public mockAVSRMImplementation;
 
     function run() external {
         // Eigenlayer contracts
@@ -181,6 +189,12 @@ contract AnzenDeployer is Script, Utils {
         stakeRegistry = IStakeRegistry(
             address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
         );
+        safetyFactorOracle = SafetyFactorOracle(
+            address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
+        );
+        avsReservesManagerFactory = AVSReservesManagerFactory(
+            address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
+        );
 
         operatorStateRetriever = new OperatorStateRetriever();
 
@@ -271,10 +285,42 @@ contract AnzenDeployer is Script, Utils {
 
         anzenTaskManagerImplementation = new AnzenTaskManager(registryCoordinator, TASK_RESPONSE_WINDOW_BLOCK);
 
-        safetyFactorOracle = new SafetyFactorOracle(address(anzenTaskManager), anzenCommunityMultisig);
+        safetyFactorOracleImplementation = new SafetyFactorOracle();
+
+        // TODO: Replace 3rd param with fallbackposter address
+        anzenProxyAdmin.upgradeAndCall(
+            TransparentUpgradeableProxy(payable(address(safetyFactorOracle))),
+            address(safetyFactorOracleImplementation),
+            abi.encodeWithSelector(
+                safetyFactorOracleImplementation.initialize.selector,
+                address(anzenTaskManager),
+                address(avsReservesManagerFactory),
+                anzenCommunityMultisig
+            )
+        );
+
+        avsReservesManagerFactoryImplementation =
+            new AVSReservesManagerFactory(address(safetyFactorOracle), anzenCommunityMultisig);
+
+        anzenProxyAdmin.upgrade(
+            TransparentUpgradeableProxy(payable(address(avsReservesManagerFactory))),
+            address(avsReservesManagerFactoryImplementation)
+        );
+
+        SafetyFactorConfig memory safetyFactorConfig = SafetyFactorConfig(200_000, 300_000, 200_000, 200_000, 1 days);
+
+        (mockAVSRM, mockAVSRMImplementation) = avsReservesManagerFactory.createAVSReservesManager(
+            address(anzenProxyAdmin),
+            safetyFactorConfig,
+            anzenCommunityMultisig,
+            address(anzenServiceManager),
+            new address[](0),
+            new uint256[](0),
+            50
+        );
 
         // TODO: Add the avsReservesManager address
-        safetyFactorOracle.addProtocol(0, address(anzenServiceManager));
+        // safetyFactorOracle.addProtocol(0, address(anzenServiceManager));
 
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
         anzenProxyAdmin.upgradeAndCall(
@@ -290,33 +336,48 @@ contract AnzenDeployer is Script, Utils {
             )
         );
 
+        anzenProxyAdmin.upgrade(
+            TransparentUpgradeableProxy(payable(address(avsReservesManagerFactory))),
+            address(avsReservesManagerFactoryImplementation)
+        );
+
         // WRITE JSON DATA
         string memory parent_object = "parent object";
 
         string memory deployed_addresses = "addresses";
         vm.serializeAddress(deployed_addresses, "erc20Mock", address(erc20Mock));
         vm.serializeAddress(deployed_addresses, "erc20MockStrategy", address(erc20MockStrategy));
-        vm.serializeAddress(deployed_addresses, "credibleSquaringServiceManager", address(anzenServiceManager));
+        vm.serializeAddress(deployed_addresses, "anzenServiceManager", address(anzenServiceManager));
         vm.serializeAddress(
-            deployed_addresses,
-            "credibleSquaringServiceManagerImplementation",
-            address(anzenServiceManagerImplementation)
+            deployed_addresses, "anzenServiceManagerImplementation", address(anzenServiceManagerImplementation)
         );
-        vm.serializeAddress(deployed_addresses, "credibleSquaringTaskManager", address(anzenTaskManager));
+        vm.serializeAddress(deployed_addresses, "anzenTaskManager", address(anzenTaskManager));
         vm.serializeAddress(
-            deployed_addresses, "credibleSquaringTaskManagerImplementation", address(anzenTaskManagerImplementation)
+            deployed_addresses, "anzenTaskManagerImplementation", address(anzenTaskManagerImplementation)
         );
         vm.serializeAddress(deployed_addresses, "registryCoordinator", address(registryCoordinator));
         vm.serializeAddress(
             deployed_addresses, "registryCoordinatorImplementation", address(registryCoordinatorImplementation)
         );
-        vm.serializeAddress(deployed_addresses, "safeFactorOracle", address(safetyFactorOracle));
+        vm.serializeAddress(deployed_addresses, "safetyFactorOracle", address(safetyFactorOracle));
+        vm.serializeAddress(
+            deployed_addresses, "safetyFactorOracleImplementation", address(safetyFactorOracleImplementation)
+        );
+        vm.serializeAddress(deployed_addresses, "avsReservesManagerFactory", address(avsReservesManagerFactory));
+        vm.serializeAddress(
+            deployed_addresses,
+            "avsReservesManagerFactoryImplementation",
+            address(avsReservesManagerFactoryImplementation)
+        );
+        vm.serializeAddress(deployed_addresses, "mockAVSRM", mockAVSRM);
+        vm.serializeAddress(deployed_addresses, "mockAVSRMImplementation", mockAVSRMImplementation);
+
         string memory deployed_addresses_output =
             vm.serializeAddress(deployed_addresses, "operatorStateRetriever", address(operatorStateRetriever));
 
         // serialize all the data
         string memory finalJson = vm.serializeString(parent_object, deployed_addresses, deployed_addresses_output);
 
-        writeOutput(finalJson, "credible_squaring_avs_deployment_output");
+        writeOutput(finalJson, "anzen_avs_deployment_output");
     }
 }

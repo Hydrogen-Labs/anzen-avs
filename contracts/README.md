@@ -1,19 +1,18 @@
-## Foundry
+## Architecture
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+```mermaid
+graph TD
+    F[Anzen Operators] -->|Oracle Consensus| A[Anzen Task Manager]
+    A -->|Operator Consensus| B((Safety Factor Oracle))
+    B --> |Adjusts Emissions| D((AVS Reserves))
+    C[AVS Reserves Factory] --> |Creates Reserves Manager| D
+    C --> |Register AVS| B
 
-Foundry consists of:
+    subgraph AVS Controlled Contracts
+        D --> |Sends Payment| E((AVS Reward Manager))
+    end
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
-
-## Documentation
-
-https://book.getfoundry.sh/
-
-## Usage
+```
 
 ### Build
 

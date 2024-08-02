@@ -5,6 +5,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 
 import {IPaymentCoordinator} from "@eigenlayer/contracts/interfaces/IPaymentCoordinator.sol";
 
@@ -24,7 +25,7 @@ import "forge-std/console.sol";
 
 // The reserves manager serves as a 'battery' for the Service Manager contract:
 // Storing excess tokens when the protocol is healthy and releasing them when the protocol is in need of more security
-contract AVSReservesManager is AVSReservesManagerStorage, AccessControl {
+contract AVSReservesManager is AVSReservesManagerStorage, AccessControl, Initializable {
     using SafeERC20 for IERC20;
     using AccumulatorLib for Accumulator;
 
@@ -57,18 +58,21 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl {
         _;
     }
 
-    constructor(
+    constructor(address _avsServiceManager) {
+        avsServiceManager = IServiceManager(_avsServiceManager);
+    }
+
+    function initialize(
         SafetyFactorConfig memory _safetyFactorConfig,
-        uint256 _performanceFeeBPS,
         address _safetyFactorOracle,
         address _avsGov,
+        address _anzenGov,
         uint32 _protocolId,
-        address _avsServiceManager,
         address[] memory _rewardTokens,
-        uint256[] memory _initial_tokenFlowsPerSecond
-    ) {
+        uint256[] memory _initial_tokenFlowsPerSecond,
+        uint256 _performanceFeeBPS
+    ) external initializer {
         _validateSafetyFactorConfig(_safetyFactorConfig);
-        _validatePerformanceFee(_performanceFeeBPS);
         // require that the number of reward tokens is equal to the number of initial token flows
         require(_rewardTokens.length == _initial_tokenFlowsPerSecond.length, "Invalid number of reward tokens");
 
@@ -83,7 +87,6 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl {
 
         protocolId = _protocolId;
         rewardTokens = _rewardTokens;
-        performanceFeeBPS = _performanceFeeBPS;
         int256 currentSafetyFactor = safetyFactorOracle.getSafetyFactor(protocolId).safetyFactor;
 
         // initialize token flow for each reward token
@@ -95,12 +98,13 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl {
 
         lastEpochUpdateTimestamp = block.timestamp;
         lastPaymentTimestamp = uint32(block.timestamp);
+        performanceFeeBPS = _performanceFeeBPS;
 
-        avsServiceManager = IServiceManager(_avsServiceManager);
+        anzen = _anzenGov;
 
         _grantRole(AVS_GOV_ROLE, _avsGov);
-        _grantRole(ANZEN_GOV_ROLE, msg.sender);
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, _avsGov);
+        _grantRole(ANZEN_GOV_ROLE, _anzenGov);
     }
 
     function updateFlow() public afterEpochExpired {
@@ -133,13 +137,17 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl {
      *                            AVS Governance Functions
      *
      */
-    function overrideTokensPerSecond(uint256[] memory _newTokensPerSecond) external onlyAvsGov {
+    function overrideTokensPerSecond(address[] memory _tokenAddresses, uint256[] memory _newTokensPerSecond)
+        external
+        onlyAvsGov
+    {
         // require that the number of reward tokens is equal to the number of new token flows
-        require(rewardTokens.length == _newTokensPerSecond.length, "Invalid number of reward tokens");
+        require(_tokenAddresses.length == _newTokensPerSecond.length, "Invalid number of reward tokens");
 
         // This function is only callable by the AVS delegated address and should only be used in emergency situations
-        for (uint256 index = 0; index < rewardTokens.length; index++) {
-            rewardTokenAccumulator[rewardTokens[index]].overrideTokensPerSecond(
+        for (uint256 index = 0; index < _tokenAddresses.length; index++) {
+            require(rewardTokenAccumulator[_tokenAddresses[index]].tokensPerSecond != 0, "Reward token does not exist");
+            rewardTokenAccumulator[_tokenAddresses[index]].overrideTokensPerSecond(
                 _newTokensPerSecond[index], lastEpochUpdateTimestamp
             );
         }
@@ -200,6 +208,15 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl {
 
     /**
      *
+     *                            View Functions
+     *
+     */
+    function getSafetyFactorConfig() external view returns (SafetyFactorConfig memory) {
+        return safetyFactorConfig;
+    }
+
+    /**
+     *
      *                            Anzen Governance Functions
      *
      */
@@ -213,21 +230,6 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl {
      *                            Internal Functions
      *
      */
-    function _validateSafetyFactorConfig(SafetyFactorConfig memory _config) internal pure {
-        require(int256(PRECISION) < _config.TARGET_SF_LOWER_BOUND, "Invalid lower bound");
-        require(_config.TARGET_SF_LOWER_BOUND < _config.TARGET_SF_UPPER_BOUND, "Invalid Safety Factor Config");
-        require(_config.REDUCTION_FACTOR < PRECISION, "Invalid Reduction Factor");
-        require(PRECISION < _config.INCREASE_FACTOR, "Invalid Increase Factor");
-    }
-
-    function _validatePerformanceFee(uint256 _fee) internal pure {
-        require(_fee <= MAX_PERFORMANCE_FEE_BPS, "Fee cannot be greater than 5%");
-    }
-
-    function _validateInitialTokensPerSecond(uint256 _tokensPerSecond) internal pure {
-        require(_tokensPerSecond > 0, "Invalid initial token flow");
-    }
-
     function _setStrategyAndMultipliers(
         address _rewardToken,
         IPaymentCoordinator.StrategyAndMultiplier[] memory _strategyAndMultipliers
@@ -278,6 +280,30 @@ contract AVSReservesManager is AVSReservesManagerStorage, AccessControl {
 
     function _transferPerformanceFeeToAnzen(IERC20 _rewardToken, uint256 _fee) internal {
         // Transfer the fee to the Anzen contract
+        if (_fee == 0) {
+            return;
+        }
         _rewardToken.safeTransfer(anzen, _fee);
+    }
+
+    /**
+     *
+     *                            Validation Functions
+     *
+     */
+    function _validateSafetyFactorConfig(SafetyFactorConfig memory _config) internal pure {
+        require(0 <= _config.TARGET_SF_LOWER_BOUND, "Invalid lower bound");
+        require(_config.TARGET_SF_UPPER_BOUND <= int256(PRECISION), "Invalid upper bound");
+        require(_config.TARGET_SF_LOWER_BOUND < _config.TARGET_SF_UPPER_BOUND, "Invalid Safety Factor Config");
+        require(_config.MAX_REDUCTION_FACTOR < PRECISION, "Invalid Reduction Factor");
+        require(_config.MAX_INCREASE_FACTOR < PRECISION, "Invalid Increase Factor");
+    }
+
+    function _validatePerformanceFee(uint256 _fee) internal pure {
+        require(_fee <= MAX_PERFORMANCE_FEE_BPS, "Fee cannot be greater than 5%");
+    }
+
+    function _validateInitialTokensPerSecond(uint256 _tokensPerSecond) internal pure {
+        require(_tokensPerSecond > 0, "Invalid initial token flow");
     }
 }
