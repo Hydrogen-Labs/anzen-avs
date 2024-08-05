@@ -43,7 +43,7 @@ contract AnzenDeployer is Script, Utils {
     address public constant AGGREGATOR_ADDR = 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720;
     address public constant TASK_GENERATOR_ADDR = 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720;
 
-    bytes32 public salt = keccak256(abi.encodePacked("AnzenDeployer15"));
+    bytes32 public salt = keccak256(abi.encodePacked("AnzenDeployer18"));
 
     // ERC20 and Strategy: we need to deploy this erc20, create a strategy for it, and whitelist this strategy in the strategymanager
     StrategyBaseTVLLimits public erc20Strategy;
@@ -96,7 +96,6 @@ contract AnzenDeployer is Script, Utils {
         address anzenPauser = msg.sender;
 
         vm.startBroadcast();
-        console.log("Deployer: ", msg.sender);
         _deployAnzenContracts(delegationManager, avsDirectory, erc20Strategy, anzenCommunityMultisig, anzenPauser);
         vm.stopBroadcast();
     }
@@ -114,12 +113,7 @@ contract AnzenDeployer is Script, Utils {
         uint256 numStrategies = deployedStrategyArray.length;
 
         // deploy proxy admin for ability to upgrade proxy contracts
-        console.log("Sender: ", msg.sender);
-        console.log("This contract: ", address(this));
-        anzenProxyAdmin = new ProxyAdmin{salt: salt}();
-
-        address admin = anzenProxyAdmin.owner();
-        console.log("Proxy Admin: ", admin);
+        anzenProxyAdmin = new ProxyAdmin();
 
         // deploy pauser registry
         {
@@ -208,121 +202,122 @@ contract AnzenDeployer is Script, Utils {
             regcoord.IIndexRegistry(address(indexRegistry))
         );
 
-        // {
-        //     uint256 numQuorums = 1;
-        //     // for each quorum to setup, we need to define
-        //     // QuorumOperatorSetParam, minimumStakeForQuorum, and strategyParams
-        //     regcoord.IRegistryCoordinator.OperatorSetParam[] memory quorumsOperatorSetParams =
-        //         new regcoord.IRegistryCoordinator.OperatorSetParam[](numQuorums);
-        //     for (uint256 i = 0; i < numQuorums; i++) {
-        //         // hard code these for now
-        //         quorumsOperatorSetParams[i] = regcoord.IRegistryCoordinator.OperatorSetParam({
-        //             maxOperatorCount: 10000,
-        //             kickBIPsOfOperatorStake: 15000,
-        //             kickBIPsOfTotalStake: 100
-        //         });
-        //     }
-        //     // set to 0 for every quorum
-        //     uint96[] memory quorumsMinimumStake = new uint96[](numQuorums);
-        //     IStakeRegistry.StrategyParams[][] memory quorumsStrategyParams =
-        //         new IStakeRegistry.StrategyParams[][](numQuorums);
-        //     for (uint256 i = 0; i < numQuorums; i++) {
-        //         quorumsStrategyParams[i] = new IStakeRegistry.StrategyParams[](numStrategies);
-        //         for (uint256 j = 0; j < numStrategies; j++) {
-        //             quorumsStrategyParams[i][j] = IStakeRegistry.StrategyParams({
-        //                 strategy: deployedStrategyArray[j],
-        //                 // setting this to 1 ether since the divisor is also 1 ether
-        //                 // therefore this allows an operator to register with even just 1 token
-        //                 // see https://github.com/Layr-Labs/eigenlayer-middleware/blob/m2-mainnet/src/StakeRegistry.sol#L484
-        //                 //    weight += uint96(sharesAmount * strategyAndMultiplier.multiplier / WEIGHTING_DIVISOR);
-        //                 multiplier: 1 ether
-        //             });
-        //         }
-        //     }
-        //     anzenProxyAdmin.upgradeAndCall(
-        //         TransparentUpgradeableProxy(payable(address(registryCoordinator))),
-        //         address(registryCoordinatorImplementation),
-        //         abi.encodeWithSelector(
-        //             regcoord.RegistryCoordinator.initialize.selector,
-        //             // we set churnApprover and ejector to communityMultisig because we don't need them
-        //             anzenCommunityMultisig,
-        //             anzenCommunityMultisig,
-        //             anzenCommunityMultisig,
-        //             anzenPauserReg,
-        //             0, // 0 initialPausedStatus means everything unpaused
-        //             quorumsOperatorSetParams,
-        //             quorumsMinimumStake,
-        //             quorumsStrategyParams
-        //         )
-        //     );
-        // }
+        {
+            uint256 numQuorums = 1;
+            // for each quorum to setup, we need to define
+            // QuorumOperatorSetParam, minimumStakeForQuorum, and strategyParams
+            regcoord.IRegistryCoordinator.OperatorSetParam[] memory quorumsOperatorSetParams =
+                new regcoord.IRegistryCoordinator.OperatorSetParam[](numQuorums);
+            for (uint256 i = 0; i < numQuorums; i++) {
+                // hard code these for now
+                quorumsOperatorSetParams[i] = regcoord.IRegistryCoordinator.OperatorSetParam({
+                    maxOperatorCount: 10000,
+                    kickBIPsOfOperatorStake: 15000,
+                    kickBIPsOfTotalStake: 100
+                });
+            }
+            // set to 0 for every quorum
+            uint96[] memory quorumsMinimumStake = new uint96[](numQuorums);
+            IStakeRegistry.StrategyParams[][] memory quorumsStrategyParams =
+                new IStakeRegistry.StrategyParams[][](numQuorums);
+            for (uint256 i = 0; i < numQuorums; i++) {
+                quorumsStrategyParams[i] = new IStakeRegistry.StrategyParams[](numStrategies);
+                for (uint256 j = 0; j < numStrategies; j++) {
+                    quorumsStrategyParams[i][j] = IStakeRegistry.StrategyParams({
+                        strategy: deployedStrategyArray[j],
+                        // setting this to 1 ether since the divisor is also 1 ether
+                        // therefore this allows an operator to register with even just 1 token
+                        // see https://github.com/Layr-Labs/eigenlayer-middleware/blob/m2-mainnet/src/StakeRegistry.sol#L484
+                        //    weight += uint96(sharesAmount * strategyAndMultiplier.multiplier / WEIGHTING_DIVISOR);
+                        multiplier: 1 ether
+                    });
+                }
+            }
+            anzenProxyAdmin.upgradeAndCall(
+                TransparentUpgradeableProxy(payable(address(registryCoordinator))),
+                address(registryCoordinatorImplementation),
+                abi.encodeWithSelector(
+                    regcoord.RegistryCoordinator.initialize.selector,
+                    // we set churnApprover and ejector to communityMultisig because we don't need them
+                    anzenCommunityMultisig,
+                    anzenCommunityMultisig,
+                    anzenCommunityMultisig,
+                    anzenPauserReg,
+                    0, // 0 initialPausedStatus means everything unpaused
+                    quorumsOperatorSetParams,
+                    quorumsMinimumStake,
+                    quorumsStrategyParams
+                )
+            );
+        }
 
-        // anzenServiceManagerImplementation =
-        //     new AnzenServiceManager{salt: salt}(avsDirectory, registryCoordinator, stakeRegistry, anzenTaskManager);
-        // // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
-        // anzenProxyAdmin.upgrade(
-        //     TransparentUpgradeableProxy(payable(address(anzenServiceManager))),
-        //     address(anzenServiceManagerImplementation)
-        // );
+        anzenServiceManagerImplementation =
+            new AnzenServiceManager{salt: salt}(avsDirectory, registryCoordinator, stakeRegistry, anzenTaskManager);
+        // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
+        anzenProxyAdmin.upgrade(
+            TransparentUpgradeableProxy(payable(address(anzenServiceManager))),
+            address(anzenServiceManagerImplementation)
+        );
 
-        // anzenTaskManagerImplementation =
-        //     new AnzenTaskManager{salt: salt}(registryCoordinator, TASK_RESPONSE_WINDOW_BLOCK);
+        anzenTaskManagerImplementation =
+            new AnzenTaskManager{salt: salt}(registryCoordinator, TASK_RESPONSE_WINDOW_BLOCK);
 
-        // safetyFactorOracleImplementation = new SafetyFactorOracle{salt: salt}();
+        safetyFactorOracleImplementation = new SafetyFactorOracle{salt: salt}();
 
-        // // TODO: Replace 3rd param with fallbackposter address
-        // anzenProxyAdmin.upgradeAndCall(
-        //     TransparentUpgradeableProxy(payable(address(safetyFactorOracle))),
-        //     address(safetyFactorOracleImplementation),
-        //     abi.encodeWithSelector(
-        //         safetyFactorOracleImplementation.initialize.selector,
-        //         address(anzenTaskManager),
-        //         address(avsReservesManagerFactory),
-        //         anzenCommunityMultisig
-        //     )
-        // );
+        // TODO: Replace 3rd param with fallbackposter address
+        anzenProxyAdmin.upgradeAndCall(
+            TransparentUpgradeableProxy(payable(address(safetyFactorOracle))),
+            address(safetyFactorOracleImplementation),
+            abi.encodeWithSelector(
+                safetyFactorOracleImplementation.initialize.selector,
+                address(anzenTaskManager),
+                address(avsReservesManagerFactory),
+                anzenCommunityMultisig
+            )
+        );
 
-        // avsReservesManagerFactoryImplementation =
-        //     new AVSReservesManagerFactory{salt: salt}(address(safetyFactorOracle), anzenCommunityMultisig);
+        avsReservesManagerFactoryImplementation =
+            new AVSReservesManagerFactory{salt: salt}(address(safetyFactorOracle), anzenCommunityMultisig);
 
-        // anzenProxyAdmin.upgrade(
-        //     TransparentUpgradeableProxy(payable(address(avsReservesManagerFactory))),
-        //     address(avsReservesManagerFactoryImplementation)
-        // );
+        anzenProxyAdmin.upgrade(
+            TransparentUpgradeableProxy(payable(address(avsReservesManagerFactory))),
+            address(avsReservesManagerFactoryImplementation)
+        );
 
-        // SafetyFactorConfig memory safetyFactorConfig = SafetyFactorConfig(200_000, 300_000, 200_000, 200_000, 1 days);
+        SafetyFactorConfig memory safetyFactorConfig = SafetyFactorConfig(200_000, 300_000, 200_000, 200_000, 1 days);
 
-        // (anzenReservesManager, anzenReservesManagerImplementation) = avsReservesManagerFactory.createAVSReservesManager(
-        //     address(anzenProxyAdmin),
-        //     safetyFactorConfig,
-        //     anzenCommunityMultisig,
-        //     address(anzenServiceManager),
-        //     new address[](0),
-        //     new uint256[](0),
-        //     0
-        // );
+        (anzenReservesManager, anzenReservesManagerImplementation) = avsReservesManagerFactory.createAVSReservesManager(
+            address(anzenProxyAdmin),
+            safetyFactorConfig,
+            anzenCommunityMultisig,
+            address(anzenServiceManager),
+            new address[](0),
+            new uint256[](0),
+            0
+        );
 
         // TODO: Add the avsReservesManager address
         // safetyFactorOracle.addProtocol(0, address(anzenServiceManager));
 
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
-        // anzenProxyAdmin.upgradeAndCall(
-        //     TransparentUpgradeableProxy(payable(address(anzenTaskManager))),
-        //     address(anzenTaskManagerImplementation),
-        //     abi.encodeWithSelector(
-        //         anzenTaskManager.initialize.selector,
-        //         anzenPauserReg,
-        //         anzenCommunityMultisig,
-        //         AGGREGATOR_ADDR,
-        //         TASK_GENERATOR_ADDR,
-        //         address(safetyFactorOracle)
-        //     )
-        // );
+        anzenProxyAdmin.upgradeAndCall(
+            TransparentUpgradeableProxy(payable(address(anzenTaskManager))),
+            address(anzenTaskManagerImplementation),
+            abi.encodeWithSelector(
+                anzenTaskManager.initialize.selector,
+                anzenPauserReg,
+                anzenCommunityMultisig,
+                AGGREGATOR_ADDR,
+                TASK_GENERATOR_ADDR,
+                address(safetyFactorOracle)
+            )
+        );
 
         // WRITE JSON DATA
         string memory parent_object = "parent object";
 
         string memory deployed_addresses = "addresses";
+        vm.serializeAddress(deployed_addresses, "anzenProxyAdmin", address(anzenProxyAdmin));
         vm.serializeAddress(deployed_addresses, "erc20Strategy", address(erc20Strategy));
         vm.serializeAddress(deployed_addresses, "anzenServiceManager", address(anzenServiceManager));
         vm.serializeAddress(

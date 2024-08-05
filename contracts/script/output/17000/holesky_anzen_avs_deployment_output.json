@@ -1,18 +1,19 @@
 {
   "addresses": {
-    "anzenReservesManager": "0x0000000000000000000000000000000000000000",
-    "anzenReservesManagerImplementation": "0x0000000000000000000000000000000000000000",
-    "anzenServiceManager": "0x6C214DBd6b24B666120c0f158176316987639d12",
-    "anzenServiceManagerImplementation": "0x0000000000000000000000000000000000000000",
-    "anzenTaskManager": "0xeb9404e940CD9D7F369F966247f6edd3d0E7d494",
-    "anzenTaskManagerImplementation": "0x0000000000000000000000000000000000000000",
-    "avsReservesManagerFactory": "0xdB61039089DdF1991d15ADfD17F56f4F969B2D83",
-    "avsReservesManagerFactoryImplementation": "0x0000000000000000000000000000000000000000",
+    "anzenProxyAdmin": "0x89Dd8AD5cB68680697e7635FFC9087482A71aDea",
+    "anzenReservesManager": "0x9b2F1Cb43b76DeC64dEAb4dd864FF1A943E98A57",
+    "anzenReservesManagerImplementation": "0xd2708c319416bC88A232E503847B21b4cb0369C9",
+    "anzenServiceManager": "0xA0C835E9f3A4951e8EA87E16026Ba6155db58753",
+    "anzenServiceManagerImplementation": "0x86738775341Bc77c81AbCdFc7955C281110eAeEB",
+    "anzenTaskManager": "0xC44C30deE649cB7b9A3B368802A0ab4827BCaAc0",
+    "anzenTaskManagerImplementation": "0x74b3941272655B1f44dd24E5Be8709b83DE6914d",
+    "avsReservesManagerFactory": "0x7c75c2b6c41a9fBac9f81a63909af1f1ab0684f3",
+    "avsReservesManagerFactoryImplementation": "0x15e87A1C6dC29857FC000633c06e0Ac2B4F0c012",
     "erc20Strategy": "0x80528D6e9A2BAbFc766965E0E26d5aB08D9CFaF9",
-    "operatorStateRetriever": "0xf1426d467EDBFF1b9dE45630494C1ac3A17F889D",
-    "registryCoordinator": "0x3022f3B262838A4Df2f87D70341c015a78C15e8E",
-    "registryCoordinatorImplementation": "0x0000000000000000000000000000000000000000",
-    "safetyFactorOracle": "0xf4595B0ac6B54D53500A2e2859F69011aCe6F1e2",
-    "safetyFactorOracleImplementation": "0x0000000000000000000000000000000000000000"
+    "operatorStateRetriever": "0x58cE11352279a78F37C44960156e60Be548A61b1",
+    "registryCoordinator": "0xA8e02f1a23350b574346b467544Fee595586d6F0",
+    "registryCoordinatorImplementation": "0xd3bc35fD6E055B5605cAf79aDa1c77AE73CA5F2c",
+    "safetyFactorOracle": "0xBc121A33ba3CFd53b5D76783d08a73d9149f14E2",
+    "safetyFactorOracleImplementation": "0x15ed1FF1bd0688146433aA9E9757C162ce1AcE6D"
   }
 }
