@@ -30,6 +30,8 @@ interface ISafetyFactorOracle {
 
     function removeProtocol(uint32 protocolIdToRemove) external;
 
+    function updateFallbackPoster(address newFallBackSafetyFactorPoster) external;
+
     /**
      *
      *                         Anzen Task Manager Functions

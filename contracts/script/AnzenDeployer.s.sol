@@ -336,11 +336,6 @@ contract AnzenDeployer is Script, Utils {
             )
         );
 
-        anzenProxyAdmin.upgrade(
-            TransparentUpgradeableProxy(payable(address(avsReservesManagerFactory))),
-            address(avsReservesManagerFactoryImplementation)
-        );
-
         // WRITE JSON DATA
         string memory parent_object = "parent object";
 

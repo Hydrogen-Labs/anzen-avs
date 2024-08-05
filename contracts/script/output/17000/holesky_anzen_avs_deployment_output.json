@@ -1,0 +1,18 @@
+{
+  "addresses": {
+    "anzenReservesManager": "0x0000000000000000000000000000000000000000",
+    "anzenReservesManagerImplementation": "0x0000000000000000000000000000000000000000",
+    "anzenServiceManager": "0x6C214DBd6b24B666120c0f158176316987639d12",
+    "anzenServiceManagerImplementation": "0x0000000000000000000000000000000000000000",
+    "anzenTaskManager": "0xeb9404e940CD9D7F369F966247f6edd3d0E7d494",
+    "anzenTaskManagerImplementation": "0x0000000000000000000000000000000000000000",
+    "avsReservesManagerFactory": "0xdB61039089DdF1991d15ADfD17F56f4F969B2D83",
+    "avsReservesManagerFactoryImplementation": "0x0000000000000000000000000000000000000000",
+    "erc20Strategy": "0x80528D6e9A2BAbFc766965E0E26d5aB08D9CFaF9",
+    "operatorStateRetriever": "0xf1426d467EDBFF1b9dE45630494C1ac3A17F889D",
+    "registryCoordinator": "0x3022f3B262838A4Df2f87D70341c015a78C15e8E",
+    "registryCoordinatorImplementation": "0x0000000000000000000000000000000000000000",
+    "safetyFactorOracle": "0xf4595B0ac6B54D53500A2e2859F69011aCe6F1e2",
+    "safetyFactorOracleImplementation": "0x0000000000000000000000000000000000000000"
+  }
+}

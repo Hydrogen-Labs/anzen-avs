@@ -67,6 +67,10 @@ contract SafetyFactorOracle is SafetyFactorOracleStorage, Initializable {
         // TODO: Add logic to pass the safety factor to the  AVSReservesManager
     }
 
+    function updateFallbackPoster(address newFallBackSafetyFactorPoster) external onlyAnzenGov {
+        fallBackSafetyFactorPoster = newFallBackSafetyFactorPoster;
+    }
+
     function getSafetyFactor(uint32 _protocolId) external view returns (SafetyFactorSnapshot memory safetyFactor) {
         require(activeProtocols[_protocolId], "Protocol is not active");
         return safetyFactorSnapshots[_protocolId];
