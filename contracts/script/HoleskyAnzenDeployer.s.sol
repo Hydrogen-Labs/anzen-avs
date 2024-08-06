@@ -43,7 +43,7 @@ contract AnzenDeployer is Script, Utils {
     address public constant AGGREGATOR_ADDR = 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720;
     address public constant TASK_GENERATOR_ADDR = 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720;
 
-    bytes32 public salt = keccak256(abi.encodePacked("AnzenDeployer18"));
+    bytes32 public salt = keccak256(abi.encodePacked(vm.envString("DEPLOYMENT_SALT")));
 
     // ERC20 and Strategy: we need to deploy this erc20, create a strategy for it, and whitelist this strategy in the strategymanager
     StrategyBaseTVLLimits public erc20Strategy;

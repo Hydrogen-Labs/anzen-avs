@@ -27,7 +27,7 @@ type AvsSubscriber struct {
 
 func BuildAvsSubscriberFromConfig(config *config.Config) (*AvsSubscriber, error) {
 	return BuildAvsSubscriber(
-		config.IncredibleSquaringRegistryCoordinatorAddr,
+		config.AnzenRegistryCoordinatorAddr,
 		config.OperatorStateRetrieverAddr,
 		config.EthWsClient,
 		config.Logger,

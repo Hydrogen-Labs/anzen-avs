@@ -94,10 +94,12 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 		return nil, err
 	}
 
+	c.Logger.Infof("Creating sdk clients")
+
 	chainioConfig := sdkclients.BuildAllConfig{
 		EthHttpUrl:                 c.EthHttpRpcUrl,
 		EthWsUrl:                   c.EthWsRpcUrl,
-		RegistryCoordinatorAddr:    c.IncredibleSquaringRegistryCoordinatorAddr.String(),
+		RegistryCoordinatorAddr:    c.AnzenRegistryCoordinatorAddr.String(),
 		OperatorStateRetrieverAddr: c.OperatorStateRetrieverAddr.String(),
 		AvsName:                    avsName,
 		PromMetricsIpPortAddress:   ":9090",
@@ -108,10 +110,16 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 		return nil, err
 	}
 
+	c.Logger.Debugf("Creating services")
+
 	operatorPubkeysService := oprsinfoserv.NewOperatorsInfoServiceInMemory(context.Background(), clients.AvsRegistryChainSubscriber, clients.AvsRegistryChainReader, c.Logger)
+	c.Logger.Debugf("OperatorPubkeysService created")
 	avsRegistryService := avsregistry.NewAvsRegistryServiceChainCaller(avsReader, operatorPubkeysService, c.Logger)
+	c.Logger.Debugf("AvsRegistryService created")
 	blsAggregationService := blsagg.NewBlsAggregatorService(avsRegistryService, c.Logger)
+	c.Logger.Debugf("BlsAggregationService created")
 	safetyFactorService := safety_factor.NewSafetyFactorService(c.Logger)
+	c.Logger.Debugf("SafetyFactorService created")
 
 	return &Aggregator{
 		logger:                c.Logger,

@@ -8,10 +8,12 @@ AGGREGATOR_ECDSA_PRIV_KEY=0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf70
 CHALLENGER_ECDSA_PRIV_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
 
 CHAINID=31337
+HOLESKY_CHAINID=17000
 # Make sure to update this if the strategy address changes
 # check in contracts/script/output/${CHAINID}/anzen_avs_deployment_output.json
 STRATEGY_ADDRESS=0x7a2088a1bFc9d81c55368AE168C2C02570cB814F
 DEPLOYMENT_FILES_DIR=contracts/script/output/${CHAINID}
+HOLESKY_FILES_DIR=contracts/script/output/${HOLESKY_CHAINID}
 
 -----------------------------: ## 
 
@@ -25,6 +27,9 @@ deploy-eigenlayer-contracts-to-anvil-and-save-state: ## Deploy eigenlayer
 
 deploy-anzen-contracts-to-anvil-and-save-state: ## Deploy avs
 	./tests/anvil/deploy-avs-save-anvil-state.sh
+
+deploy-anzen-contracts-to-holesky-and-save-state: ## Deploy avs
+	./scripts/deploy-anzen-holesky.sh
 
 deploy-all-to-anvil-and-save-state: deploy-eigenlayer-contracts-to-anvil-and-save-state deploy-anzen-contracts-to-anvil-and-save-state ## deploy eigenlayer, shared avs contracts, and inc-sq contracts 
 
@@ -73,8 +78,19 @@ start-aggregator: ##
 		--ecdsa-private-key ${AGGREGATOR_ECDSA_PRIV_KEY} \
 		2>&1 | zap-pretty
 
+start-aggregator-holesky:
+	go run aggregator/cmd/main.go --config config-files/holesky.aggregator.yaml \
+			--credible-squaring-deployment ${HOLESKY_FILES_DIR}/holesky_anzen_avs_deployment_output.json \
+			--ecdsa-private-key ${AGGREGATOR_ECDSA_PRIV_KEY} \
+			2>&1 | zap-pretty
+
+
 start-operator: ## 
 	go run operator/cmd/main.go --config config-files/operator.anvil.yaml \
+		2>&1 | zap-pretty
+
+start-operator-holesky: ## 
+	go run operator/cmd/main.go --config config-files/holesky.operator.anvil.yaml \
 		2>&1 | zap-pretty
 
 start-operator-2: ## 
