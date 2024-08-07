@@ -79,7 +79,7 @@ start-aggregator: ##
 		2>&1 | zap-pretty
 
 start-aggregator-holesky:
-	go run aggregator/cmd/main.go --config config-files/holesky.aggregator.yaml \
+	go run aggregator/cmd/main.go --config config-files/holesky/aggregator.yaml \
 			--credible-squaring-deployment ${HOLESKY_FILES_DIR}/holesky_anzen_avs_deployment_output.json \
 			--ecdsa-private-key ${AGGREGATOR_ECDSA_PRIV_KEY} \
 			2>&1 | zap-pretty
@@ -90,7 +90,7 @@ start-operator: ##
 		2>&1 | zap-pretty
 
 start-operator-holesky: ## 
-	go run operator/cmd/main.go --config config-files/holesky.operator.anvil.yaml \
+	go run operator/cmd/main.go --config config-files/holesky/operator.anvil.yaml \
 		2>&1 | zap-pretty
 
 start-operator-2: ## 
