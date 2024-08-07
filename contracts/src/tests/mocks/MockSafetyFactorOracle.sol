@@ -35,6 +35,11 @@ contract MockSafetyFactorOracle is SafetyFactorOracleStorage, Ownable {
         pendingDispute = status;
     }
 
+    function updateFallbackPoster(address newFallBackSafetyFactorPoster) external {
+        // update the fallback poster
+        fallBackSafetyFactorPoster = newFallBackSafetyFactorPoster;
+    }
+
     function getDisputeStatus() external view returns (bool) {
         return pendingDispute;
     }

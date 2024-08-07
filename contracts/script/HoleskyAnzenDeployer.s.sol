@@ -43,10 +43,10 @@ contract AnzenDeployer is Script, Utils {
     address public constant AGGREGATOR_ADDR = 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720;
     address public constant TASK_GENERATOR_ADDR = 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720;
 
-    // ERC20 and Strategy: we need to deploy this erc20, create a strategy for it, and whitelist this strategy in the strategymanager
+    bytes32 public salt = keccak256(abi.encodePacked(vm.envString("DEPLOYMENT_SALT")));
 
-    ERC20Mock public erc20Mock;
-    StrategyBaseTVLLimits public erc20MockStrategy;
+    // ERC20 and Strategy: we need to deploy this erc20, create a strategy for it, and whitelist this strategy in the strategymanager
+    StrategyBaseTVLLimits public erc20Strategy;
 
     // Credible Squaring contracts
     ProxyAdmin public anzenProxyAdmin;
@@ -78,66 +78,26 @@ contract AnzenDeployer is Script, Utils {
     AVSReservesManagerFactory public avsReservesManagerFactory;
     AVSReservesManagerFactory public avsReservesManagerFactoryImplementation;
 
-    address public mockAVSRM;
-    address public mockAVSRMImplementation;
+    address public anzenReservesManager;
+    address public anzenReservesManagerImplementation;
 
     function run() external {
+        address delegationManagerAddr = 0xA44151489861Fe9e3055d95adC98FbD462B948e7;
+        address avsDirectoryAddr = 0x055733000064333CaDDbC92763c58BF0192fFeBf;
+        address wethStrategyAddr = 0x80528D6e9A2BAbFc766965E0E26d5aB08D9CFaF9;
+
         // Eigenlayer contracts
-        string memory eigenlayerDeployedContracts = readOutput("eigenlayer_deployment_output");
-        IStrategyManager strategyManager =
-            IStrategyManager(stdJson.readAddress(eigenlayerDeployedContracts, ".addresses.strategyManager"));
-        IDelegationManager delegationManager =
-            IDelegationManager(stdJson.readAddress(eigenlayerDeployedContracts, ".addresses.delegation"));
-        IAVSDirectory avsDirectory =
-            IAVSDirectory(stdJson.readAddress(eigenlayerDeployedContracts, ".addresses.avsDirectory"));
-        ProxyAdmin eigenLayerProxyAdmin =
-            ProxyAdmin(stdJson.readAddress(eigenlayerDeployedContracts, ".addresses.eigenLayerProxyAdmin"));
-        PauserRegistry eigenLayerPauserReg =
-            PauserRegistry(stdJson.readAddress(eigenlayerDeployedContracts, ".addresses.eigenLayerPauserReg"));
-        StrategyBaseTVLLimits baseStrategyImplementation = StrategyBaseTVLLimits(
-            stdJson.readAddress(eigenlayerDeployedContracts, ".addresses.baseStrategyImplementation")
-        );
+        IDelegationManager delegationManager = IDelegationManager(delegationManagerAddr);
+        IAVSDirectory avsDirectory = IAVSDirectory(avsDirectoryAddr);
+
+        erc20Strategy = StrategyBaseTVLLimits(wethStrategyAddr);
 
         address anzenCommunityMultisig = msg.sender;
         address anzenPauser = msg.sender;
 
         vm.startBroadcast();
-        _deployErc20AndStrategyAndWhitelistStrategy(
-            eigenLayerProxyAdmin, eigenLayerPauserReg, baseStrategyImplementation, strategyManager
-        );
-        _deployAnzenContracts(delegationManager, avsDirectory, erc20MockStrategy, anzenCommunityMultisig, anzenPauser);
+        _deployAnzenContracts(delegationManager, avsDirectory, erc20Strategy, anzenCommunityMultisig, anzenPauser);
         vm.stopBroadcast();
-    }
-
-    function _deployErc20AndStrategyAndWhitelistStrategy(
-        ProxyAdmin eigenLayerProxyAdmin,
-        PauserRegistry eigenLayerPauserReg,
-        StrategyBaseTVLLimits baseStrategyImplementation,
-        IStrategyManager strategyManager
-    ) internal {
-        erc20Mock = new ERC20Mock();
-        // TODO(samlaf): any reason why we are using the strategybase with tvl limits instead of just using strategybase?
-        // the maxPerDeposit and maxDeposits below are just arbitrary values.
-        erc20MockStrategy = StrategyBaseTVLLimits(
-            address(
-                new TransparentUpgradeableProxy(
-                    address(baseStrategyImplementation),
-                    address(eigenLayerProxyAdmin),
-                    abi.encodeWithSelector(
-                        StrategyBaseTVLLimits.initialize.selector,
-                        1 ether, // maxPerDeposit
-                        100 ether, // maxDeposits
-                        IERC20(erc20Mock),
-                        eigenLayerPauserReg
-                    )
-                )
-            )
-        );
-        IStrategy[] memory strats = new IStrategy[](1);
-        strats[0] = erc20MockStrategy;
-        bool[] memory thirdPartyTransfersForbiddenValues = new bool[](1);
-        thirdPartyTransfersForbiddenValues[0] = false;
-        strategyManager.addStrategiesToDepositWhitelist(strats, thirdPartyTransfersForbiddenValues);
     }
 
     function _deployAnzenContracts(
@@ -160,10 +120,10 @@ contract AnzenDeployer is Script, Utils {
             address[] memory pausers = new address[](2);
             pausers[0] = anzenPauser;
             pausers[1] = anzenCommunityMultisig;
-            anzenPauserReg = new PauserRegistry(pausers, anzenCommunityMultisig);
+            anzenPauserReg = new PauserRegistry{salt: salt}(pausers, anzenCommunityMultisig);
         }
 
-        EmptyContract emptyContract = new EmptyContract();
+        EmptyContract emptyContract = new EmptyContract{salt: salt}();
 
         // hard-coded inputs
 
@@ -172,54 +132,70 @@ contract AnzenDeployer is Script, Utils {
          * not yet deployed, we give these proxies an empty contract as the initial implementation, to act as if they have no code.
          */
         anzenServiceManager = AnzenServiceManager(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
-        );
-        anzenTaskManager = AnzenTaskManager(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
-        );
-        registryCoordinator = regcoord.RegistryCoordinator(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
-        );
-        blsApkRegistry = IBLSApkRegistry(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
-        );
-        indexRegistry = IIndexRegistry(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
-        );
-        stakeRegistry = IStakeRegistry(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
-        );
-        safetyFactorOracle = SafetyFactorOracle(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
-        );
-        avsReservesManagerFactory = AVSReservesManagerFactory(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(anzenProxyAdmin), ""))
+            address(new TransparentUpgradeableProxy{salt: salt}(address(emptyContract), address(anzenProxyAdmin), ""))
         );
 
-        operatorStateRetriever = new OperatorStateRetriever();
+        _churnSalt();
+        anzenTaskManager = AnzenTaskManager(
+            address(new TransparentUpgradeableProxy{salt: salt}(address(emptyContract), address(anzenProxyAdmin), ""))
+        );
+
+        _churnSalt();
+        registryCoordinator = regcoord.RegistryCoordinator(
+            address(new TransparentUpgradeableProxy{salt: salt}(address(emptyContract), address(anzenProxyAdmin), ""))
+        );
+
+        _churnSalt();
+        blsApkRegistry = IBLSApkRegistry(
+            address(new TransparentUpgradeableProxy{salt: salt}(address(emptyContract), address(anzenProxyAdmin), ""))
+        );
+
+        _churnSalt();
+        indexRegistry = IIndexRegistry(
+            address(new TransparentUpgradeableProxy{salt: salt}(address(emptyContract), address(anzenProxyAdmin), ""))
+        );
+
+        _churnSalt();
+        stakeRegistry = IStakeRegistry(
+            address(new TransparentUpgradeableProxy{salt: salt}(address(emptyContract), address(anzenProxyAdmin), ""))
+        );
+
+        _churnSalt();
+        safetyFactorOracle = SafetyFactorOracle(
+            address(new TransparentUpgradeableProxy{salt: salt}(address(emptyContract), address(anzenProxyAdmin), ""))
+        );
+
+        _churnSalt();
+        avsReservesManagerFactory = AVSReservesManagerFactory(
+            address(new TransparentUpgradeableProxy{salt: salt}(address(emptyContract), address(anzenProxyAdmin), ""))
+        );
+
+        // Current step
+
+        operatorStateRetriever = new OperatorStateRetriever{salt: salt}();
 
         // Second, deploy the *implementation* contracts, using the *proxy contracts* as inputs
         {
-            stakeRegistryImplementation = new StakeRegistry(registryCoordinator, delegationManager);
+            stakeRegistryImplementation = new StakeRegistry{salt: salt}(registryCoordinator, delegationManager);
 
             anzenProxyAdmin.upgrade(
                 TransparentUpgradeableProxy(payable(address(stakeRegistry))), address(stakeRegistryImplementation)
             );
 
-            blsApkRegistryImplementation = new BLSApkRegistry(registryCoordinator);
+            blsApkRegistryImplementation = new BLSApkRegistry{salt: salt}(registryCoordinator);
 
             anzenProxyAdmin.upgrade(
                 TransparentUpgradeableProxy(payable(address(blsApkRegistry))), address(blsApkRegistryImplementation)
             );
 
-            indexRegistryImplementation = new IndexRegistry(registryCoordinator);
+            indexRegistryImplementation = new IndexRegistry{salt: salt}(registryCoordinator);
 
             anzenProxyAdmin.upgrade(
                 TransparentUpgradeableProxy(payable(address(indexRegistry))), address(indexRegistryImplementation)
             );
         }
 
-        registryCoordinatorImplementation = new regcoord.RegistryCoordinator(
+        registryCoordinatorImplementation = new regcoord.RegistryCoordinator{salt: salt}(
             anzenServiceManager,
             regcoord.IStakeRegistry(address(stakeRegistry)),
             regcoord.IBLSApkRegistry(address(blsApkRegistry)),
@@ -276,16 +252,17 @@ contract AnzenDeployer is Script, Utils {
         }
 
         anzenServiceManagerImplementation =
-            new AnzenServiceManager(avsDirectory, registryCoordinator, stakeRegistry, anzenTaskManager);
+            new AnzenServiceManager{salt: salt}(avsDirectory, registryCoordinator, stakeRegistry, anzenTaskManager);
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
         anzenProxyAdmin.upgrade(
             TransparentUpgradeableProxy(payable(address(anzenServiceManager))),
             address(anzenServiceManagerImplementation)
         );
 
-        anzenTaskManagerImplementation = new AnzenTaskManager(registryCoordinator, TASK_RESPONSE_WINDOW_BLOCK);
+        anzenTaskManagerImplementation =
+            new AnzenTaskManager{salt: salt}(registryCoordinator, TASK_RESPONSE_WINDOW_BLOCK);
 
-        safetyFactorOracleImplementation = new SafetyFactorOracle();
+        safetyFactorOracleImplementation = new SafetyFactorOracle{salt: salt}();
 
         // TODO: Replace 3rd param with fallbackposter address
         anzenProxyAdmin.upgradeAndCall(
@@ -300,7 +277,7 @@ contract AnzenDeployer is Script, Utils {
         );
 
         avsReservesManagerFactoryImplementation =
-            new AVSReservesManagerFactory(address(safetyFactorOracle), anzenCommunityMultisig);
+            new AVSReservesManagerFactory{salt: salt}(address(safetyFactorOracle), anzenCommunityMultisig);
 
         anzenProxyAdmin.upgrade(
             TransparentUpgradeableProxy(payable(address(avsReservesManagerFactory))),
@@ -309,14 +286,14 @@ contract AnzenDeployer is Script, Utils {
 
         SafetyFactorConfig memory safetyFactorConfig = SafetyFactorConfig(200_000, 300_000, 200_000, 200_000, 1 days);
 
-        (mockAVSRM, mockAVSRMImplementation) = avsReservesManagerFactory.createAVSReservesManager(
+        (anzenReservesManager, anzenReservesManagerImplementation) = avsReservesManagerFactory.createAVSReservesManager(
             address(anzenProxyAdmin),
             safetyFactorConfig,
             anzenCommunityMultisig,
             address(anzenServiceManager),
             new address[](0),
             new uint256[](0),
-            50
+            0
         );
 
         // TODO: Add the avsReservesManager address
@@ -340,8 +317,8 @@ contract AnzenDeployer is Script, Utils {
         string memory parent_object = "parent object";
 
         string memory deployed_addresses = "addresses";
-        vm.serializeAddress(deployed_addresses, "erc20Mock", address(erc20Mock));
-        vm.serializeAddress(deployed_addresses, "erc20MockStrategy", address(erc20MockStrategy));
+        vm.serializeAddress(deployed_addresses, "anzenProxyAdmin", address(anzenProxyAdmin));
+        vm.serializeAddress(deployed_addresses, "erc20Strategy", address(erc20Strategy));
         vm.serializeAddress(deployed_addresses, "anzenServiceManager", address(anzenServiceManager));
         vm.serializeAddress(
             deployed_addresses, "anzenServiceManagerImplementation", address(anzenServiceManagerImplementation)
@@ -364,8 +341,10 @@ contract AnzenDeployer is Script, Utils {
             "avsReservesManagerFactoryImplementation",
             address(avsReservesManagerFactoryImplementation)
         );
-        vm.serializeAddress(deployed_addresses, "mockAVSRM", mockAVSRM);
-        vm.serializeAddress(deployed_addresses, "mockAVSRMImplementation", mockAVSRMImplementation);
+        vm.serializeAddress(deployed_addresses, "anzenReservesManager", anzenReservesManager);
+        vm.serializeAddress(
+            deployed_addresses, "anzenReservesManagerImplementation", anzenReservesManagerImplementation
+        );
 
         string memory deployed_addresses_output =
             vm.serializeAddress(deployed_addresses, "operatorStateRetriever", address(operatorStateRetriever));
@@ -373,6 +352,10 @@ contract AnzenDeployer is Script, Utils {
         // serialize all the data
         string memory finalJson = vm.serializeString(parent_object, deployed_addresses, deployed_addresses_output);
 
-        writeOutput(finalJson, "anzen_avs_deployment_output");
+        writeOutput(finalJson, "holesky_anzen_avs_deployment_output");
+    }
+
+    function _churnSalt() internal {
+        salt = keccak256(abi.encode(salt));
     }
 }

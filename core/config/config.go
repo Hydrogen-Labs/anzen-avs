@@ -29,14 +29,14 @@ type Config struct {
 	EigenMetricsIpPortAddress string
 	// we need the url for the eigensdk currently... eventually standardize api so as to
 	// only take an ethclient or an rpcUrl (and build the ethclient at each constructor site)
-	EthHttpRpcUrl                             string
-	EthWsRpcUrl                               string
-	EthHttpClient                             eth.Client
-	EthWsClient                               eth.Client
-	OperatorStateRetrieverAddr                common.Address
-	IncredibleSquaringRegistryCoordinatorAddr common.Address
-	AggregatorServerIpPortAddr                string
-	RegisterOperatorOnStartup                 bool
+	EthHttpRpcUrl                string
+	EthWsRpcUrl                  string
+	EthHttpClient                eth.Client
+	EthWsClient                  eth.Client
+	OperatorStateRetrieverAddr   common.Address
+	AnzenRegistryCoordinatorAddr common.Address
+	AggregatorServerIpPortAddr   string
+	RegisterOperatorOnStartup    bool
 	// json:"-" skips this field when marshaling (only used for logging to stdout), since SignerFn doesnt implement marshalJson
 	SignerFn          signerv2.SignerFn `json:"-"`
 	TxMgr             txmgr.TxManager
@@ -129,19 +129,19 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 	txMgr := txmgr.NewSimpleTxManager(skWallet, ethRpcClient, logger, aggregatorAddr)
 
 	config := &Config{
-		EcdsaPrivateKey:            ecdsaPrivateKey,
-		Logger:                     logger,
-		EthWsRpcUrl:                configRaw.EthWsUrl,
-		EthHttpRpcUrl:              configRaw.EthRpcUrl,
-		EthHttpClient:              ethRpcClient,
-		EthWsClient:                ethWsClient,
-		OperatorStateRetrieverAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.OperatorStateRetrieverAddr),
-		IncredibleSquaringRegistryCoordinatorAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.RegistryCoordinatorAddr),
-		AggregatorServerIpPortAddr:                configRaw.AggregatorServerIpPortAddr,
-		RegisterOperatorOnStartup:                 configRaw.RegisterOperatorOnStartup,
-		SignerFn:                                  signerV2,
-		TxMgr:                                     txMgr,
-		AggregatorAddress:                         aggregatorAddr,
+		EcdsaPrivateKey:              ecdsaPrivateKey,
+		Logger:                       logger,
+		EthWsRpcUrl:                  configRaw.EthWsUrl,
+		EthHttpRpcUrl:                configRaw.EthRpcUrl,
+		EthHttpClient:                ethRpcClient,
+		EthWsClient:                  ethWsClient,
+		OperatorStateRetrieverAddr:   common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.OperatorStateRetrieverAddr),
+		AnzenRegistryCoordinatorAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.RegistryCoordinatorAddr),
+		AggregatorServerIpPortAddr:   configRaw.AggregatorServerIpPortAddr,
+		RegisterOperatorOnStartup:    configRaw.RegisterOperatorOnStartup,
+		SignerFn:                     signerV2,
+		TxMgr:                        txMgr,
+		AggregatorAddress:            aggregatorAddr,
 	}
 	config.validate()
 	return config, nil
@@ -152,7 +152,7 @@ func (c *Config) validate() {
 	if c.OperatorStateRetrieverAddr == common.HexToAddress("") {
 		panic("Config: BLSOperatorStateRetrieverAddr is required")
 	}
-	if c.IncredibleSquaringRegistryCoordinatorAddr == common.HexToAddress("") {
+	if c.AnzenRegistryCoordinatorAddr == common.HexToAddress("") {
 		panic("Config: IncredibleSquaringRegistryCoordinatorAddr is required")
 	}
 }

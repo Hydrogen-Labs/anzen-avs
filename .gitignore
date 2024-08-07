@@ -26,3 +26,9 @@ logs.txt
 
 # just for example
 id_rsa
+
+# Environment variables file
+*/.env
+*/holesky/*.yaml
+!*/holesky/*sample*.yaml
+tests/keys/holesky*.json

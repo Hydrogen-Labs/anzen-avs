@@ -99,18 +99,18 @@ func TestIntegration(t *testing.T) {
 	txMgr := txmgr.NewSimpleTxManager(skWallet, ethRpcClient, logger, aggregatorAddr)
 
 	config := &config.Config{
-		EcdsaPrivateKey:            aggregatorEcdsaPrivateKey,
-		Logger:                     logger,
-		EthHttpRpcUrl:              aggConfigRaw.EthRpcUrl,
-		EthHttpClient:              ethRpcClient,
-		EthWsRpcUrl:                aggConfigRaw.EthWsUrl,
-		EthWsClient:                ethWsClient,
-		OperatorStateRetrieverAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.OperatorStateRetrieverAddr),
-		IncredibleSquaringRegistryCoordinatorAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.RegistryCoordinatorAddr),
-		AggregatorServerIpPortAddr:                aggConfigRaw.AggregatorServerIpPortAddr,
-		RegisterOperatorOnStartup:                 aggConfigRaw.RegisterOperatorOnStartup,
-		TxMgr:                                     txMgr,
-		AggregatorAddress:                         aggregatorAddr,
+		EcdsaPrivateKey:              aggregatorEcdsaPrivateKey,
+		Logger:                       logger,
+		EthHttpRpcUrl:                aggConfigRaw.EthRpcUrl,
+		EthHttpClient:                ethRpcClient,
+		EthWsRpcUrl:                  aggConfigRaw.EthWsUrl,
+		EthWsClient:                  ethWsClient,
+		OperatorStateRetrieverAddr:   common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.OperatorStateRetrieverAddr),
+		AnzenRegistryCoordinatorAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.RegistryCoordinatorAddr),
+		AggregatorServerIpPortAddr:   aggConfigRaw.AggregatorServerIpPortAddr,
+		RegisterOperatorOnStartup:    aggConfigRaw.RegisterOperatorOnStartup,
+		TxMgr:                        txMgr,
+		AggregatorAddress:            aggregatorAddr,
 	}
 
 	/* Prepare the config file for operator */
