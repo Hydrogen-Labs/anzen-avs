@@ -18,7 +18,7 @@ You will also need to [install docker](https://docs.docker.com/get-docker/), and
 make build-contracts
 ```
 
-## Running via make
+## Running locally via make
 
 This simple session illustrates the basic flow of the AVS. The makefile commands are hardcoded for a single operator, but it's however easy to create new operator config files, and start more operators manually (see the actual commands that the makefile calls).
 
@@ -46,7 +46,11 @@ make start-operator
 
 ## Running via docker compose
 
-We wrote a [docker-compose.yml](./docker-compose.yml) file to run and test everything on a single machine. It will start an anvil instance, loading a [state](./tests/anvil/avs-and-eigenlayer-deployed-anvil-state.json) where the eigenlayer and incredible-squaring contracts are deployed, start the aggregator, and finally one operator, along with prometheus and grafana servers. The grafana server will be available at http://localhost:3000, with user and password both set to `admin`. We have created a simple [grafana dashboard](./grafana/provisioning/dashboards/AVSs/incredible_squaring.json) which can be used as a starting example and expanded to include AVS specific metrics. The eigen metrics should not be added to this dashboard as they will be exposed on the main eigenlayer dashboard provided by the eigenlayer-cli.
+We wrote a [docker-compose.yml](./docker-compose.yml) file to run and test everything on a single machine. It will start an anvil instance, loading a [state](./tests/anvil/avs-and-eigenlayer-deployed-anvil-state.json) where the eigenlayer and anzen contracts are deployed, start the aggregator, and finally one operator, along with prometheus and grafana servers. The grafana server will be available at http://localhost:3000, with user and password both set to `admin`. We have created a simple [grafana dashboard](./grafana/provisioning/dashboards/AVSs/anzen.json) which can be used as a starting example and expanded to include AVS specific metrics. The eigen metrics should not be added to this dashboard as they will be exposed on the main eigenlayer dashboard provided by the eigenlayer-cli.
+
+## Running on Holesky testnet
+
+Refer to the [Holesky Guide](./docs/holesky-guide.md) for instructions on how to run the AVS on the Holesky testnet.
 
 ## Avs Task Description
 
@@ -66,11 +70,11 @@ The architecture of the AVS contains:
 - Operators
   - verify the proposed safety factor response, sign it, and send it to the aggregator
 
-1. A task generator (in our case, same as the aggregator) publishes tasks once every regular interval (say 10 blocks, you are free to set your own interval) to the AnzenTaskManager contract's [createNewTask](contracts/src/AnzenTaskManager.sol#L83) function. Each task specifies a protocol `oracleIndex` for which it wants the currently opted-in operators to determine its safety factor `safetyFactor`. `createNewTask` also takes `quorumNumbers` and `quorumThresholdPercentage` which requests that each listed quorum (we only use quorumNumber 0 in incredible-squaring) needs to reach at least thresholdPercentage of operator signatures.
+1. A task generator (in our case, same as the aggregator) publishes tasks once every regular interval (say 10 blocks, you are free to set your own interval) to the AnzenTaskManager contract's [createNewTask](contracts/src/AnzenTaskManager.sol#L83) function. Each task specifies a protocol `oracleIndex` for which it wants the currently opted-in operators to determine its safety factor `safetyFactor`. `createNewTask` also takes `quorumNumbers` and `quorumThresholdPercentage` which requests that each listed quorum (we only use quorumNumber 0 in anzen) needs to reach at least thresholdPercentage of operator signatures.
 
 2. A [registry](https://github.com/Layr-Labs/eigenlayer-middleware/blob/master/src/BLSRegistryCoordinatorWithIndices.sol) contract is deployed that allows any eigenlayer operator with at least 1 delegated [mockerc20](contracts/src/ERC20Mock.sol) token to opt-in to this AVS and also de-register from this AVS.
 
-3. [Operator] The operators who are currently opted-in with the AVS need to read the task number from the Task contract, compute its square, sign on that computed result (over the BN254 curve) and send their taskResponse and signature to the aggregator.
+3. [Operator] The operators who are currently opted-in with the AVS need to read the task number from the Task contract, compute its safety factor, sign on that computed result (over the BN254 curve) and send their taskResponse and signature to the aggregator.
 
 4. [Aggregator] The aggregator collects the signatures from the operators and aggregates them using BLS aggregation. If any response passes the [quorumThresholdPercentage](contracts/src/interfaces/IAnzenTaskManager.sol#L36) set by the task generator when posting the task, the aggregator posts the aggregated response to the Task contract.
 

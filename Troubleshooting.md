@@ -30,3 +30,13 @@ cd contracts
 forge clean
 forge build
 ```
+
+### Make `tests-integration` failing
+
+If running on an a mac:
+
+https://github.com/foundry-rs/foundry/issues/8039
+
+```bash
+docker pull --platform linux/amd64 ghcr.io/foundry-rs/foundry:latest
+```

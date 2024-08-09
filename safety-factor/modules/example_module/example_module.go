@@ -6,7 +6,7 @@ type ExampleModule struct {
 	*safety_factor_base.BaseSFModule
 }
 
-func NewExampleModule(name, id string) *ExampleModule {
+func NewExampleModule(name string, id int64) *ExampleModule {
 	module := &ExampleModule{}
 	module.BaseSFModule = safety_factor_base.NewBaseSFModule(name, id, module)
 	return module

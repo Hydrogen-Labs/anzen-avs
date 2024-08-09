@@ -37,13 +37,13 @@ var DefaultSFModuleConfig = SFModuleNodeConfig{}
 
 type BaseSFModule struct {
 	Name       string
-	ID         string
+	ID         int64
 	NodeConfig SFModuleNodeConfig
 	Config     *SFModuleConfig
 	Module     SFModule // Add reference to interface
 }
 
-func NewBaseSFModule(name, id string, module SFModule) *BaseSFModule {
+func NewBaseSFModule(name string, id int64, module SFModule) *BaseSFModule {
 	m := &BaseSFModule{
 		Name:       name,
 		ID:         id,

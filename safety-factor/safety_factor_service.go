@@ -3,6 +3,7 @@ package safety_factor
 import (
 	"github.com/Layr-Labs/eigensdk-go/logging"
 
+	anzen_sf_module "anzen-avs/safety-factor/modules/anzen_module"
 	example_sf_module "anzen-avs/safety-factor/modules/example_module"
 	safety_factor_base "anzen-avs/safety-factor/safety-factor-base"
 	"errors"
@@ -30,7 +31,8 @@ func NewSafetyFactorService(logger logging.Logger) *SafetyFactorService {
 }
 
 func (s *SafetyFactorService) registerModules() {
-	s.modules[0] = example_sf_module.NewExampleModule("exampleName", "exampleID")
+	s.modules[safety_factor_base.ExampleModuleID] = example_sf_module.NewExampleModule("exampleName", safety_factor_base.ExampleModuleID)
+	s.modules[safety_factor_base.AnzenModuleID] = anzen_sf_module.NewAnzenModule()
 }
 
 func (s *SafetyFactorService) GetModuleByOracleIndex(index int) (safety_factor_base.SFModule, error) {

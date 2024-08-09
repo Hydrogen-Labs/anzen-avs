@@ -2,6 +2,10 @@
 
 <b> Do not use it in Production, testnet only. </b>
 
+## Joining the Holesky AVS
+
+TODO: Add instructions on how to join the currently deployed Anzen Holesky AVS as an operator.
+
 ## Deploying the Holesky contracts
 
 ### Create the deployment `.env` file
@@ -56,9 +60,16 @@ make start-operator-holesky
 
 ## Troubleshooting
 
+#### RPC Issues
+
 Ensure that your RPC client let's you create websocket subscriptions.
 Recommended RPC providers are:
 
 - [Tenderly](https://tenderly.co/)
 
 The free tier of Tenderly is sufficient for testing.
+
+#### Operator not joining the AVS
+
+- Ensure that you have sufficient eth in your operator account to pay for gas costs.
+- Ensure that you have wETH in your operator account to pay for joining the AVS (this is for the default strategy of the AVS)
