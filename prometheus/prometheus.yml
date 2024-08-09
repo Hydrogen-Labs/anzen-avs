@@ -8,20 +8,19 @@ global:
 
 # A scrape configuration containing exactly one endpoint to scrape.
 scrape_configs:
-
   - job_name: "prometheus"
     scrape_interval: 10s
     static_configs:
       - targets: ["localhost:9090"]
 
-  - job_name: "incredible-squaring-node"
+  - job_name: "anzen-node"
     scrape_interval: 5s
     static_configs:
       # host.docker.internal might not work on linux
       # TODO: do https://stackoverflow.com/a/67158212/4971151
       # - targets: ["host.docker.internal:9090"]
-      - targets: ["incredible-squaring-operator1:9090"]
+      - targets: ["anzen-operator1:9090"]
         labels:
-          bot: "inc-sq-node"
+          bot: "anzen-node"
     relabel_configs:
       # is this actually useful? We already have the job name
