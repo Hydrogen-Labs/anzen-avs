@@ -9,7 +9,7 @@ import (
 	"github.com/Layr-Labs/eigensdk-go/logging"
 
 	"anzen-avs/challenger/types"
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	"anzen-avs/core/chainio"
 )
 
@@ -19,10 +19,10 @@ type Challenger struct {
 	avsReader          chainio.AvsReaderer
 	avsWriter          chainio.AvsWriterer
 	avsSubscriber      chainio.AvsSubscriberer
-	tasks              map[uint32]cstaskmanager.IAnzenTaskManagerOraclePullTask
+	tasks              map[uint32]anzentaskmanager.IAnzenTaskManagerOraclePullTask
 	taskResponses      map[uint32]types.TaskResponseData
-	taskResponseChan   chan *cstaskmanager.ContractAnzenTaskManagerOraclePullTaskResponded
-	newTaskCreatedChan chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated
+	taskResponseChan   chan *anzentaskmanager.ContractAnzenTaskManagerOraclePullTaskResponded
+	newTaskCreatedChan chan *anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated
 }
 
 func NewChallenger(c *config.Config) (*Challenger, error) {
@@ -49,10 +49,10 @@ func NewChallenger(c *config.Config) (*Challenger, error) {
 		avsWriter:          avsWriter,
 		avsReader:          avsReader,
 		avsSubscriber:      avsSubscriber,
-		tasks:              make(map[uint32]cstaskmanager.IAnzenTaskManagerOraclePullTask),
+		tasks:              make(map[uint32]anzentaskmanager.IAnzenTaskManagerOraclePullTask),
 		taskResponses:      make(map[uint32]types.TaskResponseData),
-		taskResponseChan:   make(chan *cstaskmanager.ContractAnzenTaskManagerOraclePullTaskResponded),
-		newTaskCreatedChan: make(chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
+		taskResponseChan:   make(chan *anzentaskmanager.ContractAnzenTaskManagerOraclePullTaskResponded),
+		newTaskCreatedChan: make(chan *anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
 	}
 
 	return challenger, nil
@@ -97,7 +97,7 @@ func (c *Challenger) Start(ctx context.Context) error {
 	}
 }
 
-// // func (c *Challenger) processTaskResponseLog(taskResponseLog *cstaskmanager.ContractAnzenTaskManagerOraclePullTaskResponded) uint32 {
+// // func (c *Challenger) processTaskResponseLog(taskResponseLog *anzentaskmanager.ContractAnzenTaskManagerOraclePullTaskResponded) uint32 {
 // // 	taskResponseRawLog, err := c.avsSubscriber.ParseTaskResponded(taskResponseLog.Raw)
 // // 	if err != nil {
 // // 		c.logger.Error("Error parsing task response. skipping task (this is probably bad and should be investigated)", "err", err)
@@ -132,7 +132,7 @@ func (c *Challenger) Start(ctx context.Context) error {
 // 	return types.NoErrorInTaskResponse
 // }
 
-// func (c *Challenger) getNonSigningOperatorPubKeys(vLog *cstaskmanager.ContractAnzenTaskManagerTaskResponded) []cstaskmanager.BN254G1Point {
+// func (c *Challenger) getNonSigningOperatorPubKeys(vLog *anzentaskmanager.ContractAnzenTaskManagerTaskResponded) []anzentaskmanager.BN254G1Point {
 // 	c.logger.Info("vLog.Raw is", "vLog.Raw", vLog.Raw)
 
 // 	// get the nonSignerStakesAndSignature
@@ -188,9 +188,9 @@ func (c *Challenger) Start(ctx context.Context) error {
 // 	})
 
 // 	// get pubkeys of non-signing operators and submit them to the contract
-// 	nonSigningOperatorPubKeys := make([]cstaskmanager.BN254G1Point, len(nonSignerStakesAndSignatureInput.NonSignerPubkeys))
+// 	nonSigningOperatorPubKeys := make([]anzentaskmanager.BN254G1Point, len(nonSignerStakesAndSignatureInput.NonSignerPubkeys))
 // 	for i, pubkey := range nonSignerStakesAndSignatureInput.NonSignerPubkeys {
-// 		nonSigningOperatorPubKeys[i] = cstaskmanager.BN254G1Point{
+// 		nonSigningOperatorPubKeys[i] = anzentaskmanager.BN254G1Point{
 // 			X: pubkey.X,
 // 			Y: pubkey.Y,
 // 		}

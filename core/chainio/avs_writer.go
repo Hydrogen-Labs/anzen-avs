@@ -13,7 +13,7 @@ import (
 	logging "github.com/Layr-Labs/eigensdk-go/logging"
 	sdktypes "github.com/Layr-Labs/eigensdk-go/types"
 
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	"anzen-avs/core/config"
 )
 
@@ -26,11 +26,11 @@ type AvsWriterer interface {
 		proposedSafetyFactor *big.Int,
 		quorumThresholdPercentage sdktypes.QuorumThresholdPercentage,
 		quorumNumbers sdktypes.QuorumNums,
-	) (cstaskmanager.IAnzenTaskManagerOraclePullTask, uint32, error)
+	) (anzentaskmanager.IAnzenTaskManagerOraclePullTask, uint32, error)
 	SendAggregatedOracleResponse(ctx context.Context,
-		task cstaskmanager.IAnzenTaskManagerOraclePullTask,
-		taskResponse cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse,
-		nonSignerStakesAndSignature cstaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature,
+		task anzentaskmanager.IAnzenTaskManagerOraclePullTask,
+		taskResponse anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse,
+		nonSignerStakesAndSignature anzentaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature,
 	) (*types.Receipt, error)
 }
 
@@ -75,34 +75,34 @@ func (w *AvsWriter) SendNewOraclePullTask(
 	proposedSafetyFactor *big.Int,
 	quorumThresholdPercentage sdktypes.QuorumThresholdPercentage,
 	quorumNumbers sdktypes.QuorumNums,
-) (cstaskmanager.IAnzenTaskManagerOraclePullTask, uint32, error) {
+) (anzentaskmanager.IAnzenTaskManagerOraclePullTask, uint32, error) {
 	txOpts, err := w.TxMgr.GetNoSendTxOpts()
 	if err != nil {
 		w.logger.Errorf("Error getting tx opts")
-		return cstaskmanager.IAnzenTaskManagerOraclePullTask{}, 0, err
+		return anzentaskmanager.IAnzenTaskManagerOraclePullTask{}, 0, err
 	}
 	tx, err := w.AvsContractBindings.TaskManager.CreateNewOraclePullTask(txOpts, uint32(oracleIndex.Uint64()), proposedSafetyFactor, uint32(quorumThresholdPercentage), quorumNumbers.UnderlyingType())
 	if err != nil {
 		w.logger.Errorf("Error assembling CreateNewOraclePullTask tx")
-		return cstaskmanager.IAnzenTaskManagerOraclePullTask{}, 0, err
+		return anzentaskmanager.IAnzenTaskManagerOraclePullTask{}, 0, err
 	}
 	receipt, err := w.TxMgr.Send(ctx, tx)
 	if err != nil {
 		w.logger.Errorf("Error submitting CreateNewOraclePullTask tx")
-		return cstaskmanager.IAnzenTaskManagerOraclePullTask{}, 0, err
+		return anzentaskmanager.IAnzenTaskManagerOraclePullTask{}, 0, err
 	}
 	newTaskCreatedEvent, err := w.AvsContractBindings.TaskManager.ContractAnzenTaskManagerFilterer.ParseNewOraclePullTaskCreated(*receipt.Logs[0])
 	if err != nil {
 		w.logger.Error("Aggregator failed to parse new oracle pull task created event", "err", err)
-		return cstaskmanager.IAnzenTaskManagerOraclePullTask{}, 0, err
+		return anzentaskmanager.IAnzenTaskManagerOraclePullTask{}, 0, err
 	}
 	return newTaskCreatedEvent.OraclePullTask, newTaskCreatedEvent.TaskIndex, nil
 }
 
 func (w *AvsWriter) SendAggregatedOracleResponse(
-	ctx context.Context, task cstaskmanager.IAnzenTaskManagerOraclePullTask,
-	taskResponse cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse,
-	nonSignerStakesAndSignature cstaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature,
+	ctx context.Context, task anzentaskmanager.IAnzenTaskManagerOraclePullTask,
+	taskResponse anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse,
+	nonSignerStakesAndSignature anzentaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature,
 ) (*types.Receipt, error) {
 	txOpts, err := w.TxMgr.GetNoSendTxOpts()
 	if err != nil {

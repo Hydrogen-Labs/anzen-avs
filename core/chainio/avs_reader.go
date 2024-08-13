@@ -10,7 +10,7 @@ import (
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients/eth"
 	logging "github.com/Layr-Labs/eigensdk-go/logging"
 
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	erc20mock "anzen-avs/contracts/bindings/ERC20Mock"
 	"anzen-avs/core/config"
 )
@@ -19,8 +19,8 @@ type AvsReaderer interface {
 	sdkavsregistry.AvsRegistryReader
 
 	CheckSignatures(
-		ctx context.Context, msgHash [32]byte, quorumNumbers []byte, referenceBlockNumber uint32, nonSignerStakesAndSignature cstaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature,
-	) (cstaskmanager.IBLSSignatureCheckerQuorumStakeTotals, error)
+		ctx context.Context, msgHash [32]byte, quorumNumbers []byte, referenceBlockNumber uint32, nonSignerStakesAndSignature anzentaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature,
+	) (anzentaskmanager.IBLSSignatureCheckerQuorumStakeTotals, error)
 	GetErc20Mock(ctx context.Context, tokenAddr gethcommon.Address) (*erc20mock.ContractERC20Mock, error)
 }
 
@@ -55,13 +55,13 @@ func NewAvsReader(avsRegistryReader sdkavsregistry.AvsRegistryReader, avsService
 }
 
 func (r *AvsReader) CheckSignatures(
-	ctx context.Context, msgHash [32]byte, quorumNumbers []byte, referenceBlockNumber uint32, nonSignerStakesAndSignature cstaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature,
-) (cstaskmanager.IBLSSignatureCheckerQuorumStakeTotals, error) {
+	ctx context.Context, msgHash [32]byte, quorumNumbers []byte, referenceBlockNumber uint32, nonSignerStakesAndSignature anzentaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature,
+) (anzentaskmanager.IBLSSignatureCheckerQuorumStakeTotals, error) {
 	stakeTotalsPerQuorum, _, err := r.AvsServiceBindings.TaskManager.CheckSignatures(
 		&bind.CallOpts{}, msgHash, quorumNumbers, referenceBlockNumber, nonSignerStakesAndSignature,
 	)
 	if err != nil {
-		return cstaskmanager.IBLSSignatureCheckerQuorumStakeTotals{}, err
+		return anzentaskmanager.IBLSSignatureCheckerQuorumStakeTotals{}, err
 	}
 	return stakeTotalsPerQuorum, nil
 }

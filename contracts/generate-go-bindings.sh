@@ -23,7 +23,7 @@ rm -rf bindings/*
 forge clean
 forge build
 
-avs_service_contracts="AnzenServiceManager AnzenTaskManager"
+avs_service_contracts="AnzenServiceManager AnzenTaskManager SafetyFactorOracle"
 for contract in $avs_service_contracts; do
     create_binding . $contract ./bindings
 done

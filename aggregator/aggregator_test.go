@@ -21,7 +21,7 @@ import (
 
 	"anzen-avs/aggregator/mocks"
 	"anzen-avs/aggregator/types"
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	chainiomocks "anzen-avs/core/chainio/mocks"
 )
 
@@ -92,8 +92,8 @@ func createMockAggregator(
 		logger:                logger,
 		avsWriter:             mockAvsWriter,
 		blsAggregationService: mockBlsAggregationService,
-		oracleTasks:           make(map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerOraclePullTask),
-		oracleTaskReponses:    make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse),
+		oracleTasks:           make(map[types.TaskIndex]anzentaskmanager.IAnzenTaskManagerOraclePullTask),
+		oracleTaskReponses:    make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse),
 		safetyFactorService:   mockSafetyFactorService,
 	}
 	return aggregator, mockAvsWriter, mockBlsAggregationService, nil

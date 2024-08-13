@@ -10,7 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"anzen-avs/aggregator"
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	"anzen-avs/core"
 	"anzen-avs/core/chainio"
 	"anzen-avs/metrics"
@@ -58,7 +58,7 @@ type Operator struct {
 	operatorId       sdktypes.OperatorId
 	operatorAddr     common.Address
 	// receive new oracle pull tasks in this chan (typically from listening to onchain event)	// receive new oracle pull tasks in this chan (typically from listening to onchain event)
-	newOraclePullTaskCreatedChan chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated
+	newOraclePullTaskCreatedChan chan *anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated
 	// ip address of aggregator
 	aggregatorServerIpPortAddr string
 	// rpc client to send signed task responses to aggregator
@@ -230,7 +230,7 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 		operatorAddr:                 common.HexToAddress(c.OperatorAddress),
 		aggregatorServerIpPortAddr:   c.AggregatorServerIpPortAddress,
 		aggregatorRpcClient:          aggregatorRpcClient,
-		newOraclePullTaskCreatedChan: make(chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
+		newOraclePullTaskCreatedChan: make(chan *anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
 		anzenServiceManagerAddr:      common.HexToAddress(c.AVSRegistryCoordinatorAddress),
 		operatorId:                   [32]byte{0}, // this is set below
 		safetyFactorService:          safetyFactorService,
@@ -320,7 +320,7 @@ func (o *Operator) Start(ctx context.Context) error {
 
 // Takes a newOraclePullTaskSolutionProposedLog struct as input and returns a TaskResponseHeader struct.
 // The TaskResponseHeader struct is the struct that is signed and sent to the contract as a task response.
-func (o *Operator) ProcessNewOraclePullTaskLog(newOraclePullTaskLog *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated) (*cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse, error) {
+func (o *Operator) ProcessNewOraclePullTaskLog(newOraclePullTaskLog *anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated) (*anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse, error) {
 	o.logger.Info("Received new oracle pull task solution proposed", "task", newOraclePullTaskLog)
 
 	oracleIndex := newOraclePullTaskLog.OraclePullTask.OracleIndex
@@ -338,7 +338,7 @@ func (o *Operator) ProcessNewOraclePullTaskLog(newOraclePullTaskLog *cstaskmanag
 		return nil, fmt.Errorf("Proposed solution does not match expected solution")
 	}
 
-	taskResponse := &cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
+	taskResponse := &anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
 		ReferenceTaskIndex: newOraclePullTaskLog.TaskIndex,
 		SafetyFactor:       safetyFactorInfo.SF,
 	}
@@ -349,7 +349,7 @@ func (o *Operator) ProcessNewOraclePullTaskLog(newOraclePullTaskLog *cstaskmanag
 // Takes a NewTaskCreatedLog struct as input and returns a TaskResponseHeader struct.
 // The TaskResponseHeader struct is the struct that is signed and sent to the contract as a task response.
 
-func (o *Operator) SignOraclePullTaskResponse(oraclePullTaskResponse *cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse) (*aggregator.SignedOraclePullTaskResponse, error) {
+func (o *Operator) SignOraclePullTaskResponse(oraclePullTaskResponse *anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse) (*aggregator.SignedOraclePullTaskResponse, error) {
 	oraclePullTaskResponseHash, err := core.GetPullOracleTaskResponseDigest(oraclePullTaskResponse)
 	if err != nil {
 		o.logger.Error("Error getting oracle pull task response header hash. skipping task (this is not expected and should be investigated)", "err", err)

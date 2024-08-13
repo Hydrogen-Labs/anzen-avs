@@ -9,7 +9,7 @@ import (
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 	sdklogging "github.com/Layr-Labs/eigensdk-go/logging"
 
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	"anzen-avs/metrics"
 	safety_factor "anzen-avs/safety-factor"
 	"anzen-avs/tests"
@@ -50,7 +50,7 @@ func createMockOperator() (*Operator, error) {
 		metricsReg:                   reg,
 		metrics:                      noopMetrics,
 		safetyFactorService:          mockSafetyFactorService,
-		newOraclePullTaskCreatedChan: make(chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
+		newOraclePullTaskCreatedChan: make(chan *anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
 		operatorId:                   MOCK_OPERATOR_ID,
 	}
 	return operator, nil

@@ -16,7 +16,7 @@ import (
 
 	"anzen-avs/aggregator"
 	aggtypes "anzen-avs/aggregator/types"
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	chainiomocks "anzen-avs/core/chainio/mocks"
 	operatormocks "anzen-avs/operator/mocks"
 )
@@ -30,9 +30,9 @@ func TestOperator(t *testing.T) {
 		var ORACLE_INDEX = uint32(0)
 		var proposedSafetyFactor = big.NewInt(400_000_000)
 
-		newTaskCreatedLog := &cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated{
+		newTaskCreatedLog := &anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated{
 			TaskIndex: taskIndex,
-			OraclePullTask: cstaskmanager.IAnzenTaskManagerOraclePullTask{
+			OraclePullTask: anzentaskmanager.IAnzenTaskManagerOraclePullTask{
 				OracleIndex:               ORACLE_INDEX,
 				ProposedSafetyFactor:      proposedSafetyFactor,
 				TaskCreatedBlock:          1000,
@@ -45,7 +45,7 @@ func TestOperator(t *testing.T) {
 		got, err := operator.ProcessNewOraclePullTaskLog(newTaskCreatedLog)
 		assert.Nil(t, err)
 
-		want := &cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
+		want := &anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
 			ReferenceTaskIndex: taskIndex,
 			SafetyFactor:       proposedSafetyFactor,
 		}
@@ -57,9 +57,9 @@ func TestOperator(t *testing.T) {
 		var proposedSafetyFactor = big.NewInt(400_000_000)
 
 		// new task event
-		newTaskCreatedEvent := &cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated{
+		newTaskCreatedEvent := &anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated{
 			TaskIndex: taskIndex,
-			OraclePullTask: cstaskmanager.IAnzenTaskManagerOraclePullTask{
+			OraclePullTask: anzentaskmanager.IAnzenTaskManagerOraclePullTask{
 				OracleIndex:               ORACLE_INDEX,
 				ProposedSafetyFactor:      proposedSafetyFactor,
 				TaskCreatedBlock:          1000,
@@ -75,7 +75,7 @@ func TestOperator(t *testing.T) {
 		assert.True(t, ok)
 
 		signedTaskResponse := &aggregator.SignedOraclePullTaskResponse{
-			OraclePullTaskResponse: cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
+			OraclePullTaskResponse: anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
 				ReferenceTaskIndex: taskIndex,
 				SafetyFactor:       proposedSafetyFactor,
 			},

@@ -9,14 +9,14 @@ import (
 	gethcommon "github.com/ethereum/go-ethereum/common"
 
 	csservicemanager "anzen-avs/contracts/bindings/AnzenServiceManager"
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	erc20mock "anzen-avs/contracts/bindings/ERC20Mock"
 
 	regcoord "github.com/Layr-Labs/eigensdk-go/contracts/bindings/RegistryCoordinator"
 )
 
 type AvsManagersBindings struct {
-	TaskManager    *cstaskmanager.ContractAnzenTaskManager
+	TaskManager    *anzentaskmanager.ContractAnzenTaskManager
 	ServiceManager *csservicemanager.ContractAnzenServiceManager
 	ethClient      eth.Client
 	logger         logging.Logger
@@ -42,7 +42,7 @@ func NewAvsManagersBindings(registryCoordinatorAddr, operatorStateRetrieverAddr 
 		logger.Error("Failed to fetch TaskManager address", "err", err)
 		return nil, err
 	}
-	contractTaskManager, err := cstaskmanager.NewContractAnzenTaskManager(taskManagerAddr, ethclient)
+	contractTaskManager, err := anzentaskmanager.NewContractAnzenTaskManager(taskManagerAddr, ethclient)
 	if err != nil {
 		logger.Error("Failed to fetch IAnzenTaskManager contract", "err", err)
 		return nil, err

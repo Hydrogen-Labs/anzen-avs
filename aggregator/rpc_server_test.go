@@ -10,7 +10,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"anzen-avs/aggregator/types"
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	"anzen-avs/core"
 
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
@@ -63,7 +63,7 @@ func TestProcessSignedOracleTaskResponse(t *testing.T) {
 
 // mocks an operator signing on a task response
 func createMockSignedOracleTaskResponse(mockTask MockTask, keypair bls.KeyPair) (*SignedOraclePullTaskResponse, error) {
-	taskResponse := &cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
+	taskResponse := &anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
 		ReferenceTaskIndex: mockTask.TaskNum,
 		SafetyFactor:       big.NewInt(1_000_000_000),
 	}
