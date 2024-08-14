@@ -12,7 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	safety_factor "anzen-avs/safety-factor"
+	safetyfactormocks "anzen-avs/safety-factor/mocks"
+	safety_factor_base "anzen-avs/safety-factor/safety-factor-base"
 
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 	sdklogging "github.com/Layr-Labs/eigensdk-go/logging"
@@ -55,7 +56,7 @@ func TestSendNewTask(t *testing.T) {
 		},
 	}
 
-	aggregator, mockAvsWriterer, mockBlsAggService, err := createMockAggregator(mockCtrl, operatorPubkeyDict)
+	aggregator, mockAvsWriterer, mockBlsAggService, mockSafetyFactorServicer, err := createMockAggregator(mockCtrl, operatorPubkeyDict)
 	assert.Nil(t, err)
 
 	var TASK_INDEX = uint32(0)
@@ -63,6 +64,10 @@ func TestSendNewTask(t *testing.T) {
 	var ORACLE_INDEX = uint32(0)
 	var ORACLE_INDEX_BIG_INT = big.NewInt(int64(ORACLE_INDEX))
 	var PROPSED_SAFETY_FACTOR = big.NewInt(400_000_000)
+
+	mockSafetyFactorServicer.EXPECT().GetSafetyFactorInfoByOracleIndex(int(ORACLE_INDEX)).Return(&safety_factor_base.SFModuleResponse{
+		SF: PROPSED_SAFETY_FACTOR,
+	}, nil)
 
 	mockAvsWriterer.EXPECT().SendNewOraclePullTask(
 		context.Background(), ORACLE_INDEX_BIG_INT, PROPSED_SAFETY_FACTOR, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS,
@@ -73,30 +78,33 @@ func TestSendNewTask(t *testing.T) {
 	// make sure that initializeNewTask was called on the blsAggService
 	// maybe there's a better way to do this? There's a saying "don't mock 3rd party code"
 	// see https://hynek.me/articles/what-to-mock-in-5-mins/
+
 	mockBlsAggService.EXPECT().InitializeNewTask(TASK_INDEX, BLOCK_NUMBER, types.QUORUM_NUMBERS, sdktypes.QuorumThresholdPercentages{types.QUORUM_THRESHOLD_NUMERATOR}, taskTimeToExpiry)
 
 	err = aggregator.sendNewOraclePullTask(ORACLE_INDEX_BIG_INT)
+
 	assert.Nil(t, err)
 }
 
 func createMockAggregator(
 	mockCtrl *gomock.Controller, operatorPubkeyDict map[sdktypes.OperatorId]types.OperatorInfo,
-) (*Aggregator, *chainiomocks.MockAvsWriterer, *blsaggservmock.MockBlsAggregationService, error) {
+) (*Aggregator, *chainiomocks.MockAvsWriterer, *blsaggservmock.MockBlsAggregationService, *safetyfactormocks.MockSafetyFactorServicer, error) {
 	logger := sdklogging.NewNoopLogger()
 	mockAvsWriter := chainiomocks.NewMockAvsWriterer(mockCtrl)
+	mockAvsReader := chainiomocks.NewMockAvsReaderer(mockCtrl)
 	mockBlsAggregationService := blsaggservmock.NewMockBlsAggregationService(mockCtrl)
-	// TODO: create a mock safety factor service
-	mockSafetyFactorService := safety_factor.NewSafetyFactorService(logger)
+	mockSafetyFactorService := safetyfactormocks.NewMockSafetyFactorServicer(mockCtrl)
 
 	aggregator := &Aggregator{
 		logger:                logger,
 		avsWriter:             mockAvsWriter,
+		avsReader:             mockAvsReader,
 		blsAggregationService: mockBlsAggregationService,
 		oracleTasks:           make(map[types.TaskIndex]anzentaskmanager.IAnzenTaskManagerOraclePullTask),
 		oracleTaskReponses:    make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse),
 		safetyFactorService:   mockSafetyFactorService,
 	}
-	return aggregator, mockAvsWriter, mockBlsAggregationService, nil
+	return aggregator, mockAvsWriter, mockBlsAggregationService, mockSafetyFactorService, nil
 }
 
 // just a mock ethclient to pass to bindings

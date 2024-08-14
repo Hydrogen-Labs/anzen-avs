@@ -5,13 +5,14 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 	sdklogging "github.com/Layr-Labs/eigensdk-go/logging"
 
 	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	"anzen-avs/metrics"
-	safety_factor "anzen-avs/safety-factor"
+	safetyfactormock "anzen-avs/safety-factor/mocks"
 	"anzen-avs/tests"
 )
 
@@ -24,23 +25,25 @@ var MOCK_OPERATOR_ID = [32]byte{207, 73, 226, 221, 104, 100, 123, 41, 192, 3, 9,
 // since this starts a chain and takes longer to run
 // TODO(samlaf): buggy test, fix it
 func IntegrationTestOperatorRegistration(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
 	anvilCmd := tests.StartAnvilChainAndDeployContracts()
 	defer anvilCmd.Process.Kill()
-	operator, err := createMockOperator()
+	operator, _, err := createMockOperator(mockCtrl)
 	assert.Nil(t, err)
 	err = operator.RegisterOperatorWithEigenlayer()
 	assert.Nil(t, err)
 }
 
-func createMockOperator() (*Operator, error) {
+func createMockOperator(mockCtrl *gomock.Controller) (*Operator, *safetyfactormock.MockSafetyFactorServicer, error) {
 	logger := sdklogging.NewNoopLogger()
 	reg := prometheus.NewRegistry()
 	noopMetrics := metrics.NewNoopMetrics()
-	mockSafetyFactorService := safety_factor.NewSafetyFactorService(logger)
+	mockSafetyFactorService := safetyfactormock.NewMockSafetyFactorServicer(mockCtrl)
 
 	blsPrivateKey, err := bls.NewPrivateKey(MOCK_OPERATOR_BLS_PRIVATE_KEY)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	operatorKeypair := bls.NewKeyPair(blsPrivateKey)
 
@@ -53,5 +56,5 @@ func createMockOperator() (*Operator, error) {
 		newOraclePullTaskCreatedChan: make(chan *anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
 		operatorId:                   MOCK_OPERATOR_ID,
 	}
-	return operator, nil
+	return operator, mockSafetyFactorService, nil
 }

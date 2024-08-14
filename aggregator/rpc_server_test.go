@@ -40,7 +40,7 @@ func TestProcessSignedOracleTaskResponse(t *testing.T) {
 			OperatorAddr: common.Address{},
 		},
 	}
-	aggregator, _, mockBlsAggServ, err := createMockAggregator(mockCtrl, operatorPubkeyDict)
+	aggregator, _, mockBlsAggServ, _, err := createMockAggregator(mockCtrl, operatorPubkeyDict)
 	assert.Nil(t, err)
 
 	signedTaskResponse, err := createMockSignedOracleTaskResponse(MockTask{

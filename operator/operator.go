@@ -217,7 +217,7 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 		return nil, err
 	}
 
-	safetyFactorService := safety_factor.NewSafetyFactorService(logger)
+	safetyFactorService := safety_factor.NewSafetyFactorService(logger, avsReader)
 
 	operator := &Operator{
 		config:                       c,

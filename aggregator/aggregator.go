@@ -13,6 +13,7 @@ import (
 	"anzen-avs/core"
 	"anzen-avs/core/chainio"
 	"anzen-avs/core/config"
+
 	safety_factor "anzen-avs/safety-factor"
 	safety_factor_base "anzen-avs/safety-factor/safety-factor-base"
 
@@ -120,7 +121,7 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 	c.Logger.Debugf("AvsRegistryService created")
 	blsAggregationService := blsagg.NewBlsAggregatorService(avsRegistryService, c.Logger)
 	c.Logger.Debugf("BlsAggregationService created")
-	safetyFactorService := safety_factor.NewSafetyFactorService(c.Logger)
+	safetyFactorService := safety_factor.NewSafetyFactorService(c.Logger, avsReader)
 	c.Logger.Debugf("SafetyFactorService created")
 
 	return &Aggregator{
@@ -180,25 +181,21 @@ func (agg *Aggregator) oracleTaskCreatorChronJob() error {
 	for _, moduleID := range safety_factor_base.ModuleIDs {
 		agg.logger.Debugf("Checking module %d", moduleID)
 		// get safety factor info for each module
-		proposedSafetyFactorInfo, err := agg.safetyFactorService.GetSafetyFactorInfoByOracleIndex(int(moduleID))
+
+		isStale, err := agg.safetyFactorService.IsSafetyFactorInfoStale(int32(moduleID))
 		if err != nil {
 			agg.logger.Error("Aggregator failed to get safety factor info", "err", err)
 			continue
 		}
-		currentSafetyFactorInfo, err := agg.avsReader.GetSafetyFactorByIndex(context.Background(), uint32(moduleID))
-		agg.logger.Info("Current safety factor info", "currentSafetyFactorInfo", currentSafetyFactorInfo)
-		if err != nil {
-			agg.logger.Error("Aggregator failed to get safety factor info", "err", err)
-			continue
-		}
-		if proposedSafetyFactorInfo.SF.Cmp(currentSafetyFactorInfo.SafetyFactor) == 0 {
-			agg.logger.Info("Safety factor is the same as the current one. Skipping.")
-			continue
-		}
-		// create new oracle pull task for each module
-		err = agg.sendNewOraclePullTask(big.NewInt(int64(moduleID)))
-		if err != nil {
-			agg.logger.Error("Aggregator failed to send new oracle pull task", "err", err)
+		if isStale {
+			// create new oracle pull task for each module
+			err = agg.sendNewOraclePullTask(big.NewInt(int64(moduleID)))
+			if err != nil {
+				agg.logger.Error("Aggregator failed to send new oracle pull task", "err", err)
+				continue
+			}
+		} else {
+			agg.logger.Info("Safety factor is not stale. Skipping.")
 			continue
 		}
 
