@@ -2,6 +2,7 @@ package aggregator
 
 import (
 	"context"
+	"errors"
 	"math/big"
 	"sync"
 	"time"
@@ -12,7 +13,9 @@ import (
 	"anzen-avs/core"
 	"anzen-avs/core/chainio"
 	"anzen-avs/core/config"
+
 	safety_factor "anzen-avs/safety-factor"
+	safety_factor_base "anzen-avs/safety-factor/safety-factor-base"
 
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients"
 	sdkclients "github.com/Layr-Labs/eigensdk-go/chainio/clients"
@@ -21,7 +24,7 @@ import (
 	oprsinfoserv "github.com/Layr-Labs/eigensdk-go/services/operatorsinfo"
 	sdktypes "github.com/Layr-Labs/eigensdk-go/types"
 
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 )
 
 const (
@@ -70,12 +73,13 @@ type Aggregator struct {
 	logger              logging.Logger
 	serverIpPortAddr    string
 	avsWriter           chainio.AvsWriterer
+	avsReader           chainio.AvsReaderer
 	safetyFactorService safety_factor.SafetyFactorServicer
 	// aggregation related fields
 	blsAggregationService blsagg.BlsAggregationService
-	oracleTasks           map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerOraclePullTask
+	oracleTasks           map[types.TaskIndex]anzentaskmanager.IAnzenTaskManagerOraclePullTask
 	oracleTasksMu         sync.RWMutex
-	oracleTaskReponses    map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse
+	oracleTaskReponses    map[types.TaskIndex]map[sdktypes.TaskResponseDigest]anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse
 	oracleTaskReponsesMu  sync.RWMutex
 }
 
@@ -117,17 +121,18 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 	c.Logger.Debugf("AvsRegistryService created")
 	blsAggregationService := blsagg.NewBlsAggregatorService(avsRegistryService, c.Logger)
 	c.Logger.Debugf("BlsAggregationService created")
-	safetyFactorService := safety_factor.NewSafetyFactorService(c.Logger)
+	safetyFactorService := safety_factor.NewSafetyFactorService(c.Logger, avsReader)
 	c.Logger.Debugf("SafetyFactorService created")
 
 	return &Aggregator{
 		logger:                c.Logger,
 		serverIpPortAddr:      c.AggregatorServerIpPortAddr,
 		avsWriter:             avsWriter,
+		avsReader:             avsReader,
 		blsAggregationService: blsAggregationService,
 		safetyFactorService:   safetyFactorService,
-		oracleTasks:           make(map[types.TaskIndex]cstaskmanager.IAnzenTaskManagerOraclePullTask),
-		oracleTaskReponses:    make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse),
+		oracleTasks:           make(map[types.TaskIndex]anzentaskmanager.IAnzenTaskManagerOraclePullTask),
+		oracleTaskReponses:    make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse),
 	}, nil
 }
 
@@ -155,7 +160,7 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 			agg.sendAggregatedOracleResponseToContract(blsAggServiceResp)
 		case <-ticker.C:
 			// TODO: create some policy for when to send oracle pull tasks
-			err := agg.sendNewOraclePullTask(big.NewInt(0))
+			err := agg.oracleTaskCreatorChronJob()
 			taskNum++
 			if err != nil {
 				// we log the errors inside sendNewTask() so here we just continue to the next task
@@ -165,6 +170,39 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 	}
 }
 
+func (agg *Aggregator) oracleTaskCreatorChronJob() error {
+	// safety_factor_base.ModuleIDs
+	if agg.avsReader == nil {
+		agg.logger.Error("avsReader is nil")
+		return errors.New("avsReader is not initialized")
+	}
+	agg.logger.Debugf("Aggregator creating new oracle pull tasks")
+	// loop through all modules
+	for _, moduleID := range safety_factor_base.ModuleIDs {
+		agg.logger.Debugf("Checking module %d", moduleID)
+		// get safety factor info for each module
+
+		isStale, err := agg.safetyFactorService.IsSafetyFactorInfoStale(int32(moduleID))
+		if err != nil {
+			agg.logger.Error("Aggregator failed to get safety factor info", "err", err)
+			continue
+		}
+		if isStale {
+			// create new oracle pull task for each module
+			err = agg.sendNewOraclePullTask(big.NewInt(int64(moduleID)))
+			if err != nil {
+				agg.logger.Error("Aggregator failed to send new oracle pull task", "err", err)
+				continue
+			}
+		} else {
+			agg.logger.Info("Safety factor is not stale. Skipping.")
+			continue
+		}
+
+	}
+	return nil
+}
+
 func (agg *Aggregator) sendAggregatedOracleResponseToContract(blsAggServiceResp blsagg.BlsAggregationServiceResponse) {
 	// TODO: check if blsAggServiceResp contains an err
 	if blsAggServiceResp.Err != nil {
@@ -172,15 +210,15 @@ func (agg *Aggregator) sendAggregatedOracleResponseToContract(blsAggServiceResp 
 		// panicing to help with debugging (fail fast), but we shouldn't panic if we run this in production
 		panic(blsAggServiceResp.Err)
 	}
-	nonSignerPubkeys := []cstaskmanager.BN254G1Point{}
+	nonSignerPubkeys := []anzentaskmanager.BN254G1Point{}
 	for _, nonSignerPubkey := range blsAggServiceResp.NonSignersPubkeysG1 {
 		nonSignerPubkeys = append(nonSignerPubkeys, core.ConvertToBN254G1Point(nonSignerPubkey))
 	}
-	quorumApks := []cstaskmanager.BN254G1Point{}
+	quorumApks := []anzentaskmanager.BN254G1Point{}
 	for _, quorumApk := range blsAggServiceResp.QuorumApksG1 {
 		quorumApks = append(quorumApks, core.ConvertToBN254G1Point(quorumApk))
 	}
-	nonSignerStakesAndSignature := cstaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature{
+	nonSignerStakesAndSignature := anzentaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature{
 		NonSignerPubkeys:             nonSignerPubkeys,
 		QuorumApks:                   quorumApks,
 		ApkG2:                        core.ConvertToBN254G2Point(blsAggServiceResp.SignersApkG2),

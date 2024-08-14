@@ -8,30 +8,33 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	gethcommon "github.com/ethereum/go-ethereum/common"
 
-	csservicemanager "anzen-avs/contracts/bindings/AnzenServiceManager"
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzenservicemanager "anzen-avs/contracts/bindings/AnzenServiceManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	erc20mock "anzen-avs/contracts/bindings/ERC20Mock"
+	safetyfactororacle "anzen-avs/contracts/bindings/SafetyFactorOracle"
 
 	regcoord "github.com/Layr-Labs/eigensdk-go/contracts/bindings/RegistryCoordinator"
 )
 
 type AvsManagersBindings struct {
-	TaskManager    *cstaskmanager.ContractAnzenTaskManager
-	ServiceManager *csservicemanager.ContractAnzenServiceManager
-	ethClient      eth.Client
-	logger         logging.Logger
+	TaskManager        *anzentaskmanager.ContractAnzenTaskManager
+	ServiceManager     *anzenservicemanager.ContractAnzenServiceManager
+	SafetyFactorOracle *safetyfactororacle.ContractSafetyFactorOracle
+	ethClient          eth.Client
+	logger             logging.Logger
 }
 
-func NewAvsManagersBindings(registryCoordinatorAddr, operatorStateRetrieverAddr gethcommon.Address, ethclient eth.Client, logger logging.Logger) (*AvsManagersBindings, error) {
+func NewAvsManagersBindings(registryCoordinatorAddr, operatorStateRetrieverAddr gethcommon.Address, safetyFactorOracleAddr gethcommon.Address, ethclient eth.Client, logger logging.Logger) (*AvsManagersBindings, error) {
 	contractRegistryCoordinator, err := regcoord.NewContractRegistryCoordinator(registryCoordinatorAddr, ethclient)
 	if err != nil {
 		return nil, err
 	}
+
 	serviceManagerAddr, err := contractRegistryCoordinator.ServiceManager(&bind.CallOpts{})
 	if err != nil {
 		return nil, err
 	}
-	contractServiceManager, err := csservicemanager.NewContractAnzenServiceManager(serviceManagerAddr, ethclient)
+	contractServiceManager, err := anzenservicemanager.NewContractAnzenServiceManager(serviceManagerAddr, ethclient)
 	if err != nil {
 		logger.Error("Failed to fetch IServiceManager contract", "err", err)
 		return nil, err
@@ -42,17 +45,25 @@ func NewAvsManagersBindings(registryCoordinatorAddr, operatorStateRetrieverAddr 
 		logger.Error("Failed to fetch TaskManager address", "err", err)
 		return nil, err
 	}
-	contractTaskManager, err := cstaskmanager.NewContractAnzenTaskManager(taskManagerAddr, ethclient)
+
+	contractTaskManager, err := anzentaskmanager.NewContractAnzenTaskManager(taskManagerAddr, ethclient)
 	if err != nil {
 		logger.Error("Failed to fetch IAnzenTaskManager contract", "err", err)
 		return nil, err
 	}
 
+	contractSafetyFactorOracle, err := safetyfactororacle.NewContractSafetyFactorOracle(safetyFactorOracleAddr, ethclient)
+	if err != nil {
+		logger.Error("Failed to fetch SafetyFactorOracle contract", "err", err)
+		return nil, err
+	}
+
 	return &AvsManagersBindings{
-		ServiceManager: contractServiceManager,
-		TaskManager:    contractTaskManager,
-		ethClient:      ethclient,
-		logger:         logger,
+		ServiceManager:     contractServiceManager,
+		TaskManager:        contractTaskManager,
+		SafetyFactorOracle: contractSafetyFactorOracle,
+		ethClient:          ethclient,
+		logger:             logger,
 	}, nil
 }
 

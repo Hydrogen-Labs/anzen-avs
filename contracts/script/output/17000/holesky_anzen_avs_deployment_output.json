@@ -1,19 +1,19 @@
 {
   "addresses": {
-    "anzenProxyAdmin": "0xD8FAcdCB603567EE825b5d69Ea2A6f363ED97929",
-    "anzenReservesManager": "0x84Bc91a3cA0aD44Adc8239AEa5143142a5419e23",
-    "anzenReservesManagerImplementation": "0xa5617278b64D09E4Ad17e11D2bd3843653790AAc",
-    "anzenServiceManager": "0x24d5711F2F1f808c0A8B65122a91fDC0eF7C6120",
-    "anzenServiceManagerImplementation": "0x068a32AfCF8dA17C801c21C9e3780b947739d28b",
-    "anzenTaskManager": "0xFF0B65E242f53cbd2eE3Fa1fF657B5A8f7B834cE",
-    "anzenTaskManagerImplementation": "0x2D9ba4d86E08599e02ED401E77C1867119C9Fa4F",
-    "avsReservesManagerFactory": "0x1624949317684EB06922bE7FDdD37FB7fBE33467",
-    "avsReservesManagerFactoryImplementation": "0x98bf7FcF88A4c1EfCd97A68976bAde17b4d02B31",
+    "anzenProxyAdmin": "0x1B4558C170bd1C67fDBD0AA57638261482c6E175",
+    "anzenReservesManager": "0xa7BF500F3C88b5D850aCD8B78851A518ee4901Bc",
+    "anzenReservesManagerImplementation": "0x2E882719CEA3725583BCB403459747ecC4e5f522",
+    "anzenServiceManager": "0x38E38e543C16aa31c135Cb481567023Ef30A7a7F",
+    "anzenServiceManagerImplementation": "0xB2f59Ac8316B9835605Fa5192E307e80db0e5A92",
+    "anzenTaskManager": "0xf21Be6041CCA85D4145ADD5D572602D98b918F14",
+    "anzenTaskManagerImplementation": "0x4a579726E72e2ab69bbd348087b3EF05A584516d",
+    "avsReservesManagerFactory": "0x11d2DFd34653e5de5a79D90E4055c33Ec7c8C541",
+    "avsReservesManagerFactoryImplementation": "0xD076DD0B772916Ae1B1eEEe48715A28c2d70d427",
     "erc20Strategy": "0x80528D6e9A2BAbFc766965E0E26d5aB08D9CFaF9",
-    "operatorStateRetriever": "0x258657204C8062adF832004e9fEa56B2f95f9767",
-    "registryCoordinator": "0x4AB2DCAa7768963Cd5F8D707936E8Ce063f45D35",
-    "registryCoordinatorImplementation": "0x59f2788712D2a3B5655C2917f43CFcfa0Bc0B37e",
-    "safetyFactorOracle": "0x2cF5B4912d9881aae0F68CC15b0F92D96808d224",
-    "safetyFactorOracleImplementation": "0xf13cC03DB30E6C85a432522a63b6A8f5fFb18220"
+    "operatorStateRetriever": "0x3f6a6174F00E337bf207C4324c2bb55aD6f4adCd",
+    "registryCoordinator": "0x62f09D24fa4B1F8360E766A38fFF9bee1A08959C",
+    "registryCoordinatorImplementation": "0x29F5289f625388DF8982D8c89F72Ed9eF3F3b981",
+    "safetyFactorOracle": "0x9a2Db8694E1F45411206e9Ac6e2c25Efa4AAEb74",
+    "safetyFactorOracleImplementation": "0x1e14ff1e52B1b74bAb5822EBA49D2B441AF3D518"
   }
 }

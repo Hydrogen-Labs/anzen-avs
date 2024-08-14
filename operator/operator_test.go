@@ -16,13 +16,15 @@ import (
 
 	"anzen-avs/aggregator"
 	aggtypes "anzen-avs/aggregator/types"
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	chainiomocks "anzen-avs/core/chainio/mocks"
 	operatormocks "anzen-avs/operator/mocks"
+	safety_factor_base "anzen-avs/safety-factor/safety-factor-base"
 )
 
 func TestOperator(t *testing.T) {
-	operator, err := createMockOperator()
+	mockCtrl := gomock.NewController(t)
+	operator, mockSafetyFactorServicer, err := createMockOperator(mockCtrl)
 	assert.Nil(t, err)
 	const taskIndex = 1
 
@@ -30,9 +32,13 @@ func TestOperator(t *testing.T) {
 		var ORACLE_INDEX = uint32(0)
 		var proposedSafetyFactor = big.NewInt(400_000_000)
 
-		newTaskCreatedLog := &cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated{
+		mockSafetyFactorServicer.EXPECT().GetSafetyFactorInfoByOracleIndex(int(ORACLE_INDEX)).Return(&safety_factor_base.SFModuleResponse{
+			SF: proposedSafetyFactor,
+		}, nil)
+
+		newTaskCreatedLog := &anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated{
 			TaskIndex: taskIndex,
-			OraclePullTask: cstaskmanager.IAnzenTaskManagerOraclePullTask{
+			OraclePullTask: anzentaskmanager.IAnzenTaskManagerOraclePullTask{
 				OracleIndex:               ORACLE_INDEX,
 				ProposedSafetyFactor:      proposedSafetyFactor,
 				TaskCreatedBlock:          1000,
@@ -43,13 +49,15 @@ func TestOperator(t *testing.T) {
 		}
 
 		got, err := operator.ProcessNewOraclePullTaskLog(newTaskCreatedLog)
+
 		assert.Nil(t, err)
 
-		want := &cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
+		want := &anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
 			ReferenceTaskIndex: taskIndex,
 			SafetyFactor:       proposedSafetyFactor,
 		}
 		assert.Equal(t, got, want)
+
 	})
 
 	t.Run("Start", func(t *testing.T) {
@@ -57,9 +65,9 @@ func TestOperator(t *testing.T) {
 		var proposedSafetyFactor = big.NewInt(400_000_000)
 
 		// new task event
-		newTaskCreatedEvent := &cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated{
+		newTaskCreatedEvent := &anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated{
 			TaskIndex: taskIndex,
-			OraclePullTask: cstaskmanager.IAnzenTaskManagerOraclePullTask{
+			OraclePullTask: anzentaskmanager.IAnzenTaskManagerOraclePullTask{
 				OracleIndex:               ORACLE_INDEX,
 				ProposedSafetyFactor:      proposedSafetyFactor,
 				TaskCreatedBlock:          1000,
@@ -75,7 +83,7 @@ func TestOperator(t *testing.T) {
 		assert.True(t, ok)
 
 		signedTaskResponse := &aggregator.SignedOraclePullTaskResponse{
-			OraclePullTaskResponse: cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
+			OraclePullTaskResponse: anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
 				ReferenceTaskIndex: taskIndex,
 				SafetyFactor:       proposedSafetyFactor,
 			},
@@ -86,7 +94,9 @@ func TestOperator(t *testing.T) {
 		}
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
-
+		mockSafetyFactorServicer.EXPECT().GetSafetyFactorInfoByOracleIndex(int(ORACLE_INDEX)).Return(&safety_factor_base.SFModuleResponse{
+			SF: proposedSafetyFactor,
+		}, nil)
 		mockAggregatorRpcClient := operatormocks.NewMockAggregatorRpcClienter(mockCtrl)
 		mockAggregatorRpcClient.EXPECT().SendSignedOraclePullTaskReponseToAggregator(signedTaskResponse)
 		operator.aggregatorRpcClient = mockAggregatorRpcClient

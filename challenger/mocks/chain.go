@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"math/big"
 
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 
 	"github.com/ethereum/go-ethereum/common"
 	gethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -77,6 +77,6 @@ func MockTaskResponseLog() gethtypes.Log {
 	}
 }
 
-func MockTaskResponseReferenceTaskIndex(taskResponse cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse) uint32 {
+func MockTaskResponseReferenceTaskIndex(taskResponse anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse) uint32 {
 	return taskResponse.ReferenceTaskIndex
 }

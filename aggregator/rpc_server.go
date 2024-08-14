@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/rpc"
 
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	"anzen-avs/core"
 
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
@@ -39,7 +39,7 @@ func (agg *Aggregator) startServer(ctx context.Context) error {
 }
 
 type SignedOraclePullTaskResponse struct {
-	OraclePullTaskResponse cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse
+	OraclePullTaskResponse anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse
 	BlsSignature           bls.Signature
 	OperatorId             types.OperatorId
 }
@@ -57,7 +57,7 @@ func (agg *Aggregator) ProcessSignedOraclePullTaskResponse(signedOraclePullTaskR
 	}
 	agg.oracleTaskReponsesMu.Lock()
 	if _, ok := agg.oracleTaskReponses[taskIndex]; !ok {
-		agg.oracleTaskReponses[taskIndex] = make(map[sdktypes.TaskResponseDigest]cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse)
+		agg.oracleTaskReponses[taskIndex] = make(map[sdktypes.TaskResponseDigest]anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse)
 	}
 	if _, ok := agg.oracleTaskReponses[taskIndex][taskResponseDigest]; !ok {
 		agg.oracleTaskReponses[taskIndex][taskResponseDigest] = signedOraclePullTaskResponse.OraclePullTaskResponse

@@ -8,12 +8,12 @@ import (
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients/eth"
 	sdklogging "github.com/Layr-Labs/eigensdk-go/logging"
 
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	"anzen-avs/core/config"
 )
 
 type AvsSubscriberer interface {
-	SubcribeToNewOraclePullTasks(newOraclePullTaskLogs chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated) event.Subscription
+	SubcribeToNewOraclePullTasks(newOraclePullTaskLogs chan *anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated) event.Subscription
 }
 
 // Subscribers use a ws connection instead of http connection like Readers
@@ -29,13 +29,14 @@ func BuildAvsSubscriberFromConfig(config *config.Config) (*AvsSubscriber, error)
 	return BuildAvsSubscriber(
 		config.AnzenRegistryCoordinatorAddr,
 		config.OperatorStateRetrieverAddr,
+		config.SafetyFactorOracleAddr,
 		config.EthWsClient,
 		config.Logger,
 	)
 }
 
-func BuildAvsSubscriber(registryCoordinatorAddr, blsOperatorStateRetrieverAddr gethcommon.Address, ethclient eth.Client, logger sdklogging.Logger) (*AvsSubscriber, error) {
-	avsContractBindings, err := NewAvsManagersBindings(registryCoordinatorAddr, blsOperatorStateRetrieverAddr, ethclient, logger)
+func BuildAvsSubscriber(registryCoordinatorAddr, blsOperatorStateRetrieverAddr gethcommon.Address, safetyFactorOracleAddr gethcommon.Address, ethclient eth.Client, logger sdklogging.Logger) (*AvsSubscriber, error) {
+	avsContractBindings, err := NewAvsManagersBindings(registryCoordinatorAddr, blsOperatorStateRetrieverAddr, safetyFactorOracleAddr, ethclient, logger)
 	if err != nil {
 		logger.Errorf("Failed to create contract bindings", "err", err)
 		return nil, err
@@ -50,7 +51,7 @@ func NewAvsSubscriber(avsContractBindings *AvsManagersBindings, logger sdkloggin
 	}
 }
 
-func (s *AvsSubscriber) SubcribeToNewOraclePullTasks(newOraclePullTaskLogs chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated) event.Subscription {
+func (s *AvsSubscriber) SubcribeToNewOraclePullTasks(newOraclePullTaskLogs chan *anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated) event.Subscription {
 	sub, err := s.AvsContractBindings.TaskManager.WatchNewOraclePullTaskCreated(
 		&bind.WatchOpts{}, newOraclePullTaskLogs, nil,
 	)

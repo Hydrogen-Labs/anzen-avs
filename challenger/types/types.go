@@ -3,13 +3,13 @@ package types
 import (
 	"errors"
 
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 )
 
 type TaskResponseData struct {
-	TaskResponse              cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse
-	TaskResponseMetadata      cstaskmanager.IAnzenTaskManagerTaskResponseMetadata
-	NonSigningOperatorPubKeys []cstaskmanager.BN254G1Point
+	TaskResponse              anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse
+	TaskResponseMetadata      anzentaskmanager.IAnzenTaskManagerTaskResponseMetadata
+	NonSigningOperatorPubKeys []anzentaskmanager.BN254G1Point
 }
 
 var (

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	chtypes "anzen-avs/challenger/types"
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	chainiomocks "anzen-avs/core/chainio/mocks"
 
 	mockethclient "github.com/Layr-Labs/eigensdk-go/chainio/mocks"
@@ -24,12 +24,12 @@ func TestCallChallengeModule(t *testing.T) {
 	challenger, _, _, _, _, err := createMockChallenger(mockCtrl)
 	assert.Nil(t, err)
 
-	challenger.tasks[TASK_INDEX] = cstaskmanager.IAnzenTaskManagerOraclePullTask{
+	challenger.tasks[TASK_INDEX] = anzentaskmanager.IAnzenTaskManagerOraclePullTask{
 		OracleIndex: uint32(big.NewInt(1).Uint64()),
 	}
 
 	challenger.taskResponses[TASK_INDEX] = chtypes.TaskResponseData{
-		TaskResponse: cstaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
+		TaskResponse: anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse{
 			ReferenceTaskIndex: TASK_INDEX,
 			SafetyFactor:       big.NewInt(1),
 		},
@@ -59,10 +59,10 @@ func createMockChallenger(mockCtrl *gomock.Controller) (*Challenger, *chainiomoc
 		avsReader:          mockAvsReader,
 		ethClient:          mockEthClient,
 		avsSubscriber:      mockAvsSubscriber,
-		tasks:              make(map[uint32]cstaskmanager.IAnzenTaskManagerOraclePullTask),
+		tasks:              make(map[uint32]anzentaskmanager.IAnzenTaskManagerOraclePullTask),
 		taskResponses:      make(map[uint32]chtypes.TaskResponseData),
-		taskResponseChan:   make(chan *cstaskmanager.ContractAnzenTaskManagerOraclePullTaskResponded),
-		newTaskCreatedChan: make(chan *cstaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
+		taskResponseChan:   make(chan *anzentaskmanager.ContractAnzenTaskManagerOraclePullTaskResponded),
+		newTaskCreatedChan: make(chan *anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated),
 	}
 	return challenger, mockAvsWriter, mockAvsReader, mockAvsSubscriber, mockEthClient, nil
 }

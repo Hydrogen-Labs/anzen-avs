@@ -11,6 +11,7 @@ package mocks
 import (
 	contractAnzenTaskManager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	contractERC20Mock "anzen-avs/contracts/bindings/ERC20Mock"
+	contractSafetyFactorOracle "anzen-avs/contracts/bindings/SafetyFactorOracle"
 	context "context"
 	big "math/big"
 	reflect "reflect"
@@ -225,6 +226,21 @@ func (m *MockAvsReaderer) GetQuorumCount(arg0 *bind.CallOpts) (byte, error) {
 func (mr *MockAvsReadererMockRecorder) GetQuorumCount(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQuorumCount", reflect.TypeOf((*MockAvsReaderer)(nil).GetQuorumCount), arg0)
+}
+
+// GetSafetyFactorByIndex mocks base method.
+func (m *MockAvsReaderer) GetSafetyFactorByIndex(arg0 context.Context, arg1 uint32) (contractSafetyFactorOracle.SafetyFactorSnapshot, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSafetyFactorByIndex", arg0, arg1)
+	ret0, _ := ret[0].(contractSafetyFactorOracle.SafetyFactorSnapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSafetyFactorByIndex indicates an expected call of GetSafetyFactorByIndex.
+func (mr *MockAvsReadererMockRecorder) GetSafetyFactorByIndex(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSafetyFactorByIndex", reflect.TypeOf((*MockAvsReaderer)(nil).GetSafetyFactorByIndex), arg0, arg1)
 }
 
 // IsOperatorRegistered mocks base method.

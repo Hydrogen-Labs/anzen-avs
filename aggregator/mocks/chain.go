@@ -4,7 +4,7 @@ import (
 	"math/big"
 
 	"anzen-avs/aggregator/types"
-	cstaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
+	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 
 	opstateretriever "github.com/Layr-Labs/eigensdk-go/contracts/bindings/OperatorStateRetriever"
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
@@ -12,8 +12,8 @@ import (
 
 // ====== TaskManager Mocks ======
 // Mocks the SendNewOraclePullTask method of the AvsWriter struct
-func MocksSendNewOraclePullTaskCall(blockNum, taskNum, oracleIndex uint32, proposedSafetyFactor big.Int) (cstaskmanager.IAnzenTaskManagerOraclePullTask, uint32, error) {
-	task := cstaskmanager.IAnzenTaskManagerOraclePullTask{
+func MocksSendNewOraclePullTaskCall(blockNum, taskNum, oracleIndex uint32, proposedSafetyFactor big.Int) (anzentaskmanager.IAnzenTaskManagerOraclePullTask, uint32, error) {
+	task := anzentaskmanager.IAnzenTaskManagerOraclePullTask{
 		OracleIndex:               oracleIndex,
 		TaskCreatedBlock:          blockNum,
 		ProposedSafetyFactor:      &proposedSafetyFactor,
