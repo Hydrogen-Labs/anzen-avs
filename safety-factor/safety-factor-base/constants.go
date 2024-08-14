@@ -7,4 +7,4 @@ const (
 )
 
 // export list of module IDs
-var ModuleIDs = []int64{AnzenModuleID}
+var ModuleIDs = []int32{AnzenModuleID}

@@ -2,6 +2,7 @@ package aggregator
 
 import (
 	"context"
+	"errors"
 	"math/big"
 	"sync"
 	"time"
@@ -71,6 +72,7 @@ type Aggregator struct {
 	logger              logging.Logger
 	serverIpPortAddr    string
 	avsWriter           chainio.AvsWriterer
+	avsReader           chainio.AvsReaderer
 	safetyFactorService safety_factor.SafetyFactorServicer
 	// aggregation related fields
 	blsAggregationService blsagg.BlsAggregationService
@@ -125,6 +127,7 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 		logger:                c.Logger,
 		serverIpPortAddr:      c.AggregatorServerIpPortAddr,
 		avsWriter:             avsWriter,
+		avsReader:             avsReader,
 		blsAggregationService: blsAggregationService,
 		safetyFactorService:   safetyFactorService,
 		oracleTasks:           make(map[types.TaskIndex]anzentaskmanager.IAnzenTaskManagerOraclePullTask),
@@ -156,7 +159,7 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 			agg.sendAggregatedOracleResponseToContract(blsAggServiceResp)
 		case <-ticker.C:
 			// TODO: create some policy for when to send oracle pull tasks
-			err := agg.sendNewOraclePullTask(big.NewInt(0))
+			err := agg.oracleTaskCreatorChronJob()
 			taskNum++
 			if err != nil {
 				// we log the errors inside sendNewTask() so here we just continue to the next task
@@ -166,28 +169,41 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 	}
 }
 
-func (agg *Aggregator) oracleTaskCreatorChronJob() {
+func (agg *Aggregator) oracleTaskCreatorChronJob() error {
 	// safety_factor_base.ModuleIDs
-
+	if agg.avsReader == nil {
+		agg.logger.Error("avsReader is nil")
+		return errors.New("avsReader is not initialized")
+	}
+	agg.logger.Debugf("Aggregator creating new oracle pull tasks")
 	// loop through all modules
 	for _, moduleID := range safety_factor_base.ModuleIDs {
+		agg.logger.Debugf("Checking module %d", moduleID)
 		// get safety factor info for each module
-
+		proposedSafetyFactorInfo, err := agg.safetyFactorService.GetSafetyFactorInfoByOracleIndex(int(moduleID))
+		if err != nil {
+			agg.logger.Error("Aggregator failed to get safety factor info", "err", err)
+			continue
+		}
+		currentSafetyFactorInfo, err := agg.avsReader.GetSafetyFactorByIndex(context.Background(), uint32(moduleID))
+		agg.logger.Info("Current safety factor info", "currentSafetyFactorInfo", currentSafetyFactorInfo)
+		if err != nil {
+			agg.logger.Error("Aggregator failed to get safety factor info", "err", err)
+			continue
+		}
+		if proposedSafetyFactorInfo.SF.Cmp(currentSafetyFactorInfo.SafetyFactor) == 0 {
+			agg.logger.Info("Safety factor is the same as the current one. Skipping.")
+			continue
+		}
 		// create new oracle pull task for each module
-		err := agg.sendNewOraclePullTask(big.NewInt(moduleID))
+		err = agg.sendNewOraclePullTask(big.NewInt(int64(moduleID)))
 		if err != nil {
 			agg.logger.Error("Aggregator failed to send new oracle pull task", "err", err)
 			continue
 		}
 
 	}
-
-	// get safety factor info for each module
-
-	// create new oracle pull task for each module
-
-	// send new oracle pull task
-
+	return nil
 }
 
 func (agg *Aggregator) sendAggregatedOracleResponseToContract(blsAggServiceResp blsagg.BlsAggregationServiceResponse) {

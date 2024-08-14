@@ -29,13 +29,14 @@ func BuildAvsSubscriberFromConfig(config *config.Config) (*AvsSubscriber, error)
 	return BuildAvsSubscriber(
 		config.AnzenRegistryCoordinatorAddr,
 		config.OperatorStateRetrieverAddr,
+		config.SafetyFactorOracleAddr,
 		config.EthWsClient,
 		config.Logger,
 	)
 }
 
-func BuildAvsSubscriber(registryCoordinatorAddr, blsOperatorStateRetrieverAddr gethcommon.Address, ethclient eth.Client, logger sdklogging.Logger) (*AvsSubscriber, error) {
-	avsContractBindings, err := NewAvsManagersBindings(registryCoordinatorAddr, blsOperatorStateRetrieverAddr, ethclient, logger)
+func BuildAvsSubscriber(registryCoordinatorAddr, blsOperatorStateRetrieverAddr gethcommon.Address, safetyFactorOracleAddr gethcommon.Address, ethclient eth.Client, logger sdklogging.Logger) (*AvsSubscriber, error) {
+	avsContractBindings, err := NewAvsManagersBindings(registryCoordinatorAddr, blsOperatorStateRetrieverAddr, safetyFactorOracleAddr, ethclient, logger)
 	if err != nil {
 		logger.Errorf("Failed to create contract bindings", "err", err)
 		return nil, err

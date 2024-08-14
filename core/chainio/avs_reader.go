@@ -12,6 +12,7 @@ import (
 
 	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	erc20mock "anzen-avs/contracts/bindings/ERC20Mock"
+	safetyfactororacle "anzen-avs/contracts/bindings/SafetyFactorOracle"
 	"anzen-avs/core/config"
 )
 
@@ -22,6 +23,7 @@ type AvsReaderer interface {
 		ctx context.Context, msgHash [32]byte, quorumNumbers []byte, referenceBlockNumber uint32, nonSignerStakesAndSignature anzentaskmanager.IBLSSignatureCheckerNonSignerStakesAndSignature,
 	) (anzentaskmanager.IBLSSignatureCheckerQuorumStakeTotals, error)
 	GetErc20Mock(ctx context.Context, tokenAddr gethcommon.Address) (*erc20mock.ContractERC20Mock, error)
+	GetSafetyFactorByIndex(ctx context.Context, index uint32) (safetyfactororacle.SafetyFactorSnapshot, error)
 }
 
 type AvsReader struct {
@@ -33,10 +35,10 @@ type AvsReader struct {
 var _ AvsReaderer = (*AvsReader)(nil)
 
 func BuildAvsReaderFromConfig(c *config.Config) (*AvsReader, error) {
-	return BuildAvsReader(c.AnzenRegistryCoordinatorAddr, c.OperatorStateRetrieverAddr, c.EthHttpClient, c.Logger)
+	return BuildAvsReader(c.AnzenRegistryCoordinatorAddr, c.OperatorStateRetrieverAddr, c.SafetyFactorOracleAddr, c.EthHttpClient, c.Logger)
 }
-func BuildAvsReader(registryCoordinatorAddr, operatorStateRetrieverAddr gethcommon.Address, ethHttpClient eth.Client, logger logging.Logger) (*AvsReader, error) {
-	avsManagersBindings, err := NewAvsManagersBindings(registryCoordinatorAddr, operatorStateRetrieverAddr, ethHttpClient, logger)
+func BuildAvsReader(registryCoordinatorAddr, operatorStateRetrieverAddr gethcommon.Address, safetyFactorOracleAddr gethcommon.Address, ethHttpClient eth.Client, logger logging.Logger) (*AvsReader, error) {
+	avsManagersBindings, err := NewAvsManagersBindings(registryCoordinatorAddr, operatorStateRetrieverAddr, safetyFactorOracleAddr, ethHttpClient, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -73,4 +75,13 @@ func (r *AvsReader) GetErc20Mock(ctx context.Context, tokenAddr gethcommon.Addre
 		return nil, err
 	}
 	return erc20Mock, nil
+}
+
+func (r *AvsReader) GetSafetyFactorByIndex(ctx context.Context, index uint32) (safetyfactororacle.SafetyFactorSnapshot, error) {
+	safetyFactor, err := r.AvsServiceBindings.SafetyFactorOracle.GetSafetyFactor(&bind.CallOpts{}, index)
+	if err != nil {
+		r.logger.Error("Failed to fetch safety factor", "err", err)
+		return safetyfactororacle.SafetyFactorSnapshot{}, err
+	}
+	return safetyFactor, nil
 }

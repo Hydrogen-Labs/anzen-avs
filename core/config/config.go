@@ -35,6 +35,7 @@ type Config struct {
 	EthWsClient                  eth.Client
 	OperatorStateRetrieverAddr   common.Address
 	AnzenRegistryCoordinatorAddr common.Address
+	SafetyFactorOracleAddr       common.Address
 	AggregatorServerIpPortAddr   string
 	RegisterOperatorOnStartup    bool
 	// json:"-" skips this field when marshaling (only used for logging to stdout), since SignerFn doesnt implement marshalJson
@@ -59,6 +60,7 @@ type IncredibleSquaringDeploymentRaw struct {
 type IncredibleSquaringContractsRaw struct {
 	RegistryCoordinatorAddr    string `json:"registryCoordinator"`
 	OperatorStateRetrieverAddr string `json:"operatorStateRetriever"`
+	SafetyFactorOracleAddr     string `json:"safetyFactorOracle"`
 }
 
 // NewConfig parses config file to read from from flags or environment variables
@@ -137,6 +139,7 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 		EthWsClient:                  ethWsClient,
 		OperatorStateRetrieverAddr:   common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.OperatorStateRetrieverAddr),
 		AnzenRegistryCoordinatorAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.RegistryCoordinatorAddr),
+		SafetyFactorOracleAddr:       common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.SafetyFactorOracleAddr),
 		AggregatorServerIpPortAddr:   configRaw.AggregatorServerIpPortAddr,
 		RegisterOperatorOnStartup:    configRaw.RegisterOperatorOnStartup,
 		SignerFn:                     signerV2,
@@ -154,6 +157,9 @@ func (c *Config) validate() {
 	}
 	if c.AnzenRegistryCoordinatorAddr == common.HexToAddress("") {
 		panic("Config: IncredibleSquaringRegistryCoordinatorAddr is required")
+	}
+	if c.SafetyFactorOracleAddr == common.HexToAddress("") {
+		panic("Config: SafetyFactorOracleAddr is required")
 	}
 }
 
