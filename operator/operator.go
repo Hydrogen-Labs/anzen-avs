@@ -340,7 +340,19 @@ func (o *Operator) ProcessNewOraclePullTaskLog(newOraclePullTaskLog *anzentaskma
 	if safetyFactorInfo.SF.Cmp(newOraclePullTaskLog.OraclePullTask.ProposedSafetyFactor) != 0 {
 		o.logger.Error("Proposed solution does not match expected solution", "expected", safetyFactorInfo.SF, "proposed", newOraclePullTaskLog.OraclePullTask.ProposedSafetyFactor)
 
-		return nil, fmt.Errorf("Proposed solution does not match expected solution")
+		return nil, fmt.Errorf("proposed solution does not match expected solution")
+	}
+
+	// Check if the safety factor info is stale
+	isStale, err := o.safetyFactorService.IsSafetyFactorInfoStale(int32(oracleIndex))
+	if err != nil {
+		o.logger.Error("Error checking if safety factor info is stale", "err", err)
+		return nil, err
+	}
+
+	if !isStale {
+		o.logger.Error("Safety factor info is not stale", "safetyFactorInfo", safetyFactorInfo)
+		return nil, fmt.Errorf("safety factor info is not stale")
 	}
 
 	taskResponse := &anzentaskmanager.IAnzenTaskManagerOraclePullTaskResponse{

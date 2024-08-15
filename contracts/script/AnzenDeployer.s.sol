@@ -48,7 +48,7 @@ contract AnzenDeployer is Script, Utils {
     ERC20Mock public erc20Mock;
     StrategyBaseTVLLimits public erc20MockStrategy;
 
-    // Credible Squaring contracts
+    // anzen contracts
     ProxyAdmin public anzenProxyAdmin;
     PauserRegistry public anzenPauserReg;
 

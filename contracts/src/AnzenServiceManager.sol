@@ -7,7 +7,7 @@ import "@eigenlayer-middleware/src/ServiceManagerBase.sol";
 import "./AnzenTaskManager.sol";
 
 /**
- * @title Primary entrypoint for procuring services from IncredibleSquaring.
+ * @title Primary entrypoint for procuring services from Anzen.
  * @author Layr Labs, Inc.
  */
 contract AnzenServiceManager is ServiceManagerBase {

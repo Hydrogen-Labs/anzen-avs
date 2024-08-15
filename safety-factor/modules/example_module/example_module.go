@@ -1,14 +1,14 @@
 package example_sf_module
 
-import safety_factor_base "anzen-avs/safety-factor/safety-factor-base"
+import safetyfactorbase "anzen-avs/safety-factor/safety-factor-base"
 
 type ExampleModule struct {
-	*safety_factor_base.BaseSFModule
+	*safetyfactorbase.BaseSFModule
 }
 
 func NewExampleModule(name string, id int64) *ExampleModule {
 	module := &ExampleModule{}
-	module.BaseSFModule = safety_factor_base.NewBaseSFModule(name, id, module)
+	module.BaseSFModule = safetyfactorbase.NewBaseSFModule(name, id, module)
 	return module
 }
 

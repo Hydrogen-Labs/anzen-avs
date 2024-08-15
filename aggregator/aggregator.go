@@ -15,7 +15,7 @@ import (
 	"anzen-avs/core/config"
 
 	safety_factor "anzen-avs/safety-factor"
-	safety_factor_base "anzen-avs/safety-factor/safety-factor-base"
+	safetyfactorbase "anzen-avs/safety-factor/safety-factor-base"
 
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients"
 	sdkclients "github.com/Layr-Labs/eigensdk-go/chainio/clients"
@@ -171,14 +171,14 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 }
 
 func (agg *Aggregator) oracleTaskCreatorChronJob() error {
-	// safety_factor_base.ModuleIDs
+	// safetyfactorbase.ModuleIDs
 	if agg.avsReader == nil {
 		agg.logger.Error("avsReader is nil")
 		return errors.New("avsReader is not initialized")
 	}
 	agg.logger.Debugf("Aggregator creating new oracle pull tasks")
 	// loop through all modules
-	for _, moduleID := range safety_factor_base.ModuleIDs {
+	for _, moduleID := range safetyfactorbase.ModuleIDs {
 		agg.logger.Debugf("Checking module %d", moduleID)
 		// get safety factor info for each module
 

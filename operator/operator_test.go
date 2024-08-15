@@ -19,7 +19,7 @@ import (
 	anzentaskmanager "anzen-avs/contracts/bindings/AnzenTaskManager"
 	chainiomocks "anzen-avs/core/chainio/mocks"
 	operatormocks "anzen-avs/operator/mocks"
-	safety_factor_base "anzen-avs/safety-factor/safety-factor-base"
+	safetyfactorbase "anzen-avs/safety-factor/safety-factor-base"
 )
 
 func TestOperator(t *testing.T) {
@@ -32,9 +32,11 @@ func TestOperator(t *testing.T) {
 		var ORACLE_INDEX = uint32(0)
 		var proposedSafetyFactor = big.NewInt(400_000_000)
 
-		mockSafetyFactorServicer.EXPECT().GetSafetyFactorInfoByOracleIndex(int(ORACLE_INDEX)).Return(&safety_factor_base.SFModuleResponse{
+		mockSafetyFactorServicer.EXPECT().GetSafetyFactorInfoByOracleIndex(int(ORACLE_INDEX)).Return(&safetyfactorbase.SFModuleResponse{
 			SF: proposedSafetyFactor,
 		}, nil)
+
+		mockSafetyFactorServicer.EXPECT().IsSafetyFactorInfoStale(int32(ORACLE_INDEX)).Return(true, nil)
 
 		newTaskCreatedLog := &anzentaskmanager.ContractAnzenTaskManagerNewOraclePullTaskCreated{
 			TaskIndex: taskIndex,
@@ -94,9 +96,12 @@ func TestOperator(t *testing.T) {
 		}
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
-		mockSafetyFactorServicer.EXPECT().GetSafetyFactorInfoByOracleIndex(int(ORACLE_INDEX)).Return(&safety_factor_base.SFModuleResponse{
+		mockSafetyFactorServicer.EXPECT().GetSafetyFactorInfoByOracleIndex(int(ORACLE_INDEX)).Return(&safetyfactorbase.SFModuleResponse{
 			SF: proposedSafetyFactor,
 		}, nil)
+
+		mockSafetyFactorServicer.EXPECT().IsSafetyFactorInfoStale(int32(ORACLE_INDEX)).Return(true, nil)
+
 		mockAggregatorRpcClient := operatormocks.NewMockAggregatorRpcClienter(mockCtrl)
 		mockAggregatorRpcClient.EXPECT().SendSignedOraclePullTaskReponseToAggregator(signedTaskResponse)
 		operator.aggregatorRpcClient = mockAggregatorRpcClient

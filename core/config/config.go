@@ -20,8 +20,8 @@ import (
 	sdkutils "github.com/Layr-Labs/eigensdk-go/utils"
 )
 
-// Config contains all of the configuration information for a credible squaring aggregators and challengers.
-// Operators use a separate config. (see config-files/operator.anvil.yaml)
+// Config contains all of the configuration information for an anzen aggregators and challengers.
+// Operators use a separate config. (see config-files/anvil/operator.yaml)
 type Config struct {
 	EcdsaPrivateKey           *ecdsa.PrivateKey
 	BlsPrivateKey             *bls.PrivateKey
@@ -53,11 +53,11 @@ type ConfigRaw struct {
 	RegisterOperatorOnStartup  bool                `yaml:"register_operator_on_startup"`
 }
 
-// These are read from CredibleSquaringDeploymentFileFlag
-type IncredibleSquaringDeploymentRaw struct {
-	Addresses IncredibleSquaringContractsRaw `json:"addresses"`
+// These are read from AnzenDeploymentFileFlag
+type AnzenDeploymentRaw struct {
+	Addresses AnzenContractsRaw `json:"addresses"`
 }
-type IncredibleSquaringContractsRaw struct {
+type AnzenContractsRaw struct {
 	RegistryCoordinatorAddr    string `json:"registryCoordinator"`
 	OperatorStateRetrieverAddr string `json:"operatorStateRetriever"`
 	SafetyFactorOracleAddr     string `json:"safetyFactorOracle"`
@@ -74,12 +74,12 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 		sdkutils.ReadYamlConfig(configFilePath, &configRaw)
 	}
 
-	var credibleSquaringDeploymentRaw IncredibleSquaringDeploymentRaw
-	credibleSquaringDeploymentFilePath := ctx.GlobalString(CredibleSquaringDeploymentFileFlag.Name)
-	if _, err := os.Stat(credibleSquaringDeploymentFilePath); errors.Is(err, os.ErrNotExist) {
-		panic("Path " + credibleSquaringDeploymentFilePath + " does not exist")
+	var anzenDeploymentRaw AnzenDeploymentRaw
+	anzenDeploymentFilePath := ctx.GlobalString(AnzenDeploymentFileFlag.Name)
+	if _, err := os.Stat(anzenDeploymentFilePath); errors.Is(err, os.ErrNotExist) {
+		panic("Path " + anzenDeploymentFilePath + " does not exist")
 	}
-	sdkutils.ReadJsonConfig(credibleSquaringDeploymentFilePath, &credibleSquaringDeploymentRaw)
+	sdkutils.ReadJsonConfig(anzenDeploymentFilePath, &anzenDeploymentRaw)
 
 	logger, err := sdklogging.NewZapLogger(configRaw.Environment)
 	if err != nil {
@@ -137,9 +137,9 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 		EthHttpRpcUrl:                configRaw.EthRpcUrl,
 		EthHttpClient:                ethRpcClient,
 		EthWsClient:                  ethWsClient,
-		OperatorStateRetrieverAddr:   common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.OperatorStateRetrieverAddr),
-		AnzenRegistryCoordinatorAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.RegistryCoordinatorAddr),
-		SafetyFactorOracleAddr:       common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.SafetyFactorOracleAddr),
+		OperatorStateRetrieverAddr:   common.HexToAddress(anzenDeploymentRaw.Addresses.OperatorStateRetrieverAddr),
+		AnzenRegistryCoordinatorAddr: common.HexToAddress(anzenDeploymentRaw.Addresses.RegistryCoordinatorAddr),
+		SafetyFactorOracleAddr:       common.HexToAddress(anzenDeploymentRaw.Addresses.SafetyFactorOracleAddr),
 		AggregatorServerIpPortAddr:   configRaw.AggregatorServerIpPortAddr,
 		RegisterOperatorOnStartup:    configRaw.RegisterOperatorOnStartup,
 		SignerFn:                     signerV2,
@@ -156,7 +156,7 @@ func (c *Config) validate() {
 		panic("Config: BLSOperatorStateRetrieverAddr is required")
 	}
 	if c.AnzenRegistryCoordinatorAddr == common.HexToAddress("") {
-		panic("Config: IncredibleSquaringRegistryCoordinatorAddr is required")
+		panic("Config: AnzenRegistryCoordinatorAddr is required")
 	}
 	if c.SafetyFactorOracleAddr == common.HexToAddress("") {
 		panic("Config: SafetyFactorOracleAddr is required")
@@ -170,10 +170,10 @@ var (
 		Required: true,
 		Usage:    "Load configuration from `FILE`",
 	}
-	CredibleSquaringDeploymentFileFlag = cli.StringFlag{
-		Name:     "credible-squaring-deployment",
+	AnzenDeploymentFileFlag = cli.StringFlag{
+		Name:     "anzen-deployment",
 		Required: true,
-		Usage:    "Load credible squaring contract addresses from `FILE`",
+		Usage:    "Load anzen contract addresses from `FILE`",
 	}
 	EcdsaPrivateKeyFlag = cli.StringFlag{
 		Name:     "ecdsa-private-key",
@@ -186,7 +186,7 @@ var (
 
 var requiredFlags = []cli.Flag{
 	ConfigFileFlag,
-	CredibleSquaringDeploymentFileFlag,
+	AnzenDeploymentFileFlag,
 	EcdsaPrivateKeyFlag,
 }
 

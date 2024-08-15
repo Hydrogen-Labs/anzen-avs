@@ -13,7 +13,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	safetyfactormocks "anzen-avs/safety-factor/mocks"
-	safety_factor_base "anzen-avs/safety-factor/safety-factor-base"
+	safetyfactorbase "anzen-avs/safety-factor/safety-factor-base"
 
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 	sdklogging "github.com/Layr-Labs/eigensdk-go/logging"
@@ -65,7 +65,7 @@ func TestSendNewTask(t *testing.T) {
 	var ORACLE_INDEX_BIG_INT = big.NewInt(int64(ORACLE_INDEX))
 	var PROPSED_SAFETY_FACTOR = big.NewInt(400_000_000)
 
-	mockSafetyFactorServicer.EXPECT().GetSafetyFactorInfoByOracleIndex(int(ORACLE_INDEX)).Return(&safety_factor_base.SFModuleResponse{
+	mockSafetyFactorServicer.EXPECT().GetSafetyFactorInfoByOracleIndex(int(ORACLE_INDEX)).Return(&safetyfactorbase.SFModuleResponse{
 		SF: PROPSED_SAFETY_FACTOR,
 	}, nil)
 

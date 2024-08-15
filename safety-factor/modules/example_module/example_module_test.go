@@ -5,13 +5,13 @@ import (
 	"math/big"
 	"testing"
 
-	safety_factor_base "anzen-avs/safety-factor/safety-factor-base"
+	safetyfactorbase "anzen-avs/safety-factor/safety-factor-base"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestExampleModule_QueryProfitFromCorruption(t *testing.T) {
-	module := NewExampleModule("exampleName", safety_factor_base.ExampleModuleID)
+	module := NewExampleModule("exampleName", safetyfactorbase.ExampleModuleID)
 	profit, err := module.QueryProfitFromCorruption()
 
 	assert.NoError(t, err, "Expected no error for QueryProfitFromCorruption")
@@ -19,7 +19,7 @@ func TestExampleModule_QueryProfitFromCorruption(t *testing.T) {
 }
 
 func TestExampleModule_QueryCostOfCorruption(t *testing.T) {
-	module := NewExampleModule("exampleName", safety_factor_base.ExampleModuleID)
+	module := NewExampleModule("exampleName", safetyfactorbase.ExampleModuleID)
 	cost, err := module.QueryCostOfCorruption()
 
 	assert.NoError(t, err, "Expected no error for QueryCostOfCorruption")
@@ -27,7 +27,7 @@ func TestExampleModule_QueryCostOfCorruption(t *testing.T) {
 }
 
 func TestExampleModule_SafeQueryProfitFromCorruption(t *testing.T) {
-	module := NewExampleModule("exampleName", safety_factor_base.ExampleModuleID)
+	module := NewExampleModule("exampleName", safetyfactorbase.ExampleModuleID)
 	profit, err := module.SafeQueryProfitFromCorruption()
 
 	assert.NoError(t, err, "Expected no error for SafeQueryProfitFromCorruption")
@@ -35,7 +35,7 @@ func TestExampleModule_SafeQueryProfitFromCorruption(t *testing.T) {
 }
 
 func TestExampleModule_SafeQueryCostOfCorruption(t *testing.T) {
-	module := NewExampleModule("exampleName", safety_factor_base.ExampleModuleID)
+	module := NewExampleModule("exampleName", safetyfactorbase.ExampleModuleID)
 	cost, err := module.SafeQueryCostOfCorruption()
 
 	assert.NoError(t, err, "Expected no error for SafeQueryCostOfCorruption")
@@ -43,7 +43,7 @@ func TestExampleModule_SafeQueryCostOfCorruption(t *testing.T) {
 }
 
 func TestExampleModule_SafeQuerySafetyFactorInfo(t *testing.T) {
-	module := NewExampleModule("exampleName", safety_factor_base.ExampleModuleID)
+	module := NewExampleModule("exampleName", safetyfactorbase.ExampleModuleID)
 	response, err := module.SafeQuerySafetyFactorInfo()
 
 	expectedSf := big.NewInt(int64((250.0 - 150.0) / 250.0 * 1_000_000_000))
