@@ -1,4 +1,4 @@
-package safety_factor_base
+package safetyfactorbase
 
 const (
 	ExampleModuleID = 9999

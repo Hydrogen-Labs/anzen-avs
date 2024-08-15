@@ -1,14 +1,14 @@
 package anzen_sf_module
 
-import safety_factor_base "anzen-avs/safety-factor/safety-factor-base"
+import safetyfactorbase "anzen-avs/safety-factor/safety-factor-base"
 
 type AnzenModule struct {
-	*safety_factor_base.BaseSFModule
+	*safetyfactorbase.BaseSFModule
 }
 
 func NewAnzenModule() *AnzenModule {
 	module := &AnzenModule{}
-	module.BaseSFModule = safety_factor_base.NewBaseSFModule("Anzen", safety_factor_base.AnzenModuleID, module)
+	module.BaseSFModule = safetyfactorbase.NewBaseSFModule("Anzen", safetyfactorbase.AnzenModuleID, module)
 	return module
 }
 

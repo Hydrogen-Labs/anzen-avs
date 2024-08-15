@@ -9,7 +9,7 @@
 package mocks
 
 import (
-	safety_factor_base "anzen-avs/safety-factor/safety-factor-base"
+	safetyfactorbase "anzen-avs/safety-factor/safety-factor-base"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
@@ -39,10 +39,10 @@ func (m *MockSafetyFactorServicer) EXPECT() *MockSafetyFactorServicerMockRecorde
 }
 
 // GetModuleByOracleIndex mocks base method.
-func (m *MockSafetyFactorServicer) GetModuleByOracleIndex(arg0 int) (safety_factor_base.SFModule, error) {
+func (m *MockSafetyFactorServicer) GetModuleByOracleIndex(arg0 int) (safetyfactorbase.SFModule, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleByOracleIndex", arg0)
-	ret0, _ := ret[0].(safety_factor_base.SFModule)
+	ret0, _ := ret[0].(safetyfactorbase.SFModule)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -54,10 +54,10 @@ func (mr *MockSafetyFactorServicerMockRecorder) GetModuleByOracleIndex(arg0 any)
 }
 
 // GetSafetyFactorInfoByOracleIndex mocks base method.
-func (m *MockSafetyFactorServicer) GetSafetyFactorInfoByOracleIndex(arg0 int) (*safety_factor_base.SFModuleResponse, error) {
+func (m *MockSafetyFactorServicer) GetSafetyFactorInfoByOracleIndex(arg0 int) (*safetyfactorbase.SFModuleResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSafetyFactorInfoByOracleIndex", arg0)
-	ret0, _ := ret[0].(*safety_factor_base.SFModuleResponse)
+	ret0, _ := ret[0].(*safetyfactorbase.SFModuleResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

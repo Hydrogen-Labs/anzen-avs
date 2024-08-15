@@ -10,15 +10,15 @@ import (
 
 	anzen_sf_module "anzen-avs/safety-factor/modules/anzen_module"
 	example_sf_module "anzen-avs/safety-factor/modules/example_module"
-	safety_factor_base "anzen-avs/safety-factor/safety-factor-base"
+	safetyfactorbase "anzen-avs/safety-factor/safety-factor-base"
 
 	"errors"
 )
 
 // interface
 type SafetyFactorServicer interface {
-	GetModuleByOracleIndex(index int) (safety_factor_base.SFModule, error)
-	GetSafetyFactorInfoByOracleIndex(index int) (*safety_factor_base.SFModuleResponse, error)
+	GetModuleByOracleIndex(index int) (safetyfactorbase.SFModule, error)
+	GetSafetyFactorInfoByOracleIndex(index int) (*safetyfactorbase.SFModuleResponse, error)
 	IsSafetyFactorInfoStale(moduleID int32) (bool, error)
 }
 
@@ -26,13 +26,13 @@ type SafetyFactorService struct {
 	avsReader chainio.AvsReaderer
 	logger    logging.Logger
 
-	modules map[int]safety_factor_base.SFModule
+	modules map[int]safetyfactorbase.SFModule
 }
 
 func NewSafetyFactorService(logger logging.Logger, avsReader *chainio.AvsReader) *SafetyFactorService {
 	service := &SafetyFactorService{
 		avsReader: avsReader,
-		modules:   make(map[int]safety_factor_base.SFModule),
+		modules:   make(map[int]safetyfactorbase.SFModule),
 		logger:    logger,
 	}
 	service.registerModules()
@@ -70,11 +70,11 @@ func (s *SafetyFactorService) IsSafetyFactorInfoStale(moduleID int32) (bool, err
 }
 
 func (s *SafetyFactorService) registerModules() {
-	s.modules[safety_factor_base.ExampleModuleID] = example_sf_module.NewExampleModule("exampleName", safety_factor_base.ExampleModuleID)
-	s.modules[safety_factor_base.AnzenModuleID] = anzen_sf_module.NewAnzenModule()
+	s.modules[safetyfactorbase.ExampleModuleID] = example_sf_module.NewExampleModule("exampleName", safetyfactorbase.ExampleModuleID)
+	s.modules[safetyfactorbase.AnzenModuleID] = anzen_sf_module.NewAnzenModule()
 }
 
-func (s *SafetyFactorService) GetModuleByOracleIndex(index int) (safety_factor_base.SFModule, error) {
+func (s *SafetyFactorService) GetModuleByOracleIndex(index int) (safetyfactorbase.SFModule, error) {
 	module, exists := s.modules[index]
 	if !exists {
 		return nil, errors.New("module not found for the given oracle index")
@@ -82,7 +82,7 @@ func (s *SafetyFactorService) GetModuleByOracleIndex(index int) (safety_factor_b
 	return module, nil
 }
 
-func (s *SafetyFactorService) GetSafetyFactorInfoByOracleIndex(index int) (*safety_factor_base.SFModuleResponse, error) {
+func (s *SafetyFactorService) GetSafetyFactorInfoByOracleIndex(index int) (*safetyfactorbase.SFModuleResponse, error) {
 	module, err := s.GetModuleByOracleIndex(index)
 	if err != nil {
 		return nil, err

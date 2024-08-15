@@ -23,7 +23,7 @@ func TestNewSafetyFactorService(t *testing.T) {
 // 	service := safetyfactormocks.NewMockSafetyFactorServicer(mockCtrl)
 
 // 	// Ensure the modules are registered correctly
-// 	exampleModule, err := service.GetModuleByOracleIndex(safety_factor_base.ExampleModuleID)
+// 	exampleModule, err := service.GetModuleByOracleIndex(safetyfactorbase.ExampleModuleID)
 // 	assert.NoError(t, err, "Expected no error for getting module by index 0")
 // 	assert.NotNil(t, exampleModule, "Expected non-nil module for index 0")
 // 	assert.IsType(t, &example_sf_module.ExampleModule{}, exampleModule, "Expected ExampleModule type for index 0")
@@ -41,7 +41,7 @@ func TestNewSafetyFactorService(t *testing.T) {
 // }
 
 // func TestExampleModule_QueryProfitFromCorruption(t *testing.T) {
-// 	module := example_sf_module.NewExampleModule("exampleName", safety_factor_base.ExampleModuleID)
+// 	module := example_sf_module.NewExampleModule("exampleName", safetyfactorbase.ExampleModuleID)
 // 	profit, err := module.QueryProfitFromCorruption()
 
 // 	assert.NoError(t, err, "Expected no error for QueryProfitFromCorruption")
@@ -49,7 +49,7 @@ func TestNewSafetyFactorService(t *testing.T) {
 // }
 
 // func TestExampleModule_QueryCostOfCorruption(t *testing.T) {
-// 	module := example_sf_module.NewExampleModule("exampleName", safety_factor_base.ExampleModuleID)
+// 	module := example_sf_module.NewExampleModule("exampleName", safetyfactorbase.ExampleModuleID)
 // 	cost, err := module.QueryCostOfCorruption()
 
 // 	assert.NoError(t, err, "Expected no error for QueryCostOfCorruption")
@@ -62,7 +62,7 @@ func TestNewSafetyFactorService(t *testing.T) {
 
 // 	expectedSf := big.NewInt(int64((250.0 - 150.0) / 250.0 * 1_000_000_000))
 
-// 	response, err := service.GetSafetyFactorInfoByOracleIndex(safety_factor_base.ExampleModuleID)
+// 	response, err := service.GetSafetyFactorInfoByOracleIndex(safetyfactorbase.ExampleModuleID)
 // 	assert.NoError(t, err, "Expected no error for GetSafetyFactorInfoByOracleIndex")
 // 	assert.NotNil(t, response, "Expected non-nil response for GetSafetyFactorInfoByOracleIndex")
 // 	assert.Equal(t, 150.0, *response.PfC, "Expected PfC to be 150.0")
