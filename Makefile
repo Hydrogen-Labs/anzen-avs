@@ -51,19 +51,19 @@ __CLI__: ##
 cli-setup-operator: send-fund cli-register-operator-with-eigenlayer cli-deposit-into-mocktoken-strategy cli-register-operator-with-avs ## registers operator with eigenlayer and avs
 
 cli-register-operator-with-eigenlayer: ## registers operator with delegationManager
-	go run cli/main.go --config config-files/operator.anvil.yaml register-operator-with-eigenlayer
+	go run cli/main.go --config config-files/anvil/operator.yaml register-operator-with-eigenlayer
 
 cli-deposit-into-mocktoken-strategy: ## 
 	./scripts/deposit-into-mocktoken-strategy.sh
 
 cli-register-operator-with-avs: ## 
-	go run cli/main.go --config config-files/operator.anvil.yaml register-operator-with-avs
+	go run cli/main.go --config config-files/anvil/operator.yaml register-operator-with-avs
 
 cli-deregister-operator-with-avs: ## 
-	go run cli/main.go --config config-files/operator.anvil.yaml deregister-operator-with-avs
+	go run cli/main.go --config config-files/anvil/operator.yaml deregister-operator-with-avs
 
 cli-print-operator-status: ## 
-	go run cli/main.go --config config-files/operator.anvil.yaml print-operator-status
+	go run cli/main.go --config config-files/anvil/operator.yaml print-operator-status
 
 send-fund: ## sends fund to the operator saved in tests/keys/test.ecdsa.key.json
 	cast send 0x860B6912C2d0337ef05bbC89b0C2CB6CbAEAB4A5 --value 10ether --private-key 0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6
@@ -73,7 +73,7 @@ send-fund: ## sends fund to the operator saved in tests/keys/test.ecdsa.key.json
 # TODO: piping to zap-pretty only works when zapper environment is set to production, unsure why
 ____OFFCHAIN_SOFTWARE___: ## 
 start-aggregator: ## 
-	go run aggregator/cmd/main.go --config config-files/aggregator.yaml \
+	go run aggregator/cmd/main.go --config config-files/anvil/aggregator.yaml \
 		--credible-squaring-deployment ${DEPLOYMENT_FILES_DIR}/anzen_avs_deployment_output.json \
 		--ecdsa-private-key ${AGGREGATOR_ECDSA_PRIV_KEY} \
 		2>&1 | zap-pretty
@@ -86,29 +86,29 @@ start-aggregator-holesky:
 
 
 start-operator: ## 
-	go run operator/cmd/main.go --config config-files/operator.anvil.yaml \
+	go run operator/cmd/main.go --config config-files/anvil/operator.yaml \
 		2>&1 | zap-pretty
 
 start-operator-holesky: ## 
-	go run operator/cmd/main.go --config config-files/holesky/operator.anvil.yaml \
+	go run operator/cmd/main.go --config config-files/holesky/operator.yaml \
 		2>&1 | zap-pretty
 
 start-operator-2: ## 
-	go run operator/cmd/main.go --config config-files/operator-2.anvil.yaml \
+	go run operator/cmd/main.go --config config-files/anvil/operator-2.yaml \
 		2>&1 | zap-pretty
 
 start-operator-3: ## 
-	go run operator/cmd/main.go --config config-files/operator-3.anvil.yaml \
+	go run operator/cmd/main.go --config config-files/anvil/operator-3.yaml \
 		2>&1 | zap-pretty
 
 start-challenger: ## 
-	go run challenger/cmd/main.go --config config-files/challenger.yaml \
+	go run challenger/cmd/main.go --config config-files/anvil/challenger.yaml \
 		--credible-squaring-deployment ${DEPLOYMENT_FILES_DIR}/anzen_avs_deployment_output.json \
 		--ecdsa-private-key ${CHALLENGER_ECDSA_PRIV_KEY} \
 		2>&1 | zap-pretty
 
 run-plugin: ## 
-	go run plugin/cmd/main.go --config config-files/operator.anvil.yaml
+	go run plugin/cmd/main.go --config config-files/anvil/operator.yaml
 -----------------------------: ## 
 _____HELPER_____: ## 
 mocks: ## generates mocks for tests

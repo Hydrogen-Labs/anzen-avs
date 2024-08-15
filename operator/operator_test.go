@@ -97,6 +97,7 @@ func TestOperator(t *testing.T) {
 		mockSafetyFactorServicer.EXPECT().GetSafetyFactorInfoByOracleIndex(int(ORACLE_INDEX)).Return(&safety_factor_base.SFModuleResponse{
 			SF: proposedSafetyFactor,
 		}, nil)
+
 		mockAggregatorRpcClient := operatormocks.NewMockAggregatorRpcClienter(mockCtrl)
 		mockAggregatorRpcClient.EXPECT().SendSignedOraclePullTaskReponseToAggregator(signedTaskResponse)
 		operator.aggregatorRpcClient = mockAggregatorRpcClient

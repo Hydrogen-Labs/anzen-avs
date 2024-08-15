@@ -42,7 +42,7 @@ Register the operator with eigenlayer and the anzen avs, and then start the proc
 make start-operator
 ```
 
-> By default, the `start-operator` command will also setup the operator (see `register_operator_on_startup` flag in `config-files/operator.anvil.yaml`). To disable this, set `register_operator_on_startup` to false, and run `make cli-setup-operator` before running `start-operator`.
+> By default, the `start-operator` command will also setup the operator (see `register_operator_on_startup` flag in `config-files/anvil/operator.yaml`). To disable this, set `register_operator_on_startup` to false, and run `make cli-setup-operator` before running `start-operator`.
 
 ## Running via docker compose
 

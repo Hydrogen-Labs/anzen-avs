@@ -21,7 +21,7 @@ import (
 )
 
 // Config contains all of the configuration information for a credible squaring aggregators and challengers.
-// Operators use a separate config. (see config-files/operator.anvil.yaml)
+// Operators use a separate config. (see config-files/anvil/operator.yaml)
 type Config struct {
 	EcdsaPrivateKey           *ecdsa.PrivateKey
 	BlsPrivateKey             *bls.PrivateKey
