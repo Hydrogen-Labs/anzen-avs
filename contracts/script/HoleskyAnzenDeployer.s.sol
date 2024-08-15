@@ -48,7 +48,7 @@ contract AnzenDeployer is Script, Utils {
     // ERC20 and Strategy: we need to deploy this erc20, create a strategy for it, and whitelist this strategy in the strategymanager
     StrategyBaseTVLLimits public erc20Strategy;
 
-    // Credible Squaring contracts
+    // anzen contracts
     ProxyAdmin public anzenProxyAdmin;
     PauserRegistry public anzenPauserReg;
 

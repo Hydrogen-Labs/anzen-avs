@@ -74,13 +74,13 @@ send-fund: ## sends fund to the operator saved in tests/keys/test.ecdsa.key.json
 ____OFFCHAIN_SOFTWARE___: ## 
 start-aggregator: ## 
 	go run aggregator/cmd/main.go --config config-files/anvil/aggregator.yaml \
-		--credible-squaring-deployment ${DEPLOYMENT_FILES_DIR}/anzen_avs_deployment_output.json \
+		--anzen-deployment ${DEPLOYMENT_FILES_DIR}/anzen_avs_deployment_output.json \
 		--ecdsa-private-key ${AGGREGATOR_ECDSA_PRIV_KEY} \
 		2>&1 | zap-pretty
 
 start-aggregator-holesky:
 	go run aggregator/cmd/main.go --config config-files/holesky/aggregator.yaml \
-			--credible-squaring-deployment ${HOLESKY_FILES_DIR}/holesky_anzen_avs_deployment_output.json \
+			--anzen-deployment ${HOLESKY_FILES_DIR}/holesky_anzen_avs_deployment_output.json \
 			--ecdsa-private-key ${AGGREGATOR_ECDSA_PRIV_KEY} \
 			2>&1 | zap-pretty
 
@@ -103,7 +103,7 @@ start-operator-3: ##
 
 start-challenger: ## 
 	go run challenger/cmd/main.go --config config-files/anvil/challenger.yaml \
-		--credible-squaring-deployment ${DEPLOYMENT_FILES_DIR}/anzen_avs_deployment_output.json \
+		--anzen-deployment ${DEPLOYMENT_FILES_DIR}/anzen_avs_deployment_output.json \
 		--ecdsa-private-key ${CHALLENGER_ECDSA_PRIV_KEY} \
 		2>&1 | zap-pretty
 
@@ -124,4 +124,6 @@ tests-contract: ## runs all forge tests
 
 tests-integration: ## runs all integration tests
 	go test ./tests/integration/... -v -count=1
+
+tests-all: tests-unit tests-contract tests-integration ## runs all tests
 
