@@ -138,7 +138,6 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 
 func (agg *Aggregator) Start(ctx context.Context) error {
 	agg.logger.Infof("Starting aggregator.")
-	agg.logger.Infof("Starting aggregator rpc server.")
 	go agg.startServer(ctx)
 
 	// TODO(soubhik): refactor task generation/sending into a separate function that we can run as goroutine
