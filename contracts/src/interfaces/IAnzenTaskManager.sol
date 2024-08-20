@@ -65,5 +65,7 @@ interface IAnzenTaskManager {
     /// @notice Returns the TASK_RESPONSE_WINDOW_BLOCK
     function getTaskResponseWindowBlock() external view returns (uint32);
 
-    // TODO: Add ability to change aggregator and challenger
+    function updateAggregator(address newAggregator) external;
+
+    function updateTaskGenerator(address newTaskGenerator) external;
 }

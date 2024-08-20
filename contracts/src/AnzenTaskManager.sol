@@ -157,6 +157,14 @@ contract AnzenTaskManager is
         safetyFactorOracle.setSafetyFactor(task.oracleIndex, taskResponse.safetyFactor);
     }
 
+    function updateAggregator(address _newAggregator) external onlyOwner {
+        aggregator = _newAggregator;
+    }
+
+    function updateTaskGenerator(address _newTaskGenerator) external onlyOwner {
+        generator = _newTaskGenerator;
+    }
+
     function taskNumber() external view returns (uint32) {
         return latestTaskNum;
     }
