@@ -296,9 +296,6 @@ contract AnzenDeployer is Script, Utils {
             0
         );
 
-        // TODO: Add the avsReservesManager address
-        // safetyFactorOracle.addProtocol(0, address(anzenServiceManager));
-
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
         anzenProxyAdmin.upgradeAndCall(
             TransparentUpgradeableProxy(payable(address(anzenTaskManager))),

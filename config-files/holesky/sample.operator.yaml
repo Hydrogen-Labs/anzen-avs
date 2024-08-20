@@ -42,3 +42,4 @@ register_operator_on_startup: true
 # address of token to deposit tokens into when registering on startup
 # addresses.erc20MockStrategy in tests/anvil/anzen_avs_deployment_output.json
 token_strategy_addr: 0x80528D6e9A2BAbFc766965E0E26d5aB08D9CFaF9
+deposit_amount: 1000
