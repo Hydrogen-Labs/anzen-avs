@@ -78,8 +78,8 @@ contract AnzenDeployer is Script, Utils {
     AVSReservesManagerFactory public avsReservesManagerFactory;
     AVSReservesManagerFactory public avsReservesManagerFactoryImplementation;
 
-    address public mockAVSRM;
-    address public mockAVSRMImplementation;
+    address public anzenAvsReservesManager;
+    address public anzenAvsReservesManagerImplementation;
 
     function run() external {
         // Eigenlayer contracts
@@ -309,7 +309,8 @@ contract AnzenDeployer is Script, Utils {
 
         SafetyFactorConfig memory safetyFactorConfig = SafetyFactorConfig(200_000, 300_000, 200_000, 200_000, 1 days);
 
-        (mockAVSRM, mockAVSRMImplementation) = avsReservesManagerFactory.createAVSReservesManager(
+        (anzenAvsReservesManager, anzenAvsReservesManagerImplementation) = avsReservesManagerFactory
+            .createAVSReservesManager(
             address(anzenProxyAdmin),
             safetyFactorConfig,
             anzenCommunityMultisig,
@@ -364,8 +365,6 @@ contract AnzenDeployer is Script, Utils {
             "avsReservesManagerFactoryImplementation",
             address(avsReservesManagerFactoryImplementation)
         );
-        vm.serializeAddress(deployed_addresses, "mockAVSRM", mockAVSRM);
-        vm.serializeAddress(deployed_addresses, "mockAVSRMImplementation", mockAVSRMImplementation);
 
         string memory deployed_addresses_output =
             vm.serializeAddress(deployed_addresses, "operatorStateRetriever", address(operatorStateRetriever));
@@ -374,5 +373,9 @@ contract AnzenDeployer is Script, Utils {
         string memory finalJson = vm.serializeString(parent_object, deployed_addresses, deployed_addresses_output);
 
         writeOutput(finalJson, "anzen_avs_deployment_output");
+
+        writeAvsOnboardingOutput(
+            address(anzenProxyAdmin), anzenAvsReservesManager, anzenAvsReservesManagerImplementation, 0
+        );
     }
 }

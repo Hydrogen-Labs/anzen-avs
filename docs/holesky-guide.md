@@ -4,7 +4,7 @@
 
 ## Joining the Holesky AVS
 
-TODO: Add instructions on how to join the currently deployed Anzen Holesky AVS as an operator.
+Review the guide here: [Operator Guide](../docs/operator-guide.md)
 
 ## Deploying the Holesky contracts
 

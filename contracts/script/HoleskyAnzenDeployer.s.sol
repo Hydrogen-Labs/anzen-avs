@@ -40,8 +40,8 @@ contract AnzenDeployer is Script, Utils {
     uint32 public constant TASK_RESPONSE_WINDOW_BLOCK = 30;
     uint32 public constant TASK_DURATION_BLOCKS = 0;
     // TODO: right now hardcoding these (this address is anvil's default address 9)
-    address public constant AGGREGATOR_ADDR = 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720;
-    address public constant TASK_GENERATOR_ADDR = 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720;
+    address public AGGREGATOR_ADDR = vm.envAddress("INIT_AGGREGATOR_ADDR");
+    address public TASK_GENERATOR_ADDR = vm.envAddress("INIT_TASK_GENERATOR_ADDR");
 
     bytes32 public salt = keccak256(abi.encodePacked(vm.envString("DEPLOYMENT_SALT")));
 
@@ -338,10 +338,6 @@ contract AnzenDeployer is Script, Utils {
             "avsReservesManagerFactoryImplementation",
             address(avsReservesManagerFactoryImplementation)
         );
-        vm.serializeAddress(deployed_addresses, "anzenReservesManager", anzenReservesManager);
-        vm.serializeAddress(
-            deployed_addresses, "anzenReservesManagerImplementation", anzenReservesManagerImplementation
-        );
 
         string memory deployed_addresses_output =
             vm.serializeAddress(deployed_addresses, "operatorStateRetriever", address(operatorStateRetriever));
@@ -350,6 +346,8 @@ contract AnzenDeployer is Script, Utils {
         string memory finalJson = vm.serializeString(parent_object, deployed_addresses, deployed_addresses_output);
 
         writeOutput(finalJson, "holesky_anzen_avs_deployment_output");
+
+        writeAvsOnboardingOutput(address(anzenProxyAdmin), anzenReservesManager, anzenReservesManagerImplementation, 0);
     }
 
     function _churnSalt() internal {

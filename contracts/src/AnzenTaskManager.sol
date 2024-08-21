@@ -96,6 +96,7 @@ contract AnzenTaskManager is
         newTask.quorumThresholdPercentage = quorumThresholdPercentage;
         newTask.quorumNumbers = quorumNumbers;
         newTask.proposedSafetyFactor = proposedSafetyFactor;
+        // TODO: Hardcode the quorumNumbers
 
         // store hash of task onchain, emit event, and increase taskNum
         allTaskHashes[latestTaskNum] = keccak256(abi.encode(newTask));
