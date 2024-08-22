@@ -1,0 +1,20 @@
+version: "3"
+
+services:
+  aggregator:
+    image: ghcr.io/hydrogen-labs/anzen-avs/aggregator/cmd/main.go:latest
+    container_name: anzen-aggregator
+    volumes:
+      - ./:/anzen/
+    working_dir: /anzen
+    ports:
+      - "8090:8090"
+    command: 
+      - --config 
+      - config-files/holesky/aggregator.yaml
+      - --anzen-deployment 
+      - contracts/script/output/17000/holesky_anzen_avs_deployment_output.json
+      - --ecdsa-private-key 
+      - "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6"
+
+

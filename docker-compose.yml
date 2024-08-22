@@ -42,7 +42,7 @@ services:
     working_dir: /anzen
     command: 
       - --config 
-      - config-files/aggregator-docker-compose.yaml
+      - config-files/anvil/aggregator-docker-compose.yaml
       - --anzen-deployment 
       - contracts/script/output/31337/anzen_avs_deployment_output.json
       - --ecdsa-private-key 
