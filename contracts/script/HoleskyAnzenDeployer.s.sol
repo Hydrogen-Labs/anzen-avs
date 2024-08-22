@@ -292,8 +292,7 @@ contract AnzenDeployer is Script, Utils {
             anzenCommunityMultisig,
             address(anzenServiceManager),
             new address[](0),
-            new uint256[](0),
-            0
+            new uint256[](0)
         );
 
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
@@ -346,7 +345,6 @@ contract AnzenDeployer is Script, Utils {
         string memory finalJson = vm.serializeString(parent_object, deployed_addresses, deployed_addresses_output);
 
         writeOutput(finalJson, "holesky_anzen_avs_deployment_output");
-
         writeAvsOnboardingOutput(address(anzenProxyAdmin), anzenReservesManager, anzenReservesManagerImplementation, 0);
     }
 

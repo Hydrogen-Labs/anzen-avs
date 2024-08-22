@@ -53,6 +53,7 @@ contract OnboardNewAvsToAnzen is Script, Utils {
         // hard-coded inputs
         _churnSalt();
 
+        // TODO: make all of this inputs configurable with the environment
         SafetyFactorConfig memory safetyFactorConfig = SafetyFactorConfig(200_000, 300_000, 200_000, 200_000, 1 days);
 
         (newAvsReservesManager, newAvsReservesManagerImplementation) = avsReservesManagerFactory
@@ -62,11 +63,8 @@ contract OnboardNewAvsToAnzen is Script, Utils {
             anzenCommunityMultisig,
             avsServiceManagerAddr,
             new address[](0),
-            new uint256[](0),
-            0
+            new uint256[](0)
         );
-
-        // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
 
         // write the output
         writeAvsOnboardingOutput(

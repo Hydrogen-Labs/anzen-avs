@@ -13,6 +13,8 @@ import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transpa
 contract AVSReservesManagerFactoryStorage {
     uint32 public lastAVSReservesManagerId;
 
+    uint256 public performanceFeeBPS;
+
     mapping(uint32 => address) public avsReservesManagers;
     mapping(address => bool) public hasAVSReservesManager;
 

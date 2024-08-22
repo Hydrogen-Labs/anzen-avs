@@ -316,12 +316,8 @@ contract AnzenDeployer is Script, Utils {
             anzenCommunityMultisig,
             address(anzenServiceManager),
             new address[](0),
-            new uint256[](0),
-            50
+            new uint256[](0)
         );
-
-        // TODO: Add the avsReservesManager address
-        // safetyFactorOracle.addProtocol(0, address(anzenServiceManager));
 
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
         anzenProxyAdmin.upgradeAndCall(

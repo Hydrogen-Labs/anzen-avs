@@ -27,6 +27,24 @@ Anzen should be provided with the following information to create the AVSReserve
 - `initial_rewardTokens`: The initial reward token addresses for the AVS.
 - `initial_tokenFlowsPerSecond`: The initial token flows per second for the AVS.
 
+The `SafetyFactorConfig` struct is defined as follows:
+
+```
+struct SafetyFactorConfig {
+    int256 TARGET_SF_LOWER_BOUND;
+    int256 TARGET_SF_UPPER_BOUND;
+    uint256 MAX_REDUCTION_FACTOR;
+    uint256 MAX_INCREASE_FACTOR;
+    uint256 minEpochDuration;
+}
+```
+
+- `TARGET_SF_LOWER_BOUND`: The lower bound of the target safety factor, it must be greater than `0`.
+- `TARGET_SF_UPPER_BOUND`: The upper bound of the target safety factor, it must be between `TARGET_SF_LOWER_BOUND` and `10e9`.
+- `MAX_REDUCTION_FACTOR`: The maximum reward token tps reduction factor for the safety factor, it must be between `0` and `10e9`. I.e `2*10e8` means a maximum 20% reduction.
+- `MAX_INCREASE_FACTOR`: The maximum reward token tps increase factor for the safety factor, it must be between `0` and `10e9`. I.e `2*10e8` means a maximum 20% increase.
+- `minEpochDuration`: The minimum duration in seconds for which the safety factor can be updated, it must be greater than `0`.
+
 #### 4. Registering the AVSReservesManager with your AVS Service Manager
 
 The AVSReservesManager will be registered with your [AVS Service Manager](https://github.com/Layr-Labs/eigenlayer-middleware/blob/dev/src/ServiceManagerBase.sol), which will be used to make programmatic payments to operators.
