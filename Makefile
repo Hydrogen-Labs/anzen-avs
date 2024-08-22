@@ -83,7 +83,7 @@ start-aggregator: ##
 
 start-aggregator-holesky:
 	go run aggregator/cmd/main.go --config config-files/holesky/aggregator.yaml \
-			--anzen-deployment ${HOLESKY_FILES_DIR}/holesky_anzen_avs_deployment_output.json \
+			--anzen-deployment ${HOLESKY_FILES_DIR}/anzen_avs_deployment_output.json \
 			--ecdsa-private-key ${AGGREGATOR_ECDSA_PRIV_KEY} \
 			2>&1 | zap-pretty
 

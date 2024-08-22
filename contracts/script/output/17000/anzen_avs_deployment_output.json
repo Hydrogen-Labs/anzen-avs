@@ -1,0 +1,17 @@
+{
+  "addresses": {
+    "anzenProxyAdmin": "0x2f54a8eb31eE7dB69ab1274E639b6D10be06bE38",
+    "anzenServiceManager": "0x08F06c24c5D1A1dDb622648c1D4E7c154c9a6c99",
+    "anzenServiceManagerImplementation": "0x119F2D9Cfc02Fe209389797590191a186f77C2a2",
+    "anzenTaskManager": "0xCeCb4eD0260FDa2F7A6E7C82aD4446c9342A4dca",
+    "anzenTaskManagerImplementation": "0x473639B80374CF706a3e1F60047a873E546F6A2a",
+    "avsReservesManagerFactory": "0x0DCac0E6A5CeFe3EA3DE4154C73C71D9D2425835",
+    "avsReservesManagerFactoryImplementation": "0xcd4Bfca45dA1B2af66aB31a7f53D859322253DB9",
+    "erc20Strategy": "0x80528D6e9A2BAbFc766965E0E26d5aB08D9CFaF9",
+    "operatorStateRetriever": "0x2BC7cD9f76a157eeAc36913190d4bdA737039474",
+    "registryCoordinator": "0xFE5F9f731bfC44e232bFCDe65B224122fCCd40fe",
+    "registryCoordinatorImplementation": "0x4160558A8D206dAFD0a918FB1C4C58D258e976fc",
+    "safetyFactorOracle": "0xd99652eD79836802615D2C4bE76826fCeF988b8a",
+    "safetyFactorOracleImplementation": "0x15A5E4b17e42Be4Cbf4bF7A888515beF1a4Ed97e"
+  }
+}

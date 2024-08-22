@@ -39,10 +39,9 @@ contract AnzenDeployer is Script, Utils {
     uint256 public constant QUORUM_THRESHOLD_PERCENTAGE = 100;
     uint32 public constant TASK_RESPONSE_WINDOW_BLOCK = 30;
     uint32 public constant TASK_DURATION_BLOCKS = 0;
-    // TODO: right now hardcoding these (this address is anvil's default address 9)
+
     address public AGGREGATOR_ADDR = vm.envAddress("INIT_AGGREGATOR_ADDR");
     address public TASK_GENERATOR_ADDR = vm.envAddress("INIT_TASK_GENERATOR_ADDR");
-
     bytes32 public salt = keccak256(abi.encodePacked(vm.envString("DEPLOYMENT_SALT")));
 
     // ERC20 and Strategy: we need to deploy this erc20, create a strategy for it, and whitelist this strategy in the strategymanager
@@ -344,7 +343,7 @@ contract AnzenDeployer is Script, Utils {
         // serialize all the data
         string memory finalJson = vm.serializeString(parent_object, deployed_addresses, deployed_addresses_output);
 
-        writeOutput(finalJson, "holesky_anzen_avs_deployment_output");
+        writeOutput(finalJson, "anzen_avs_deployment_output");
         writeAvsOnboardingOutput(address(anzenProxyAdmin), anzenReservesManager, anzenReservesManagerImplementation, 0);
     }
 

@@ -32,3 +32,6 @@ id_rsa
 */holesky/*.yaml
 !*/holesky/*sample*.yaml
 tests/keys/holesky*.json
+
+*.env
+!sample*.env
