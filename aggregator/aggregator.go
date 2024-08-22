@@ -194,7 +194,7 @@ func (agg *Aggregator) oracleTaskCreatorChronJob() error {
 				continue
 			}
 		} else {
-			agg.logger.Info("Safety factor is not stale. Skipping.")
+			agg.logger.Debug("Safety factor is not stale. Skipping.")
 			continue
 		}
 
@@ -251,8 +251,6 @@ func (agg *Aggregator) sendNewOraclePullTask(oracleIndex *big.Int) error {
 		agg.logger.Error("Aggregator failed to get safety factor info", "err", err)
 		return err
 	}
-
-	// TODO: Implement policy on when to update the safety factor
 	newPullTask, taskIndex, err := agg.avsWriter.SendNewOraclePullTask(context.Background(), oracleIndex, proposedSafetyFactorInfo.SF, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
 
 	if err != nil {

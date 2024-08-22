@@ -64,4 +64,8 @@ interface IAnzenTaskManager {
 
     /// @notice Returns the TASK_RESPONSE_WINDOW_BLOCK
     function getTaskResponseWindowBlock() external view returns (uint32);
+
+    function updateAggregator(address newAggregator) external;
+
+    function updateTaskGenerator(address newTaskGenerator) external;
 }

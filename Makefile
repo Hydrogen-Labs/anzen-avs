@@ -36,6 +36,9 @@ deploy-all-to-anvil-and-save-state: deploy-eigenlayer-contracts-to-anvil-and-sav
 start-anvil-chain-with-el-and-avs-deployed: ## starts anvil from a saved state file (with el and avs contracts deployed)
 	./tests/anvil/start-anvil-chain-with-el-and-avs-deployed.sh
 
+onboard-avs-to-anvil-anzen:
+	./tests/anvil/onboard-avs-to-anzen.sh
+
 bindings: ## generates contract bindings
 	cd contracts && ./generate-go-bindings.sh
 
@@ -80,7 +83,7 @@ start-aggregator: ##
 
 start-aggregator-holesky:
 	go run aggregator/cmd/main.go --config config-files/holesky/aggregator.yaml \
-			--anzen-deployment ${HOLESKY_FILES_DIR}/holesky_anzen_avs_deployment_output.json \
+			--anzen-deployment ${HOLESKY_FILES_DIR}/anzen_avs_deployment_output.json \
 			--ecdsa-private-key ${AGGREGATOR_ECDSA_PRIV_KEY} \
 			2>&1 | zap-pretty
 

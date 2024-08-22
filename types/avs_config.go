@@ -18,4 +18,5 @@ type NodeConfig struct {
 	EnableMetrics                 bool   `yaml:"enable_metrics"`
 	NodeApiIpPortAddress          string `yaml:"node_api_ip_port_address"`
 	EnableNodeApi                 bool   `yaml:"enable_node_api"`
+	DepositAmount                 uint   `yaml:"deposit_amount"`
 }

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.12;
 
+import "@openzeppelin/contracts/utils/Strings.sol";
+
 import "@eigenlayer-middleware/src/interfaces/IRegistryCoordinator.sol";
 import "@eigenlayer/contracts/strategies/StrategyBase.sol";
 import "../../src/tests/mocks/ERC20Mock.sol";
@@ -61,5 +63,31 @@ contract Utils is Script {
         string memory chainDir = string.concat(vm.toString(block.chainid), "/");
         string memory outputFilePath = string.concat(outputDir, chainDir, outputFileName, ".json");
         vm.writeJson(outputJson, outputFilePath);
+    }
+
+    function writeAvsOnboardingOutput(
+        address avsProxyAdminAddr,
+        address avsReservesManagerAddr,
+        address avsReservesManagerImplementationAddr,
+        uint32 avsId
+    ) internal {
+        string memory parent_object = "parent object avs onboarding";
+
+        string memory deployed_addresses = "avs_addresses";
+
+        vm.serializeAddress(deployed_addresses, "avsProxyAdmin", avsProxyAdminAddr);
+
+        vm.serializeAddress(deployed_addresses, "avsReservesManager", avsReservesManagerAddr);
+
+        string memory deployed_addresses_output = vm.serializeAddress(
+            deployed_addresses, "avsReservesManagerImplementation", avsReservesManagerImplementationAddr
+        );
+
+        // serialize all the data
+        string memory finalJson = vm.serializeString(parent_object, deployed_addresses, deployed_addresses_output);
+
+        string memory file_name = string.concat("onboarded_avs_outputs/", Strings.toString(avsId), "_deployment_output");
+
+        writeOutput(finalJson, file_name);
     }
 }

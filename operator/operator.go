@@ -3,6 +3,7 @@ package operator
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"os"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -242,7 +243,8 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 	}
 
 	if c.RegisterOperatorOnStartup {
-		operator.registerOperatorOnStartup(operatorEcdsaPrivateKey, common.HexToAddress(c.TokenStrategyAddr))
+		depositAmount := big.NewInt(int64(c.DepositAmount))
+		operator.registerOperatorOnStartup(operatorEcdsaPrivateKey, common.HexToAddress(c.TokenStrategyAddr), depositAmount)
 	}
 
 	// OperatorId is set in contract during registration so we get it after registering operator.

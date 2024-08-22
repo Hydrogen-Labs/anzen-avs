@@ -96,6 +96,7 @@ contract AnzenTaskManager is
         newTask.quorumThresholdPercentage = quorumThresholdPercentage;
         newTask.quorumNumbers = quorumNumbers;
         newTask.proposedSafetyFactor = proposedSafetyFactor;
+        // TODO: Hardcode the quorumNumbers
 
         // store hash of task onchain, emit event, and increase taskNum
         allTaskHashes[latestTaskNum] = keccak256(abi.encode(newTask));
@@ -155,6 +156,14 @@ contract AnzenTaskManager is
 
         // TODO: Pass the response to the oracle
         safetyFactorOracle.setSafetyFactor(task.oracleIndex, taskResponse.safetyFactor);
+    }
+
+    function updateAggregator(address _newAggregator) external onlyOwner {
+        aggregator = _newAggregator;
+    }
+
+    function updateTaskGenerator(address _newTaskGenerator) external onlyOwner {
+        generator = _newTaskGenerator;
     }
 
     function taskNumber() external view returns (uint32) {

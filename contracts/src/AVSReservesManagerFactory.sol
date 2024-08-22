@@ -31,8 +31,7 @@ contract AVSReservesManagerFactory is AVSReservesManagerFactoryStorage {
         address _avsGov,
         address _avsServiceManager,
         address[] memory _initial_rewardTokens,
-        uint256[] memory _initial_tokenFlowsPerSecond,
-        uint256 _performanceFeeBPS
+        uint256[] memory _initial_tokenFlowsPerSecond
     ) external onlyAnzenGov returns (address, address) {
         require(
             !hasAVSReservesManager[_avsServiceManager],
@@ -55,7 +54,7 @@ contract AVSReservesManagerFactory is AVSReservesManagerFactoryStorage {
             lastAVSReservesManagerId,
             _initial_rewardTokens,
             _initial_tokenFlowsPerSecond,
-            _performanceFeeBPS
+            performanceFeeBPS
         );
 
         hasAVSReservesManager[_avsServiceManager] = true;

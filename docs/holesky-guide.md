@@ -4,7 +4,7 @@
 
 ## Joining the Holesky AVS
 
-TODO: Add instructions on how to join the currently deployed Anzen Holesky AVS as an operator.
+Review the guide here: [Operator Guide](../docs/operator-guide.md)
 
 ## Deploying the Holesky contracts
 
@@ -24,7 +24,7 @@ make build-contracts
 make deploy-anzen-contracts-to-holesky-and-save-state
 ```
 
-This will deploy the contracts to the holesky chain and save the state to [`contracts/script/output/17000/holesky_anzen_avs_deployment_output.json`](../contracts/script/output/17000/holesky_anzen_avs_deployment_output.json)
+This will deploy the contracts to the holesky chain and save the state to [`contracts/script/output/17000/anzen_avs_deployment_output.json`](../contracts/script/output/17000/anzen_avs_deployment_output.json)
 
 ## Running the Holesky AVS
 

@@ -1,0 +1,7 @@
+{
+  "avs_addresses": {
+    "avsProxyAdmin": "0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E",
+    "avsReservesManager": "0x3c5bb6747794374fA8E812f2BAA33f63349cAB40",
+    "avsReservesManagerImplementation": "0x47b36E824631e97E94d462F822181Ed08A459384"
+  }
+}

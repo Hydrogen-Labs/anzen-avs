@@ -25,6 +25,7 @@ import (
 func (o *Operator) registerOperatorOnStartup(
 	operatorEcdsaPrivateKey *ecdsa.PrivateKey,
 	mockTokenStrategyAddr common.Address,
+	amount *big.Int,
 ) {
 	err := o.RegisterOperatorWithEigenlayer()
 	if err != nil {
@@ -35,7 +36,6 @@ func (o *Operator) registerOperatorOnStartup(
 	}
 
 	// TODO(samlaf): shouldn't hardcode number here
-	amount := big.NewInt(1000)
 	err = o.DepositIntoStrategy(mockTokenStrategyAddr, amount)
 	if err != nil {
 		o.logger.Fatal("Error depositing into strategy", "err", err)
@@ -98,6 +98,7 @@ func (o *Operator) RegisterOperatorWithAvs(
 	operatorEcdsaKeyPair *ecdsa.PrivateKey,
 ) error {
 	// hardcode these things for now
+	// TODO: make these configurable
 	quorumNumbers := eigenSdkTypes.QuorumNums{eigenSdkTypes.QuorumNum(0)}
 	socket := "Not Needed"
 	operatorToAvsRegistrationSigSalt := [32]byte{123}
