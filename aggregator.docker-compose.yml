@@ -9,6 +9,7 @@ services:
     working_dir: /anzen
     ports:
       - "8090:8090"
+    restart: always
     command: 
       - --config 
       - config-files/holesky/aggregator.yaml

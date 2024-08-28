@@ -1,7 +1,7 @@
 {
   "avs_addresses": {
-    "avsProxyAdmin": "0x2f54a8eb31eE7dB69ab1274E639b6D10be06bE38",
-    "avsReservesManager": "0x17bb61b6a2F3F75F9E4371a305AB1985A2eA6712",
-    "avsReservesManagerImplementation": "0xfF476333eDacBb5a2baf8c7CB15c6aB57c1fe675"
+    "avsProxyAdmin": "0xAB5D289a03D9E700d7946A76f7F642F02653493b",
+    "avsReservesManager": "0xC90B544eC1B004Ff23cbdc33ba91848C4418cA98",
+    "avsReservesManagerImplementation": "0x1Da2A619C60AA5270f69280Be7083080DbC2704E"
   }
 }
