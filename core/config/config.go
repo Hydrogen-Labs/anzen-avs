@@ -74,12 +74,10 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 		sdkutils.ReadYamlConfig(configFilePath, &configRaw)
 	}
 
-	var anzenDeploymentRaw AnzenDeploymentRaw
-	anzenDeploymentFilePath := ctx.GlobalString(AnzenDeploymentFileFlag.Name)
-	if _, err := os.Stat(anzenDeploymentFilePath); errors.Is(err, os.ErrNotExist) {
-		panic("Path " + anzenDeploymentFilePath + " does not exist")
+	anzenDeploymentRaw, err := getAnzenDeploymentRaw(ctx)
+	if err != nil {
+		return nil, err
 	}
-	sdkutils.ReadJsonConfig(anzenDeploymentFilePath, &anzenDeploymentRaw)
 
 	logger, err := sdklogging.NewZapLogger(configRaw.Environment)
 	if err != nil {
@@ -148,6 +146,16 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 	}
 	config.validate()
 	return config, nil
+}
+
+func getAnzenDeploymentRaw(ctx *cli.Context) (AnzenDeploymentRaw, error) {
+	var anzenDeploymentRaw AnzenDeploymentRaw
+	anzenDeploymentFilePath := ctx.GlobalString(AnzenDeploymentFileFlag.Name)
+	if _, err := os.Stat(anzenDeploymentFilePath); errors.Is(err, os.ErrNotExist) {
+		panic("Path " + anzenDeploymentFilePath + " does not exist")
+	}
+	sdkutils.ReadJsonConfig(anzenDeploymentFilePath, &anzenDeploymentRaw)
+	return anzenDeploymentRaw, nil
 }
 
 func (c *Config) validate() {

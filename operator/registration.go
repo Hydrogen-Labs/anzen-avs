@@ -121,6 +121,7 @@ func (o *Operator) RegisterOperatorWithAvs(
 	)
 	if err != nil {
 		o.logger.Errorf("Unable to register operator with avs registry coordinator")
+		o.logger.Errorf("Error: %v", err)
 		return err
 	}
 	o.logger.Infof("Registered operator with avs registry coordinator.")

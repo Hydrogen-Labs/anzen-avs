@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"os"
 
@@ -17,7 +18,7 @@ import (
 
 func main() {
 	app := cli.NewApp()
-	app.Flags = []cli.Flag{config.ConfigFileFlag}
+	app.Flags = []cli.Flag{config.ConfigFileFlag, config.AnzenDeploymentFileFlag}
 	app.Name = "anzen-operator"
 	app.Usage = "Anzen Operator"
 	app.Description = "Service that reads numbers onchain, squares, signs, and sends them to the aggregator."
@@ -38,6 +39,18 @@ func operatorMain(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
+	var anzenDeploymentRaw config.AnzenDeploymentRaw
+	anzenDeploymentFilePath := ctx.GlobalString(config.AnzenDeploymentFileFlag.Name)
+	if _, err := os.Stat(anzenDeploymentFilePath); errors.Is(err, os.ErrNotExist) {
+		panic("Path " + anzenDeploymentFilePath + " does not exist")
+	}
+	sdkutils.ReadJsonConfig(anzenDeploymentFilePath, &anzenDeploymentRaw)
+
+	nodeConfig.AVSRegistryCoordinatorAddress = anzenDeploymentRaw.Addresses.RegistryCoordinatorAddr
+	nodeConfig.OperatorStateRetrieverAddress = anzenDeploymentRaw.Addresses.OperatorStateRetrieverAddr
+	nodeConfig.SafetyFactorOracleAddr = anzenDeploymentRaw.Addresses.SafetyFactorOracleAddr
+
 	configJson, err := json.MarshalIndent(nodeConfig, "", "  ")
 	if err != nil {
 		log.Fatalf(err.Error())

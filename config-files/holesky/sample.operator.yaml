@@ -3,14 +3,6 @@ production: true
 
 operator_address: 0x52d7792d70e15dc6eddb8dc907c06d3b8247aebe
 
-# EigenLayer Slasher contract address
-
-# This is the address of the contracts which are deployed in the anvil saved state
-# The saved eigenlayer state is located in tests/anvil/anzen_avs_deployment_output.json
-# TODO(samlaf): automate updating these addresses when we deploy new contracts
-avs_registry_coordinator_address: 0x4AB2DCAa7768963Cd5F8D707936E8Ce063f45D35
-operator_state_retriever_address: 0x258657204C8062adF832004e9fEa56B2f95f9767
-
 # ETH RPC URL
 eth_rpc_url: your_eth_holesky_rpc_url
 eth_ws_url: your_eth_holesky_ws_url
