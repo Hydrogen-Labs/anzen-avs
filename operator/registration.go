@@ -101,7 +101,7 @@ func (o *Operator) RegisterOperatorWithAvs(
 	// TODO: make these configurable
 	quorumNumbers := eigenSdkTypes.QuorumNums{eigenSdkTypes.QuorumNum(0)}
 	socket := "Not Needed"
-	operatorToAvsRegistrationSigSalt := [32]byte{123}
+	operatorToAvsRegistrationSigSalt := [32]byte{125}
 	curBlockNum, err := o.ethClient.BlockNumber(context.Background())
 	if err != nil {
 		o.logger.Errorf("Unable to get current block number")
@@ -121,6 +121,7 @@ func (o *Operator) RegisterOperatorWithAvs(
 	)
 	if err != nil {
 		o.logger.Errorf("Unable to register operator with avs registry coordinator")
+		o.logger.Errorf("Error: %v", err)
 		return err
 	}
 	o.logger.Infof("Registered operator with avs registry coordinator.")

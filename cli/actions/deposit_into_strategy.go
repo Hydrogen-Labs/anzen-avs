@@ -46,6 +46,11 @@ func DepositIntoStrategy(ctx *cli.Context) error {
 		return err
 	}
 
+	if amount.Cmp(big.NewInt(0)) == -1 {
+		fmt.Println("Deposit amount must be greater than 0")
+		return err
+	}
+
 	err = operator.DepositIntoStrategy(strategyAddr, amount)
 	if err != nil {
 		return err

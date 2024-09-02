@@ -90,18 +90,22 @@ start-aggregator-holesky:
 
 start-operator: ## 
 	go run operator/cmd/main.go --config config-files/anvil/operator.yaml \
+		--anzen-deployment ${DEPLOYMENT_FILES_DIR}/anzen_avs_deployment_output.json \
 		2>&1 | zap-pretty
 
 start-operator-holesky: ## 
 	go run operator/cmd/main.go --config config-files/holesky/operator.yaml \
+		--anzen-deployment ${HOLESKY_FILES_DIR}/anzen_avs_deployment_output.json \
 		2>&1 | zap-pretty
 
 start-operator-2: ## 
 	go run operator/cmd/main.go --config config-files/anvil/operator-2.yaml \
+		--anzen-deployment ${DEPLOYMENT_FILES_DIR}/anzen_avs_deployment_output.json \
 		2>&1 | zap-pretty
 
 start-operator-3: ## 
 	go run operator/cmd/main.go --config config-files/anvil/operator-3.yaml \
+		--anzen-deployment ${DEPLOYMENT_FILES_DIR}/anzen_avs_deployment_output.json \
 		2>&1 | zap-pretty
 
 start-challenger: ## 

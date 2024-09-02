@@ -32,7 +32,7 @@ This will deploy the contracts to the holesky chain and save the state to [`cont
 
 Follow the Eigenlayer guide to create keys [here](https://docs.eigenlayer.xyz/eigenlayer/operator-guides/operator-installation#create-keys), for holesky deployment it is okay to use the `--insecure` flag in the key creation command. You will need both an `edcsa` and `bls` key.
 
-### Create .env file
+### Create config files
 
 ```bash
 cd config-files/holesky
@@ -46,7 +46,7 @@ Edit the aggregator.yaml and operator.yaml files with your variables:
 
 [operator.yaml](../config-files/holesky/operator.yaml)
 
-### Start the Holesky AVS
+### Start the Holesky AVS using Make
 
 ```bash
 make start-aggregator-holesky
@@ -56,6 +56,28 @@ in a separate terminal
 
 ```bash
 make start-operator-holesky
+```
+
+### Start the Holesky AVS using Docker
+
+#### Aggregator
+
+Configure the aggregator environment variables with the aggregator private key
+
+```bash
+cp sample.aggregator.env .env
+```
+
+```bash
+docker compose -f aggregator.docker-compose.yml up
+```
+
+#### Operator
+
+in a separate terminal
+
+```bash
+docker compose -f operator.docker-compose.yml up
 ```
 
 ## Troubleshooting
