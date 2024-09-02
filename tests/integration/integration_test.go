@@ -146,6 +146,10 @@ func TestIntegration(t *testing.T) {
 	nodeConfig.RegisterOperatorOnStartup = true
 	nodeConfig.EthRpcUrl = "http://" + anvilEndpoint
 	nodeConfig.EthWsUrl = "ws://" + anvilEndpoint
+	nodeConfig.AVSRegistryCoordinatorAddress = anzenDeploymentRaw.Addresses.RegistryCoordinatorAddr
+	nodeConfig.SafetyFactorOracleAddr = anzenDeploymentRaw.Addresses.SafetyFactorOracleAddr
+	nodeConfig.OperatorStateRetrieverAddress = anzenDeploymentRaw.Addresses.OperatorStateRetrieverAddr
+
 	operator, err := operator.NewOperatorFromConfig(nodeConfig)
 	if err != nil {
 		t.Fatalf("Failed to create operator: %s", err.Error())
