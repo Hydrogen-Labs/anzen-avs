@@ -1,3 +1,6 @@
+# This imports the environment variables from the .env file
+include .env
+export $(shell sed 's/=.*//' .env)
 ############################# HELP MESSAGE #############################
 # Make sure the help command stays first, so that it's printed by default when `make` is called without arguments
 .PHONY: help tests
@@ -84,7 +87,7 @@ start-aggregator: ##
 start-aggregator-holesky:
 	go run aggregator/cmd/main.go --config config-files/holesky/aggregator.yaml \
 			--anzen-deployment ${HOLESKY_FILES_DIR}/anzen_avs_deployment_output.json \
-			--ecdsa-private-key ${AGGREGATOR_ECDSA_PRIV_KEY} \
+			--ecdsa-private-key ${ECDSA_PRIVATE_KEY} \
 			2>&1 | zap-pretty
 
 

@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  operator:
+    image: ghcr.io/hydrogen-labs/anzen-avs/operator/cmd/main.go:latest
+    container_name: anzen-operator
+    volumes:
+      - ./:/anzen/
+    working_dir: /anzen
+    restart: always
+    command: 
+      - --config 
+      - config-files/holesky/operator.yaml
+      - --anzen-deployment 
+      - contracts/script/output/17000/anzen_avs_deployment_output.json
+    network_mode: "bridge"
+

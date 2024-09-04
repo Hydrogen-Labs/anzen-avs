@@ -101,6 +101,7 @@ func (o *Operator) RegisterOperatorWithAvs(
 	// TODO: make these configurable
 	quorumNumbers := eigenSdkTypes.QuorumNums{eigenSdkTypes.QuorumNum(0)}
 	socket := "Not Needed"
+	// Salt this salt if reused will cause this operation to fail
 	operatorToAvsRegistrationSigSalt := [32]byte{125}
 	curBlockNum, err := o.ethClient.BlockNumber(context.Background())
 	if err != nil {
