@@ -21,7 +21,7 @@ func main() {
 	app.Flags = []cli.Flag{config.ConfigFileFlag, config.AnzenDeploymentFileFlag}
 	app.Name = "anzen-operator"
 	app.Usage = "Anzen Operator"
-	app.Description = "Service that reads numbers onchain, squares, signs, and sends them to the aggregator."
+	app.Description = "Service that reads AVS economic secuirty metrics posted onchain, verifies, signs, and sends them to the aggregator."
 
 	app.Action = operatorMain
 	err := app.Run(os.Args)
