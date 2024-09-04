@@ -16,6 +16,6 @@ jobs:
         with:
           go-version: "1.21"
       - name: Set up environment variables
-        run: cp sample.aggregator.env .aggregator.env
+        run: cp sample.aggregator.env .env
       - name: Test
         run: make tests-unit
