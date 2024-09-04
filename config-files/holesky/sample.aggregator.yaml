@@ -5,3 +5,4 @@ eth_ws_url: your_eth_holesky_ws_url
 
 # address which the aggregator listens on for operator signed messages
 aggregator_server_ip_port_address: localhost:8090
+# use 0.0.0.0:8090 if you want to expose the aggregator to the network

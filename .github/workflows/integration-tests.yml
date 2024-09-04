@@ -6,7 +6,7 @@ on:
       - master
   pull_request:
 
-jobs:  
+jobs:
   Test:
     name: Integration Test
     runs-on: ubuntu-latest
@@ -14,8 +14,8 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
-      
+          go-version: "1.21"
+
       # we use forge right now as part of integration test, so need to install it first
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -24,6 +24,7 @@ jobs:
       - name: Install forge dependencies
         run: forge install
         working-directory: ./contracts
-
+      - name: Create ENV file
+        run: cp sample.aggregator.env .env
       - name: Test
         run: make tests-integration
