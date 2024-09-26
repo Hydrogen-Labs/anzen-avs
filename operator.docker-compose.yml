@@ -13,5 +13,5 @@ services:
       - config-files/holesky/operator.yaml
       - --anzen-deployment 
       - contracts/script/output/17000/anzen_avs_deployment_output.json
-    network_mode: "bridge"
+    network_mode: "host"
 
