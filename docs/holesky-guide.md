@@ -34,10 +34,17 @@ Follow the Eigenlayer guide to create keys [here](https://docs.eigenlayer.xyz/ei
 
 ### Create config files
 
+You only need to set up the operator.yaml file for the operator. If you want to set up an aggregator you will need to set up the aggregator.yaml file as well, but this is not required to join the AVS.
+
 ```bash
 cd config-files/holesky
-cp sample.aggregator.yaml aggregator.yaml
 cp sample.operator.yaml operator.yaml
+```
+
+Optional:
+
+```bash
+cp sample.aggregator.yaml aggregator.yaml
 ```
 
 Edit the aggregator.yaml and operator.yaml files with your variables:
@@ -46,19 +53,15 @@ Edit the aggregator.yaml and operator.yaml files with your variables:
 
 [operator.yaml](../config-files/holesky/operator.yaml)
 
-### Start the Holesky AVS using Make
+### Start the Holesky AVS using Docker
 
-```bash
-make start-aggregator-holesky
-```
+#### Operator
 
 in a separate terminal
 
 ```bash
-make start-operator-holesky
+docker compose -f operator.docker-compose.yml up
 ```
-
-### Start the Holesky AVS using Docker
 
 #### Aggregator
 
@@ -72,15 +75,26 @@ cp sample.aggregator.env .env
 docker compose -f aggregator.docker-compose.yml up
 ```
 
-#### Operator
-
-in a separate terminal
+### Start the Holesky AVS using Make
 
 ```bash
-docker compose -f operator.docker-compose.yml up
+make start-operator-holesky
+```
+
+Optional:
+
+```bash
+make start-aggregator-holesky
 ```
 
 ## Troubleshooting
+
+First, you should check for any updates to the operator image
+
+```bash
+docker pull ghcr.io/hydrogen-labs/anzen-avs/aggregator/cmd/main.go:latest
+docker pull ghcr.io/hydrogen-labs/anzen-avs/operator/cmd/main.go:latest
+```
 
 #### RPC Issues
 

@@ -60,6 +60,7 @@ func (s *SafetyFactorService) IsSafetyFactorInfoStale(moduleID int32) (bool, err
 	// TODO let this be configurable
 
 	// Check if the safety factor has deviated
+	// TODO: check if the deviation is within the threshold
 	isDeviated := latestSafetyFactorOffChainInfo.SF.Cmp(currentSafetyFactorOnChainInfo.SafetyFactor) != 0
 
 	// Check if the safety factor is stale by one minute
